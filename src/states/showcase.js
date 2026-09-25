@@ -61,11 +61,7 @@ export class ShowcasePilot {
 export function applyLook(game, env) {
   const g = game;
   g.world.configure({ ...env });
-  g.renderer.toneMappingExposure = env.toneExposure ?? 0.6;
-  g.post.grade.setGrade(env.grade || 'neutral');
-  const bl = env.bloom || {};
-  g.post.bloom.luminanceMaterial.threshold = bl.threshold ?? 1.0;
-  g.post.bloom.intensity = bl.intensity ?? 0.9;
+  g.post.applyLook(g.world.env || env, g.renderer);
 }
 
 /** Load models + FX and build a showcase jet in the world. */

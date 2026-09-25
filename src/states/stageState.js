@@ -168,7 +168,7 @@ export class StageState {
     this.pullUp = false;
 
     // cloud banks
-    const cdef = def.env.clouds;
+    const cdef = (g.world.env || def.env).clouds; // resolved env (honours ?look=)
     if (cdef && g.preset.clouds > 0) {
       this.clouds = new Clouds({
         rail: this.rail,
@@ -257,8 +257,21 @@ export class StageState {
     if (vaporMesh) vaporMesh.frustumCulled = false; // the rig may not frame the jet yet
     g.rig.update(this.player, this.rail, 1, 1 / 60);
     g.world.update(0, g.rig.camera);
+    // The scene is only ever drawn into the post chain's HalfFloat input buffer
+    // (linear output), so compile every material for that target too — objects
+    // outside the warm-up frame's view (obstacles, trees further down the rail)
+    // would otherwise compile their linear variant mid-stage.
+    const r = g.renderer;
+    const input = g.post.composer?.inputBuffer;
     try {
-      await g.renderer.compileAsync(g.world.scene, g.rig.camera);
+      await r.compileAsync(g.world.scene, g.rig.camera);
+      if (input) {
+        const prev = r.getRenderTarget();
+        r.setRenderTarget(input);
+        const pending = r.compileAsync(g.world.scene, g.rig.camera); // programs are created synchronously here
+        r.setRenderTarget(prev);
+        await pending;
+      }
     } catch (e) {
       console.warn('compileAsync failed', e);
     }
