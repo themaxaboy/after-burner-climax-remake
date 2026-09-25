@@ -1,0 +1,418 @@
+{
+  "gen.stageStart": {
+    "speaker": "awacs",
+    "cat": "stageStart",
+    "variants": [
+      { "en": "Skywatch online. Bandits inbound, weapons free.", "th": "สกายวอทช์พร้อม ข้าศึกกำลังมา อนุญาตให้ใช้อาวุธ" },
+      { "speaker": "lead", "en": "Hawk in position. Let's go to work.", "th": "ฮอว์กเข้าประจำที่ เริ่มงานกัน" },
+      { "speaker": "wing", "en": "Rook on your wing, Hawk. Ready.", "th": "รุกอยู่ข้างปีกคุณ ฮอว์ก พร้อมแล้ว" },
+      { "en": "Multiple contacts ahead. Stay sharp.", "th": "เป้าหมายจำนวนมากข้างหน้า ตั้งสติให้ดี" },
+      { "speaker": "carrier", "en": "Good luck out there, Hawk.", "th": "โชคดีนะ ฮอว์ก" }
+    ]
+  },
+  "gen.bandits": {
+    "speaker": "awacs",
+    "cat": "contact",
+    "variants": [
+      { "en": "Bandits, twelve o'clock!", "th": "ข้าศึก ทิศสิบสองนาฬิกา!" },
+      { "en": "New contacts, closing fast!", "th": "เป้าหมายใหม่ เข้ามาเร็วมาก!" },
+      { "speaker": "wing", "en": "Tally ho! Here they come!", "th": "เห็นเป้าแล้ว! พวกมันมาแล้ว!" },
+      { "en": "Multiple bandits, low and fast!", "th": "ข้าศึกหลายลำ บินต่ำและเร็ว!" }
+    ]
+  },
+  "gen.kill": {
+    "speaker": "wing",
+    "cat": "kill",
+    "variants": [
+      { "en": "Splash one!", "th": "ร่วงไปหนึ่ง!" },
+      { "en": "Good kill! Good kill!", "th": "ยิงตกสวย! ยิงตกสวย!" },
+      { "speaker": "lead", "en": "Scratch one bandit!", "th": "จัดการข้าศึกไปหนึ่ง!" },
+      { "en": "He's going down!", "th": "มันร่วงแล้ว!" },
+      { "speaker": "awacs", "en": "Bandit destroyed.", "th": "ทำลายข้าศึกแล้ว" },
+      { "speaker": "lead", "en": "Got him!", "th": "โดนแล้ว!" }
+    ]
+  },
+  "gen.multiKill": {
+    "speaker": "wing",
+    "cat": "multiKill",
+    "variants": [
+      { "en": "Multiple splashes! Nice shooting, Hawk!", "th": "ร่วงหลายลำ! ยิงเยี่ยมมาก ฮอว์ก!" },
+      { "speaker": "awacs", "en": "Multiple kills confirmed.", "th": "ยืนยัน ยิงตกหลายลำ" },
+      { "speaker": "lead", "en": "That's a clean sweep!", "th": "กวาดเรียบ!" },
+      { "en": "They're dropping like flies!", "th": "ร่วงกันเป็นใบไม้เลย!" }
+    ]
+  },
+  "gen.bigKill": {
+    "speaker": "awacs",
+    "cat": "bigKill",
+    "variants": [
+      { "en": "Heavy target destroyed!", "th": "ทำลายเป้าหมายขนาดใหญ่แล้ว!" },
+      { "speaker": "wing", "en": "Big one's going down!", "th": "ตัวใหญ่ร่วงแล้ว!" },
+      { "speaker": "carrier", "en": "Outstanding hit, Hawk!", "th": "ยิงได้ยอดเยี่ยม ฮอว์ก!" }
+    ]
+  },
+  "gen.fox": {
+    "speaker": "lead",
+    "cat": "fox",
+    "variants": [
+      { "en": "Fox two!", "th": "ฟ็อกซ์ทู!" },
+      { "en": "Missile away!", "th": "ปล่อยมิสไซล์!" },
+      { "en": "Fox two, fox two!", "th": "ฟ็อกซ์ทู ฟ็อกซ์ทู!" },
+      { "en": "Birds away!", "th": "ปล่อยจรวดแล้ว!" }
+    ]
+  },
+  "gen.missileInbound": {
+    "speaker": "wing",
+    "cat": "threat",
+    "speed": 1.08,
+    "variants": [
+      { "en": "Missile launch! Break right!", "th": "มิสไซล์ยิงมา! หักขวา!" },
+      { "speaker": "awacs", "en": "Hawk, missile inbound! Defend!", "th": "ฮอว์ก มิสไซล์พุ่งเข้ามา! ป้องกันตัว!" },
+      { "en": "Break left! Break left!", "th": "หักซ้าย! หักซ้าย!" },
+      { "speaker": "lead", "en": "Missile on my tail!", "th": "มิสไซล์ตามหลังมา!" },
+      { "speaker": "awacs", "en": "Launch detected! Roll out, Hawk!", "th": "ตรวจพบการยิง! หมุนหลบ ฮอว์ก!" }
+    ]
+  },
+  "gen.strongInbound": {
+    "speaker": "awacs",
+    "cat": "threat",
+    "speed": 1.08,
+    "variants": [
+      { "en": "Heavy missile, heavy missile! Roll now!", "th": "มิสไซล์หนัก! หมุนหลบเดี๋ยวนี้!" },
+      { "speaker": "wing", "en": "That one's big! Get out of there!", "th": "ลูกนั้นใหญ่มาก! หนีเร็ว!" },
+      { "speaker": "lead", "en": "Big one inbound! Rolling!", "th": "ลูกใหญ่มาแล้ว! หมุนหลบ!" }
+    ]
+  },
+  "gen.evade": {
+    "speaker": "lead",
+    "cat": "evade",
+    "variants": [
+      { "en": "Missile defeated!", "th": "หลบมิสไซล์ได้แล้ว!" },
+      { "speaker": "wing", "en": "Nice roll! It missed!", "th": "หมุนสวย! มันพลาดไปแล้ว!" },
+      { "speaker": "awacs", "en": "Missile trashed. Good move.", "th": "มิสไซล์หลุดเป้า ขยับได้ดี" },
+      { "en": "Too slow!", "th": "ช้าไปแล้ว!" }
+    ]
+  },
+  "gen.hit": {
+    "speaker": "lead",
+    "cat": "hit",
+    "speed": 1.08,
+    "variants": [
+      { "en": "I'm hit!", "th": "โดนยิงแล้ว!" },
+      { "en": "Taking damage!", "th": "เครื่องเสียหาย!" },
+      { "speaker": "wing", "en": "Hawk, you're hit!", "th": "ฮอว์ก คุณโดนยิง!" },
+      { "en": "That hurt! Still flying!", "th": "เจ็บแต่ยังบินได้!" },
+      { "speaker": "awacs", "en": "Hawk, check your damage!", "th": "ฮอว์ก ตรวจความเสียหายด้วย!" }
+    ]
+  },
+  "gen.lowArmor": {
+    "speaker": "lead",
+    "cat": "lowArmor",
+    "variants": [
+      { "en": "Systems failing! I can't take much more!", "th": "ระบบเริ่มล่ม! ทนได้อีกไม่นานแล้ว!" },
+      { "speaker": "awacs", "en": "Hawk, your airframe is critical!", "th": "ฮอว์ก โครงเครื่องเสียหายหนัก!" },
+      { "speaker": "wing", "en": "You're trailing smoke, Hawk! Hang in there!", "th": "เครื่องคุณมีควัน ฮอว์ก! อดทนไว้!" },
+      { "speaker": "carrier", "en": "Hawk, don't do anything stupid.", "th": "ฮอว์ก อย่าทำอะไรบ้าบิ่นนะ" }
+    ]
+  },
+  "gen.nearMiss": {
+    "speaker": "lead",
+    "cat": "nearMiss",
+    "variants": [
+      { "en": "Whoa! That was close!", "th": "เฮ้ย! เฉียดไปนิดเดียว!" },
+      { "speaker": "wing", "en": "Too close, Hawk!", "th": "ใกล้เกินไปแล้ว ฮอว์ก!" },
+      { "en": "Close enough to shake hands!", "th": "ใกล้จนจับมือกันได้เลย!" },
+      { "speaker": "wing", "en": "You just shaved his paint!", "th": "คุณเพิ่งเฉี่ยวสีเครื่องมันไป!" }
+    ]
+  },
+  "gen.rammer": {
+    "speaker": "awacs",
+    "cat": "rammer",
+    "variants": [
+      { "en": "Kamikaze bandit! He's trying to ram you!", "th": "ข้าศึกพลีชีพ! มันจะพุ่งชนคุณ!" },
+      { "speaker": "wing", "en": "Crazy one coming head-on!", "th": "ตัวบ้าพุ่งเข้ามาตรงๆ!" },
+      { "en": "Collision course! Move, Hawk!", "th": "อยู่ในเส้นทางชน! หลบเร็ว ฮอว์ก!" }
+    ]
+  },
+  "gen.enemyBehind": {
+    "speaker": "awacs",
+    "cat": "enemyBehind",
+    "variants": [
+      { "en": "Bandit on your six!", "th": "ข้าศึกอยู่ข้างหลังคุณ!" },
+      { "speaker": "wing", "en": "Check six, Hawk! Check six!", "th": "ระวังหลัง ฮอว์ก! ระวังหลัง!" },
+      { "en": "Contacts closing from behind!", "th": "มีเป้าหมายไล่มาจากด้านหลัง!" },
+      { "speaker": "lead", "en": "He's on my tail! Shaking him!", "th": "มันตามหลังมา! จะสลัดมันทิ้ง!" }
+    ]
+  },
+  "gen.climaxReady": {
+    "speaker": "awacs",
+    "cat": "climaxReady",
+    "variants": [
+      { "en": "Climax system ready, Hawk.", "th": "ระบบไคลแมกซ์พร้อมแล้ว ฮอว์ก" },
+      { "speaker": "lead", "en": "Climax is hot. Let's do this.", "th": "ไคลแมกซ์พร้อมแล้ว ลุยเลย" },
+      { "speaker": "wing", "en": "Gauge is full! Light them up!", "th": "เกจเต็มแล้ว! จัดหนักเลย!" }
+    ]
+  },
+  "gen.climaxStart": {
+    "speaker": "lead",
+    "cat": "climax",
+    "variants": [
+      { "en": "Climax! Painting them all!", "th": "ไคลแมกซ์! ล็อกให้หมด!" },
+      { "en": "Going Climax!", "th": "เข้าโหมดไคลแมกซ์!" },
+      { "en": "Time to slow things down.", "th": "ถึงเวลาทำให้ทุกอย่างช้าลง" },
+      { "speaker": "wing", "en": "Climax engaged! Take them all!", "th": "ไคลแมกซ์ทำงาน! จัดการให้หมด!" }
+    ]
+  },
+  "gen.climaxAllDown": {
+    "speaker": "awacs",
+    "cat": "climaxAllDown",
+    "variants": [
+      { "en": "All targets down! Incredible!", "th": "ทุกเป้าหมายร่วงหมด! เหลือเชื่อ!" },
+      { "speaker": "wing", "en": "Every single one! Unreal!", "th": "ทุกลำเลย! ไม่อยากเชื่อ!" },
+      { "speaker": "carrier", "en": "Clean sweep. That's how it's done.", "th": "กวาดเรียบ ต้องแบบนี้แหละ" },
+      { "speaker": "lead", "en": "Board is clear!", "th": "เคลียร์หมดแล้ว!" }
+    ]
+  },
+  "gen.combo10": {
+    "speaker": "wing",
+    "cat": "combo",
+    "variants": [
+      { "en": "You're on a roll, Hawk!", "th": "กำลังมือขึ้นเลย ฮอว์ก!" },
+      { "speaker": "awacs", "en": "Ten in a row. Keep it up.", "th": "สิบลำติดแล้ว รักษาจังหวะไว้" },
+      { "speaker": "lead", "en": "Just getting warmed up!", "th": "เพิ่งจะอุ่นเครื่องเอง!" }
+    ]
+  },
+  "gen.combo30": {
+    "speaker": "wing",
+    "cat": "combo",
+    "variants": [
+      { "en": "Thirty in a row! Save some for me!", "th": "สามสิบลำติด! เหลือไว้ให้ผมบ้าง!" },
+      { "speaker": "awacs", "en": "Chain unbroken. Outstanding.", "th": "คอมโบยังไม่ขาด ยอดเยี่ยม" },
+      { "speaker": "carrier", "en": "Hawk, the whole fleet is watching.", "th": "ฮอว์ก ทั้งกองเรือกำลังดูคุณอยู่" }
+    ]
+  },
+  "gen.combo50": {
+    "speaker": "awacs",
+    "cat": "combo",
+    "variants": [
+      { "en": "Fifty plus chain! That's a record!", "th": "คอมโบห้าสิบกว่าแล้ว! นี่มันสถิติใหม่!" },
+      { "speaker": "wing", "en": "Are you even human?", "th": "คุณเป็นคนจริงๆ หรือเปล่า?" },
+      { "speaker": "lead", "en": "Nobody breaks this chain!", "th": "ไม่มีใครหยุดคอมโบนี้ได้!" }
+    ]
+  },
+  "gen.terrainCaution": {
+    "speaker": "awacs",
+    "cat": "terrain",
+    "variants": [
+      { "en": "Terrain ahead. Watch your altitude.", "th": "ภูมิประเทศข้างหน้า ระวังระดับความสูง" },
+      { "speaker": "lead", "en": "Walls closing in. Easy now.", "th": "ผนังหุบเขาบีบเข้ามา ใจเย็นๆ" },
+      { "speaker": "wing", "en": "Rocks ahead! Thread the needle!", "th": "หินข้างหน้า! ลอดช่องให้ได้!" }
+    ]
+  },
+  "gen.pullUp": {
+    "speaker": "awacs",
+    "cat": "pullUp",
+    "speed": 1.1,
+    "variants": [
+      { "en": "Pull up! Pull up!", "th": "เชิดหัวขึ้น! เชิดหัวขึ้น!" },
+      { "speaker": "wing", "en": "Hawk, climb! Climb now!", "th": "ฮอว์ก ไต่ระดับ! เดี๋ยวนี้!" },
+      { "speaker": "lead", "en": "Too low! Pulling up!", "th": "ต่ำเกินไป! ดึงเครื่องขึ้น!" }
+    ]
+  },
+  "gen.eoStart": {
+    "speaker": "awacs",
+    "cat": "eo",
+    "variants": [
+      { "en": "Priority target marked. Go get it.", "th": "กำหนดเป้าหมายสำคัญแล้ว ไปจัดการเลย" },
+      { "speaker": "carrier", "en": "Hawk, new orders. Hit that target.", "th": "ฮอว์ก คำสั่งใหม่ ทำลายเป้านั้น" },
+      { "en": "Emergency order! Target on your screen.", "th": "คำสั่งฉุกเฉิน! เป้าหมายขึ้นจอแล้ว" }
+    ]
+  },
+  "gen.eoClear": {
+    "speaker": "carrier",
+    "cat": "eo",
+    "variants": [
+      { "en": "Target destroyed. Well done, Hawk.", "th": "ทำลายเป้าหมายแล้ว ทำได้ดี ฮอว์ก" },
+      { "speaker": "awacs", "en": "Priority target down. Nice work.", "th": "เป้าหมายสำคัญร่วงแล้ว เยี่ยมมาก" },
+      { "speaker": "wing", "en": "That's the one! Scratch it!", "th": "ตัวนั้นแหละ! จัดการเรียบร้อย!" }
+    ]
+  },
+  "gen.eoFail": {
+    "speaker": "carrier",
+    "cat": "eo",
+    "variants": [
+      { "en": "Target escaped. Stay on mission.", "th": "เป้าหมายหนีไปได้ ทำภารกิจต่อ" },
+      { "speaker": "awacs", "en": "We lost it. Refocus, Hawk.", "th": "เราพลาดเป้าไปแล้ว ตั้งสติ ฮอว์ก" },
+      { "speaker": "lead", "en": "No! It got away!", "th": "ไม่นะ! มันหนีไปได้!" }
+    ]
+  },
+  "gen.routeSelect": {
+    "speaker": "awacs",
+    "cat": "route",
+    "variants": [
+      { "en": "Route split ahead. Choose your heading.", "th": "เส้นทางแยกข้างหน้า เลือกทิศทางได้เลย" },
+      { "speaker": "carrier", "en": "Two targets, Hawk. Your call.", "th": "มีสองเป้าหมาย ฮอว์ก คุณตัดสินใจ" },
+      { "en": "Fork coming up. Left or right, Hawk?", "th": "ทางแยกกำลังมา ซ้ายหรือขวา ฮอว์ก?" }
+    ]
+  },
+  "gen.routeLeft": {
+    "speaker": "lead",
+    "cat": "route",
+    "variants": [
+      { "en": "Taking the left route.", "th": "ไปเส้นทางซ้าย" },
+      { "en": "Breaking left. Follow me, Rook.", "th": "เลี้ยวซ้าย ตามมา รุก" }
+    ]
+  },
+  "gen.routeRight": {
+    "speaker": "lead",
+    "cat": "route",
+    "variants": [
+      { "en": "Taking the right route.", "th": "ไปเส้นทางขวา" },
+      { "en": "Going right. Stay with me, Rook.", "th": "ไปทางขวา ตามผมมา รุก" }
+    ]
+  },
+  "gen.stageClear": {
+    "speaker": "carrier",
+    "cat": "stageClear",
+    "variants": [
+      { "en": "Area clear. Outstanding flying, Hawk.", "th": "พื้นที่ปลอดภัย บินได้ยอดเยี่ยม ฮอว์ก" },
+      { "speaker": "awacs", "en": "Sector clear. Proceed to the next waypoint.", "th": "เคลียร์พื้นที่แล้ว มุ่งหน้าสู่จุดต่อไป" },
+      { "speaker": "wing", "en": "That's how we do it!", "th": "นี่แหละสไตล์เรา!" },
+      { "speaker": "lead", "en": "Sector clear. Moving on.", "th": "เคลียร์พื้นที่แล้ว ไปต่อ" }
+    ]
+  },
+  "gen.down": {
+    "speaker": "carrier",
+    "cat": "down",
+    "variants": [
+      { "en": "Hawk is down! Hawk, respond!", "th": "ฮอว์กตกแล้ว! ฮอว์ก ตอบด้วย!" },
+      { "speaker": "wing", "en": "Hawk! Hawk, do you read?", "th": "ฮอว์ก! ฮอว์ก ได้ยินไหม?" },
+      { "speaker": "awacs", "en": "Lost contact with Hawk!", "th": "ขาดการติดต่อกับฮอว์ก!" },
+      { "speaker": "wing", "en": "No! Hawk's going down!", "th": "ไม่นะ! ฮอว์กกำลังตก!" }
+    ]
+  },
+  "gen.respawn": {
+    "speaker": "lead",
+    "cat": "respawn",
+    "variants": [
+      { "en": "Hawk, back in the fight!", "th": "ฮอว์กกลับเข้าสู่การรบแล้ว!" },
+      { "speaker": "awacs", "en": "Good to have you back, Hawk.", "th": "ดีใจที่คุณกลับมา ฮอว์ก" },
+      { "speaker": "wing", "en": "There you are! Let's get them.", "th": "มาแล้ว! ไปจัดการพวกมันกัน" },
+      { "speaker": "carrier", "en": "Spare jet's yours, Hawk. Don't waste it.", "th": "เครื่องสำรองเป็นของคุณแล้ว ฮอว์ก อย่าให้เสียเปล่า" }
+    ]
+  },
+  "gen.idle": {
+    "speaker": "awacs",
+    "cat": "idle",
+    "variants": [
+      { "en": "Skywatch. Picture clean for now.", "th": "สกายวอทช์ ตอนนี้น่านฟ้ายังปลอดภัย" },
+      { "speaker": "wing", "en": "Rook. Fuel and weapons good.", "th": "รุก เชื้อเพลิงและอาวุธพร้อม" },
+      { "en": "More bandits forming up to the north.", "th": "ข้าศึกกำลังรวมตัวทางเหนือ" },
+      { "speaker": "lead", "en": "Keep your eyes open, Rook.", "th": "เปิดตาไว้ รุก" },
+      { "speaker": "wing", "en": "Quiet. Too quiet.", "th": "เงียบ เงียบเกินไป" },
+      { "speaker": "carrier", "en": "Keep pushing, Hawk. We're right behind you.", "th": "บุกต่อไป ฮอว์ก เราอยู่ข้างหลังคุณ" },
+      { "en": "Radar's lighting up. Here they come.", "th": "เรดาร์เริ่มจับเป้าได้ พวกมันมาแล้ว" },
+      { "speaker": "wing", "en": "Stay close, Hawk. I've got your wing.", "th": "อยู่ใกล้ๆ ไว้ ฮอว์ก ผมคุ้มกันปีกให้" }
+    ]
+  },
+  "r.s1.launch": {
+    "speaker": "carrier",
+    "variants": [{ "en": "Hawk, you are cleared to launch. Good hunting.", "th": "ฮอว์ก อนุญาตให้ขึ้นบิน โชคดี" }]
+  },
+  "r.s1.feetWet": {
+    "speaker": "awacs",
+    "variants": [{ "en": "Hawk, bandits inbound from the north, low. Weapons free.", "th": "ฮอว์ก ข้าศึกมาจากทางเหนือ บินต่ำ อนุญาตให้ใช้อาวุธ" }]
+  },
+  "r.s1.tallyho": {
+    "speaker": "lead",
+    "variants": [{ "en": "Tally ho! Multiple bandits, twelve o'clock!", "th": "เห็นเป้าแล้ว! ข้าศึกหลายลำ ทิศสิบสองนาฬิกา!" }]
+  },
+  "r.s1.six": {
+    "speaker": "awacs",
+    "variants": [{ "en": "Watch your six, Hawk! Bandits closing from behind!", "th": "ระวังข้างหลัง ฮอว์ก! ข้าศึกไล่มาจากด้านหลัง!" }]
+  },
+  "r.s1.ships": {
+    "speaker": "awacs",
+    "variants": [{ "en": "Surface group ahead. Expect SAMs. Stay low, stay fast.", "say": "Surface group ahead. Expect sams. Stay low, stay fast.", "th": "กองเรือข้าศึกข้างหน้า ระวังจรวด SAM บินต่ำและเร็วไว้!" }]
+  },
+  "r.s1.eo": {
+    "speaker": "awacs",
+    "variants": [{ "en": "Priority target! Heavy bomber heading for the fleet. Take it down!", "th": "เป้าหมายสำคัญ! เครื่องบินทิ้งระเบิดกำลังมุ่งหน้าไปกองเรือ ยิงมันตก!" }]
+  },
+  "r.s1.eoDown": {
+    "speaker": "carrier",
+    "variants": [{ "en": "Bomber splashed! Outstanding work, Hawk.", "th": "ยิงเครื่องบินทิ้งระเบิดตกแล้ว! ยอดเยี่ยม ฮอว์ก" }]
+  },
+  "r.s1.tanker": {
+    "speaker": "tanker",
+    "variants": [{ "en": "Hawk, Texaco on station. Come get a drink.", "th": "ฮอว์ก เครื่องเติมน้ำมันพร้อมแล้ว เข้ามาเติมได้เลย" }]
+  },
+  "r.s2.brief": {
+    "speaker": "carrier",
+    "variants": [{ "en": "Canyon run. Stay under the radar ceiling or their SAMs will light you up.", "say": "Canyon run. Stay under the radar ceiling, or their sams will light you up.", "th": "บินฝ่าหุบเขา อยู่ใต้เพดานเรดาร์ไว้ ไม่งั้นโดน SAM แน่" }]
+  },
+  "r.s2.ceiling": {
+    "speaker": "awacs",
+    "speed": 1.06,
+    "variants": [{ "en": "You're above the ceiling! Get down, Hawk!", "th": "คุณบินสูงเกินเพดานแล้ว! ลดระดับเดี๋ยวนี้ ฮอว์ก!" }]
+  },
+  "r.s2.xb70": {
+    "speaker": "awacs",
+    "variants": [{ "en": "XB-70 spotted running the canyon. Don't let it escape!", "say": "X B seventy spotted, running the canyon. Don't let it escape!", "th": "พบ XB-70 บินหนีผ่านหุบเขา อย่าให้มันรอด!" }]
+  },
+  "r.s2.popup": {
+    "speaker": "lead",
+    "variants": [{ "en": "Target in sight. Pulling up!", "th": "เห็นเป้าหมายแล้ว ดึงเครื่องขึ้น!" }]
+  },
+  "r.s2.hit": {
+    "speaker": "carrier",
+    "variants": [{ "en": "Direct hit! Now get out of there!", "th": "เข้าเป้าเต็มๆ! ออกมาจากตรงนั้นเร็ว!" }]
+  },
+  "r.s2.sams": {
+    "speaker": "awacs",
+    "speed": 1.08,
+    "variants": [{ "en": "SAMs in the air! Break, break!", "say": "Sams in the air! Break, break!", "th": "SAM ยิงขึ้นมาแล้ว! หลบ หลบ!" }]
+  },
+  "r.s3.brief": {
+    "speaker": "carrier",
+    "variants": [{ "en": "This is it. Enemy strike package over the clouds. Stop them.", "th": "นี่คือศึกสุดท้าย กองบินโจมตีของข้าศึกอยู่เหนือเมฆ หยุดพวกมันให้ได้" }]
+  },
+  "r.s3.ace": {
+    "speaker": "awacs",
+    "variants": [{ "en": "Fifth-gen bandit. He's good. Stay on him!", "say": "Fifth gen bandit. He's good. Stay on him!", "th": "ข้าศึกเครื่องบินรุ่นที่ห้า ฝีมือดีมาก ตามมันไว้!" }]
+  },
+  "r.s3.fortress": {
+    "speaker": "awacs",
+    "variants": [{ "en": "There's the big one. Target the engines!", "th": "ตัวใหญ่มาแล้ว เล็งที่เครื่องยนต์!" }]
+  },
+  "r.s3.win": {
+    "speaker": "carrier",
+    "variants": [{ "en": "Mission accomplished. Bring it home, Hawk.", "th": "ภารกิจสำเร็จ กลับบ้านกันเถอะ ฮอว์ก" }]
+  },
+  "r.gen.goodKill": {
+    "speaker": "wing",
+    "variants": [{ "en": "Good kill! Good kill!", "th": "ยิงตกสวย! ยิงตกสวย!" }]
+  },
+  "r.gen.fox2": {
+    "speaker": "lead",
+    "variants": [{ "en": "Fox two!", "th": "ฟ็อกซ์ทู!" }]
+  },
+  "r.gen.missile": {
+    "speaker": "wing",
+    "speed": 1.08,
+    "variants": [{ "en": "Missile launch! Break right!", "th": "มิสไซล์ยิงมา! หักขวา!" }]
+  },
+  "r.gen.climax": {
+    "speaker": "lead",
+    "variants": [{ "en": "Engaging!", "th": "เข้าโจมตี!" }]
+  },
+  "r.gen.hit": {
+    "speaker": "lead",
+    "speed": 1.08,
+    "variants": [{ "en": "I'm hit!", "th": "โดนยิงแล้ว!" }]
+  },
+  "r.gen.down": {
+    "speaker": "carrier",
+    "variants": [{ "en": "Hawk is down! Hawk, respond!", "th": "ฮอว์กตกแล้ว! ฮอว์ก ตอบด้วย!" }]
+  }
+}

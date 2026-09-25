@@ -1,0 +1,1567 @@
+{
+ "version": 1,
+ "format": {
+  "codec": "mp3",
+  "sampleRate": 24000,
+  "channels": 1,
+  "kbps": 32
+ },
+ "speakers": {
+  "awacs": {
+   "voice": "af_heart",
+   "speed": 1.1,
+   "callsign": "SKYWATCH"
+  },
+  "lead": {
+   "voice": "am_michael",
+   "speed": 1.1,
+   "callsign": "HAWK"
+  },
+  "wing": {
+   "voice": "am_puck",
+   "speed": 1.14,
+   "callsign": "ROOK"
+  },
+  "carrier": {
+   "voice": "bm_george",
+   "speed": 1.0,
+   "callsign": "BOSS"
+  },
+  "tanker": {
+   "voice": "bm_fable",
+   "speed": 1.0,
+   "callsign": "TEXACO"
+  }
+ },
+ "totalBytes": 1108416,
+ "lines": {
+  "gen.stageStart": {
+   "speaker": "awacs",
+   "cat": "stageStart",
+   "variants": [
+    {
+     "file": "gen.stageStart.0.mp3",
+     "dur": 3.172,
+     "bytes": 12960,
+     "hash": "e04858eaf1f0",
+     "en": "Skywatch online. Bandits inbound, weapons free.",
+     "th": "สกายวอทช์พร้อม ข้าศึกกำลังมา อนุญาตให้ใช้อาวุธ"
+    },
+    {
+     "file": "gen.stageStart.1.mp3",
+     "dur": 2.34,
+     "bytes": 9600,
+     "hash": "96ef2605c819",
+     "en": "Hawk in position. Let's go to work.",
+     "th": "ฮอว์กเข้าประจำที่ เริ่มงานกัน",
+     "speaker": "lead"
+    },
+    {
+     "file": "gen.stageStart.2.mp3",
+     "dur": 1.465,
+     "bytes": 6144,
+     "hash": "e3901c851a71",
+     "en": "Rook on your wing, Hawk. Ready.",
+     "th": "รุกอยู่ข้างปีกคุณ ฮอว์ก พร้อมแล้ว",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.stageStart.3.mp3",
+     "dur": 2.34,
+     "bytes": 9600,
+     "hash": "d2080a054768",
+     "en": "Multiple contacts ahead. Stay sharp.",
+     "th": "เป้าหมายจำนวนมากข้างหน้า ตั้งสติให้ดี"
+    },
+    {
+     "file": "gen.stageStart.4.mp3",
+     "dur": 1.807,
+     "bytes": 7488,
+     "hash": "e859d3c3a99a",
+     "en": "Good luck out there, Hawk.",
+     "th": "โชคดีนะ ฮอว์ก",
+     "speaker": "carrier"
+    }
+   ]
+  },
+  "gen.bandits": {
+   "speaker": "awacs",
+   "cat": "contact",
+   "variants": [
+    {
+     "file": "gen.bandits.0.mp3",
+     "dur": 1.444,
+     "bytes": 6048,
+     "hash": "b905269262fd",
+     "en": "Bandits, twelve o'clock!",
+     "th": "ข้าศึก ทิศสิบสองนาฬิกา!"
+    },
+    {
+     "file": "gen.bandits.1.mp3",
+     "dur": 1.807,
+     "bytes": 7488,
+     "hash": "f5fd50406942",
+     "en": "New contacts, closing fast!",
+     "th": "เป้าหมายใหม่ เข้ามาเร็วมาก!"
+    },
+    {
+     "file": "gen.bandits.2.mp3",
+     "dur": 1.316,
+     "bytes": 5472,
+     "hash": "6061c7154b00",
+     "en": "Tally ho! Here they come!",
+     "th": "เห็นเป้าแล้ว! พวกมันมาแล้ว!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.bandits.3.mp3",
+     "dur": 1.999,
+     "bytes": 8256,
+     "hash": "e0d5667ed3e8",
+     "en": "Multiple bandits, low and fast!",
+     "th": "ข้าศึกหลายลำ บินต่ำและเร็ว!"
+    }
+   ]
+  },
+  "gen.kill": {
+   "speaker": "wing",
+   "cat": "kill",
+   "variants": [
+    {
+     "file": "gen.kill.0.mp3",
+     "dur": 0.889,
+     "bytes": 3840,
+     "hash": "f6af99df6a12",
+     "en": "Splash one!",
+     "th": "ร่วงไปหนึ่ง!"
+    },
+    {
+     "file": "gen.kill.1.mp3",
+     "dur": 1.188,
+     "bytes": 4992,
+     "hash": "3dcd1fd89bd8",
+     "en": "Good kill! Good kill!",
+     "th": "ยิงตกสวย! ยิงตกสวย!"
+    },
+    {
+     "file": "gen.kill.2.mp3",
+     "dur": 1.551,
+     "bytes": 6432,
+     "hash": "a6547c3dd82e",
+     "en": "Scratch one bandit!",
+     "th": "จัดการข้าศึกไปหนึ่ง!",
+     "speaker": "lead"
+    },
+    {
+     "file": "gen.kill.3.mp3",
+     "dur": 1.017,
+     "bytes": 4320,
+     "hash": "966801b441ad",
+     "en": "He's going down!",
+     "th": "มันร่วงแล้ว!"
+    },
+    {
+     "file": "gen.kill.4.mp3",
+     "dur": 1.252,
+     "bytes": 5280,
+     "hash": "a01afcb4e2db",
+     "en": "Bandit destroyed.",
+     "th": "ทำลายข้าศึกแล้ว",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.kill.5.mp3",
+     "dur": 0.975,
+     "bytes": 4128,
+     "hash": "61cebb2120cb",
+     "en": "Got him!",
+     "th": "โดนแล้ว!",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.multiKill": {
+   "speaker": "wing",
+   "cat": "multiKill",
+   "variants": [
+    {
+     "file": "gen.multiKill.0.mp3",
+     "dur": 1.999,
+     "bytes": 8256,
+     "hash": "0597d16b9b17",
+     "en": "Multiple splashes! Nice shooting, Hawk!",
+     "th": "ร่วงหลายลำ! ยิงเยี่ยมมาก ฮอว์ก!"
+    },
+    {
+     "file": "gen.multiKill.1.mp3",
+     "dur": 1.657,
+     "bytes": 6912,
+     "hash": "f2e818ab41f0",
+     "en": "Multiple kills confirmed.",
+     "th": "ยืนยัน ยิงตกหลายลำ",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.multiKill.2.mp3",
+     "dur": 1.423,
+     "bytes": 5952,
+     "hash": "844a9e79e71a",
+     "en": "That's a clean sweep!",
+     "th": "กวาดเรียบ!",
+     "speaker": "lead"
+    },
+    {
+     "file": "gen.multiKill.3.mp3",
+     "dur": 1.401,
+     "bytes": 5856,
+     "hash": "4c7b283f23dc",
+     "en": "They're dropping like flies!",
+     "th": "ร่วงกันเป็นใบไม้เลย!"
+    }
+   ]
+  },
+  "gen.bigKill": {
+   "speaker": "awacs",
+   "cat": "bigKill",
+   "variants": [
+    {
+     "file": "gen.bigKill.0.mp3",
+     "dur": 1.487,
+     "bytes": 6144,
+     "hash": "f7601e61b4d9",
+     "en": "Heavy target destroyed!",
+     "th": "ทำลายเป้าหมายขนาดใหญ่แล้ว!"
+    },
+    {
+     "file": "gen.bigKill.1.mp3",
+     "dur": 1.188,
+     "bytes": 4992,
+     "hash": "1e7b1a797f3d",
+     "en": "Big one's going down!",
+     "th": "ตัวใหญ่ร่วงแล้ว!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.bigKill.2.mp3",
+     "dur": 1.956,
+     "bytes": 8064,
+     "hash": "109db2d10996",
+     "en": "Outstanding hit, Hawk!",
+     "th": "ยิงได้ยอดเยี่ยม ฮอว์ก!",
+     "speaker": "carrier"
+    }
+   ]
+  },
+  "gen.fox": {
+   "speaker": "lead",
+   "cat": "fox",
+   "variants": [
+    {
+     "file": "gen.fox.0.mp3",
+     "dur": 1.145,
+     "bytes": 4800,
+     "hash": "610887ecf3e1",
+     "en": "Fox two!",
+     "th": "ฟ็อกซ์ทู!"
+    },
+    {
+     "file": "gen.fox.1.mp3",
+     "dur": 1.209,
+     "bytes": 5088,
+     "hash": "ff571a7adfc0",
+     "en": "Missile away!",
+     "th": "ปล่อยมิสไซล์!"
+    },
+    {
+     "file": "gen.fox.2.mp3",
+     "dur": 1.721,
+     "bytes": 7104,
+     "hash": "e8e94211ee9d",
+     "en": "Fox two, fox two!",
+     "th": "ฟ็อกซ์ทู ฟ็อกซ์ทู!"
+    },
+    {
+     "file": "gen.fox.3.mp3",
+     "dur": 1.188,
+     "bytes": 4992,
+     "hash": "6f0ebe59e3f1",
+     "en": "Birds away!",
+     "th": "ปล่อยจรวดแล้ว!"
+    }
+   ]
+  },
+  "gen.missileInbound": {
+   "speaker": "wing",
+   "cat": "threat",
+   "variants": [
+    {
+     "file": "gen.missileInbound.0.mp3",
+     "dur": 1.337,
+     "bytes": 5568,
+     "hash": "b9e25686a7c3",
+     "en": "Missile launch! Break right!",
+     "th": "มิสไซล์ยิงมา! หักขวา!"
+    },
+    {
+     "file": "gen.missileInbound.1.mp3",
+     "dur": 1.721,
+     "bytes": 7104,
+     "hash": "cd6053d8afe4",
+     "en": "Hawk, missile inbound! Defend!",
+     "th": "ฮอว์ก มิสไซล์พุ่งเข้ามา! ป้องกันตัว!",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.missileInbound.2.mp3",
+     "dur": 1.188,
+     "bytes": 4992,
+     "hash": "22169ab39206",
+     "en": "Break left! Break left!",
+     "th": "หักซ้าย! หักซ้าย!"
+    },
+    {
+     "file": "gen.missileInbound.3.mp3",
+     "dur": 1.487,
+     "bytes": 6144,
+     "hash": "f93f6c22a711",
+     "en": "Missile on my tail!",
+     "th": "มิสไซล์ตามหลังมา!",
+     "speaker": "lead"
+    },
+    {
+     "file": "gen.missileInbound.4.mp3",
+     "dur": 1.935,
+     "bytes": 7968,
+     "hash": "151c0140dacf",
+     "en": "Launch detected! Roll out, Hawk!",
+     "th": "ตรวจพบการยิง! หมุนหลบ ฮอว์ก!",
+     "speaker": "awacs"
+    }
+   ]
+  },
+  "gen.strongInbound": {
+   "speaker": "awacs",
+   "cat": "threat",
+   "variants": [
+    {
+     "file": "gen.strongInbound.0.mp3",
+     "dur": 2.169,
+     "bytes": 8928,
+     "hash": "e8eb701dbf41",
+     "en": "Heavy missile, heavy missile! Roll now!",
+     "th": "มิสไซล์หนัก! หมุนหลบเดี๋ยวนี้!"
+    },
+    {
+     "file": "gen.strongInbound.1.mp3",
+     "dur": 1.423,
+     "bytes": 5952,
+     "hash": "929530df3260",
+     "en": "That one's big! Get out of there!",
+     "th": "ลูกนั้นใหญ่มาก! หนีเร็ว!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.strongInbound.2.mp3",
+     "dur": 1.679,
+     "bytes": 6912,
+     "hash": "920cbdad357b",
+     "en": "Big one inbound! Rolling!",
+     "th": "ลูกใหญ่มาแล้ว! หมุนหลบ!",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.evade": {
+   "speaker": "lead",
+   "cat": "evade",
+   "variants": [
+    {
+     "file": "gen.evade.0.mp3",
+     "dur": 1.359,
+     "bytes": 5664,
+     "hash": "38a9827322cf",
+     "en": "Missile defeated!",
+     "th": "หลบมิสไซล์ได้แล้ว!"
+    },
+    {
+     "file": "gen.evade.1.mp3",
+     "dur": 1.252,
+     "bytes": 5280,
+     "hash": "7caa53fea9e5",
+     "en": "Nice roll! It missed!",
+     "th": "หมุนสวย! มันพลาดไปแล้ว!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.evade.2.mp3",
+     "dur": 1.721,
+     "bytes": 7104,
+     "hash": "691af55a496c",
+     "en": "Missile trashed. Good move.",
+     "th": "มิสไซล์หลุดเป้า ขยับได้ดี",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.evade.3.mp3",
+     "dur": 1.039,
+     "bytes": 4416,
+     "hash": "6930c402e218",
+     "en": "Too slow!",
+     "th": "ช้าไปแล้ว!"
+    }
+   ]
+  },
+  "gen.hit": {
+   "speaker": "lead",
+   "cat": "hit",
+   "variants": [
+    {
+     "file": "gen.hit.0.mp3",
+     "dur": 0.932,
+     "bytes": 3936,
+     "hash": "3bd4a8f15327",
+     "en": "I'm hit!",
+     "th": "โดนยิงแล้ว!"
+    },
+    {
+     "file": "gen.hit.1.mp3",
+     "dur": 1.231,
+     "bytes": 5184,
+     "hash": "e834ec44e803",
+     "en": "Taking damage!",
+     "th": "เครื่องเสียหาย!"
+    },
+    {
+     "file": "gen.hit.2.mp3",
+     "dur": 0.804,
+     "bytes": 3456,
+     "hash": "d37423c867c7",
+     "en": "Hawk, you're hit!",
+     "th": "ฮอว์ก คุณโดนยิง!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.hit.3.mp3",
+     "dur": 1.615,
+     "bytes": 6720,
+     "hash": "7e2d07418cf3",
+     "en": "That hurt! Still flying!",
+     "th": "เจ็บแต่ยังบินได้!"
+    },
+    {
+     "file": "gen.hit.4.mp3",
+     "dur": 1.359,
+     "bytes": 5664,
+     "hash": "8f67dfc30d7f",
+     "en": "Hawk, check your damage!",
+     "th": "ฮอว์ก ตรวจความเสียหายด้วย!",
+     "speaker": "awacs"
+    }
+   ]
+  },
+  "gen.lowArmor": {
+   "speaker": "lead",
+   "cat": "lowArmor",
+   "variants": [
+    {
+     "file": "gen.lowArmor.0.mp3",
+     "dur": 2.809,
+     "bytes": 11520,
+     "hash": "8365ff9e0594",
+     "en": "Systems failing! I can't take much more!",
+     "th": "ระบบเริ่มล่ม! ทนได้อีกไม่นานแล้ว!"
+    },
+    {
+     "file": "gen.lowArmor.1.mp3",
+     "dur": 1.785,
+     "bytes": 7392,
+     "hash": "71fa38123406",
+     "en": "Hawk, your airframe is critical!",
+     "th": "ฮอว์ก โครงเครื่องเสียหายหนัก!",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.lowArmor.2.mp3",
+     "dur": 1.999,
+     "bytes": 8256,
+     "hash": "b0932fd32378",
+     "en": "You're trailing smoke, Hawk! Hang in there!",
+     "th": "เครื่องคุณมีควัน ฮอว์ก! อดทนไว้!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.lowArmor.3.mp3",
+     "dur": 2.191,
+     "bytes": 9024,
+     "hash": "8156d71e6b0c",
+     "en": "Hawk, don't do anything stupid.",
+     "th": "ฮอว์ก อย่าทำอะไรบ้าบิ่นนะ",
+     "speaker": "carrier"
+    }
+   ]
+  },
+  "gen.nearMiss": {
+   "speaker": "lead",
+   "cat": "nearMiss",
+   "variants": [
+    {
+     "file": "gen.nearMiss.0.mp3",
+     "dur": 1.423,
+     "bytes": 5952,
+     "hash": "2230e2d72f70",
+     "en": "Whoa! That was close!",
+     "th": "เฮ้ย! เฉียดไปนิดเดียว!"
+    },
+    {
+     "file": "gen.nearMiss.1.mp3",
+     "dur": 1.039,
+     "bytes": 4416,
+     "hash": "0fef3835d76c",
+     "en": "Too close, Hawk!",
+     "th": "ใกล้เกินไปแล้ว ฮอว์ก!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.nearMiss.2.mp3",
+     "dur": 1.849,
+     "bytes": 7680,
+     "hash": "e9b3e45c21ef",
+     "en": "Close enough to shake hands!",
+     "th": "ใกล้จนจับมือกันได้เลย!"
+    },
+    {
+     "file": "gen.nearMiss.3.mp3",
+     "dur": 1.423,
+     "bytes": 5952,
+     "hash": "3f684f611573",
+     "en": "You just shaved his paint!",
+     "th": "คุณเพิ่งเฉี่ยวสีเครื่องมันไป!",
+     "speaker": "wing"
+    }
+   ]
+  },
+  "gen.rammer": {
+   "speaker": "awacs",
+   "cat": "rammer",
+   "variants": [
+    {
+     "file": "gen.rammer.0.mp3",
+     "dur": 2.447,
+     "bytes": 9984,
+     "hash": "0e3d1ec079de",
+     "en": "Kamikaze bandit! He's trying to ram you!",
+     "th": "ข้าศึกพลีชีพ! มันจะพุ่งชนคุณ!"
+    },
+    {
+     "file": "gen.rammer.1.mp3",
+     "dur": 1.487,
+     "bytes": 6144,
+     "hash": "46a75e465d40",
+     "en": "Crazy one coming head-on!",
+     "th": "ตัวบ้าพุ่งเข้ามาตรงๆ!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.rammer.2.mp3",
+     "dur": 1.828,
+     "bytes": 7584,
+     "hash": "7e8570c80b06",
+     "en": "Collision course! Move, Hawk!",
+     "th": "อยู่ในเส้นทางชน! หลบเร็ว ฮอว์ก!"
+    }
+   ]
+  },
+  "gen.enemyBehind": {
+   "speaker": "awacs",
+   "cat": "enemyBehind",
+   "variants": [
+    {
+     "file": "gen.enemyBehind.0.mp3",
+     "dur": 1.295,
+     "bytes": 5376,
+     "hash": "516a99c138ae",
+     "en": "Bandit on your six!",
+     "th": "ข้าศึกอยู่ข้างหลังคุณ!"
+    },
+    {
+     "file": "gen.enemyBehind.1.mp3",
+     "dur": 1.465,
+     "bytes": 6144,
+     "hash": "f751b10777a5",
+     "en": "Check six, Hawk! Check six!",
+     "th": "ระวังหลัง ฮอว์ก! ระวังหลัง!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.enemyBehind.2.mp3",
+     "dur": 1.828,
+     "bytes": 7584,
+     "hash": "79a88aa01680",
+     "en": "Contacts closing from behind!",
+     "th": "มีเป้าหมายไล่มาจากด้านหลัง!"
+    },
+    {
+     "file": "gen.enemyBehind.3.mp3",
+     "dur": 2.041,
+     "bytes": 8448,
+     "hash": "63e2719ae32d",
+     "en": "He's on my tail! Shaking him!",
+     "th": "มันตามหลังมา! จะสลัดมันทิ้ง!",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.climaxReady": {
+   "speaker": "awacs",
+   "cat": "climaxReady",
+   "variants": [
+    {
+     "file": "gen.climaxReady.0.mp3",
+     "dur": 1.657,
+     "bytes": 6912,
+     "hash": "b853a7204806",
+     "en": "Climax system ready, Hawk.",
+     "th": "ระบบไคลแมกซ์พร้อมแล้ว ฮอว์ก"
+    },
+    {
+     "file": "gen.climaxReady.1.mp3",
+     "dur": 2.212,
+     "bytes": 9120,
+     "hash": "25fd03fadb4e",
+     "en": "Climax is hot. Let's do this.",
+     "th": "ไคลแมกซ์พร้อมแล้ว ลุยเลย",
+     "speaker": "lead"
+    },
+    {
+     "file": "gen.climaxReady.2.mp3",
+     "dur": 1.423,
+     "bytes": 5952,
+     "hash": "77bbe08b0a7b",
+     "en": "Gauge is full! Light them up!",
+     "th": "เกจเต็มแล้ว! จัดหนักเลย!",
+     "speaker": "wing"
+    }
+   ]
+  },
+  "gen.climaxStart": {
+   "speaker": "lead",
+   "cat": "climax",
+   "variants": [
+    {
+     "file": "gen.climaxStart.0.mp3",
+     "dur": 1.849,
+     "bytes": 7680,
+     "hash": "ea679a83b9ee",
+     "en": "Climax! Painting them all!",
+     "th": "ไคลแมกซ์! ล็อกให้หมด!"
+    },
+    {
+     "file": "gen.climaxStart.1.mp3",
+     "dur": 1.295,
+     "bytes": 5376,
+     "hash": "071e86bf6671",
+     "en": "Going Climax!",
+     "th": "เข้าโหมดไคลแมกซ์!"
+    },
+    {
+     "file": "gen.climaxStart.2.mp3",
+     "dur": 1.871,
+     "bytes": 7680,
+     "hash": "6b3c816a5131",
+     "en": "Time to slow things down.",
+     "th": "ถึงเวลาทำให้ทุกอย่างช้าลง"
+    },
+    {
+     "file": "gen.climaxStart.3.mp3",
+     "dur": 1.807,
+     "bytes": 7488,
+     "hash": "3093a59406a5",
+     "en": "Climax engaged! Take them all!",
+     "th": "ไคลแมกซ์ทำงาน! จัดการให้หมด!",
+     "speaker": "wing"
+    }
+   ]
+  },
+  "gen.climaxAllDown": {
+   "speaker": "awacs",
+   "cat": "climaxAllDown",
+   "variants": [
+    {
+     "file": "gen.climaxAllDown.0.mp3",
+     "dur": 2.063,
+     "bytes": 8448,
+     "hash": "b311fb6901b3",
+     "en": "All targets down! Incredible!",
+     "th": "ทุกเป้าหมายร่วงหมด! เหลือเชื่อ!"
+    },
+    {
+     "file": "gen.climaxAllDown.1.mp3",
+     "dur": 1.508,
+     "bytes": 6240,
+     "hash": "e81e405a012c",
+     "en": "Every single one! Unreal!",
+     "th": "ทุกลำเลย! ไม่อยากเชื่อ!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.climaxAllDown.2.mp3",
+     "dur": 2.34,
+     "bytes": 9600,
+     "hash": "7401eba630a9",
+     "en": "Clean sweep. That's how it's done.",
+     "th": "กวาดเรียบ ต้องแบบนี้แหละ",
+     "speaker": "carrier"
+    },
+    {
+     "file": "gen.climaxAllDown.3.mp3",
+     "dur": 1.273,
+     "bytes": 5376,
+     "hash": "3ab96cfee80d",
+     "en": "Board is clear!",
+     "th": "เคลียร์หมดแล้ว!",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.combo10": {
+   "speaker": "wing",
+   "cat": "combo",
+   "variants": [
+    {
+     "file": "gen.combo10.0.mp3",
+     "dur": 1.081,
+     "bytes": 4608,
+     "hash": "ed87becb0bce",
+     "en": "You're on a roll, Hawk!",
+     "th": "กำลังมือขึ้นเลย ฮอว์ก!"
+    },
+    {
+     "file": "gen.combo10.1.mp3",
+     "dur": 1.657,
+     "bytes": 6912,
+     "hash": "678dee0d11de",
+     "en": "Ten in a row. Keep it up.",
+     "th": "สิบลำติดแล้ว รักษาจังหวะไว้",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.combo10.2.mp3",
+     "dur": 1.593,
+     "bytes": 6624,
+     "hash": "bf24917065af",
+     "en": "Just getting warmed up!",
+     "th": "เพิ่งจะอุ่นเครื่องเอง!",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.combo30": {
+   "speaker": "wing",
+   "cat": "combo",
+   "variants": [
+    {
+     "file": "gen.combo30.0.mp3",
+     "dur": 1.785,
+     "bytes": 7392,
+     "hash": "7fd8775d7a44",
+     "en": "Thirty in a row! Save some for me!",
+     "th": "สามสิบลำติด! เหลือไว้ให้ผมบ้าง!"
+    },
+    {
+     "file": "gen.combo30.1.mp3",
+     "dur": 1.956,
+     "bytes": 8064,
+     "hash": "eb17052cf66b",
+     "en": "Chain unbroken. Outstanding.",
+     "th": "คอมโบยังไม่ขาด ยอดเยี่ยม",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.combo30.2.mp3",
+     "dur": 2.404,
+     "bytes": 9888,
+     "hash": "8691aa0c4ade",
+     "en": "Hawk, the whole fleet is watching.",
+     "th": "ฮอว์ก ทั้งกองเรือกำลังดูคุณอยู่",
+     "speaker": "carrier"
+    }
+   ]
+  },
+  "gen.combo50": {
+   "speaker": "awacs",
+   "cat": "combo",
+   "variants": [
+    {
+     "file": "gen.combo50.0.mp3",
+     "dur": 2.084,
+     "bytes": 8544,
+     "hash": "ca615b0203a0",
+     "en": "Fifty plus chain! That's a record!",
+     "th": "คอมโบห้าสิบกว่าแล้ว! นี่มันสถิติใหม่!"
+    },
+    {
+     "file": "gen.combo50.1.mp3",
+     "dur": 1.103,
+     "bytes": 4608,
+     "hash": "7a801212ed4a",
+     "en": "Are you even human?",
+     "th": "คุณเป็นคนจริงๆ หรือเปล่า?",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.combo50.2.mp3",
+     "dur": 1.679,
+     "bytes": 6912,
+     "hash": "dac0d0bfd41b",
+     "en": "Nobody breaks this chain!",
+     "th": "ไม่มีใครหยุดคอมโบนี้ได้!",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.terrainCaution": {
+   "speaker": "awacs",
+   "cat": "terrain",
+   "variants": [
+    {
+     "file": "gen.terrainCaution.0.mp3",
+     "dur": 2.084,
+     "bytes": 8544,
+     "hash": "0d05858d8a0a",
+     "en": "Terrain ahead. Watch your altitude.",
+     "th": "ภูมิประเทศข้างหน้า ระวังระดับความสูง"
+    },
+    {
+     "file": "gen.terrainCaution.1.mp3",
+     "dur": 2.127,
+     "bytes": 8736,
+     "hash": "a181831ad885",
+     "en": "Walls closing in. Easy now.",
+     "th": "ผนังหุบเขาบีบเข้ามา ใจเย็นๆ",
+     "speaker": "lead"
+    },
+    {
+     "file": "gen.terrainCaution.2.mp3",
+     "dur": 1.465,
+     "bytes": 6144,
+     "hash": "b18629b1f66f",
+     "en": "Rocks ahead! Thread the needle!",
+     "th": "หินข้างหน้า! ลอดช่องให้ได้!",
+     "speaker": "wing"
+    }
+   ]
+  },
+  "gen.pullUp": {
+   "speaker": "awacs",
+   "cat": "pullUp",
+   "variants": [
+    {
+     "file": "gen.pullUp.0.mp3",
+     "dur": 1.103,
+     "bytes": 4608,
+     "hash": "e0e71f73e58c",
+     "en": "Pull up! Pull up!",
+     "th": "เชิดหัวขึ้น! เชิดหัวขึ้น!"
+    },
+    {
+     "file": "gen.pullUp.1.mp3",
+     "dur": 1.252,
+     "bytes": 5280,
+     "hash": "b58feb437e4a",
+     "en": "Hawk, climb! Climb now!",
+     "th": "ฮอว์ก ไต่ระดับ! เดี๋ยวนี้!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.pullUp.2.mp3",
+     "dur": 1.359,
+     "bytes": 5664,
+     "hash": "0d44f50c519d",
+     "en": "Too low! Pulling up!",
+     "th": "ต่ำเกินไป! ดึงเครื่องขึ้น!",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.eoStart": {
+   "speaker": "awacs",
+   "cat": "eo",
+   "variants": [
+    {
+     "file": "gen.eoStart.0.mp3",
+     "dur": 2.105,
+     "bytes": 8640,
+     "hash": "fe669a4100b6",
+     "en": "Priority target marked. Go get it.",
+     "th": "กำหนดเป้าหมายสำคัญแล้ว ไปจัดการเลย"
+    },
+    {
+     "file": "gen.eoStart.1.mp3",
+     "dur": 2.681,
+     "bytes": 10944,
+     "hash": "d5152836fbb5",
+     "en": "Hawk, new orders. Hit that target.",
+     "th": "ฮอว์ก คำสั่งใหม่ ทำลายเป้านั้น",
+     "speaker": "carrier"
+    },
+    {
+     "file": "gen.eoStart.2.mp3",
+     "dur": 2.404,
+     "bytes": 9888,
+     "hash": "7fee6879e689",
+     "en": "Emergency order! Target on your screen.",
+     "th": "คำสั่งฉุกเฉิน! เป้าหมายขึ้นจอแล้ว"
+    }
+   ]
+  },
+  "gen.eoClear": {
+   "speaker": "carrier",
+   "cat": "eo",
+   "variants": [
+    {
+     "file": "gen.eoClear.0.mp3",
+     "dur": 2.745,
+     "bytes": 11232,
+     "hash": "cba895f43c6d",
+     "en": "Target destroyed. Well done, Hawk.",
+     "th": "ทำลายเป้าหมายแล้ว ทำได้ดี ฮอว์ก"
+    },
+    {
+     "file": "gen.eoClear.1.mp3",
+     "dur": 2.233,
+     "bytes": 9216,
+     "hash": "c55381b2b224",
+     "en": "Priority target down. Nice work.",
+     "th": "เป้าหมายสำคัญร่วงแล้ว เยี่ยมมาก",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.eoClear.2.mp3",
+     "dur": 1.295,
+     "bytes": 5376,
+     "hash": "7e1a1da9011f",
+     "en": "That's the one! Scratch it!",
+     "th": "ตัวนั้นแหละ! จัดการเรียบร้อย!",
+     "speaker": "wing"
+    }
+   ]
+  },
+  "gen.eoFail": {
+   "speaker": "carrier",
+   "cat": "eo",
+   "variants": [
+    {
+     "file": "gen.eoFail.0.mp3",
+     "dur": 2.511,
+     "bytes": 10272,
+     "hash": "862bb3c28e45",
+     "en": "Target escaped. Stay on mission.",
+     "th": "เป้าหมายหนีไปได้ ทำภารกิจต่อ"
+    },
+    {
+     "file": "gen.eoFail.1.mp3",
+     "dur": 1.828,
+     "bytes": 7584,
+     "hash": "f49558b5abed",
+     "en": "We lost it. Refocus, Hawk.",
+     "th": "เราพลาดเป้าไปแล้ว ตั้งสติ ฮอว์ก",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.eoFail.2.mp3",
+     "dur": 1.401,
+     "bytes": 5856,
+     "hash": "bce3b04de8c5",
+     "en": "No! It got away!",
+     "th": "ไม่นะ! มันหนีไปได้!",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.routeSelect": {
+   "speaker": "awacs",
+   "cat": "route",
+   "variants": [
+    {
+     "file": "gen.routeSelect.0.mp3",
+     "dur": 2.041,
+     "bytes": 8448,
+     "hash": "9f09581d8295",
+     "en": "Route split ahead. Choose your heading.",
+     "th": "เส้นทางแยกข้างหน้า เลือกทิศทางได้เลย"
+    },
+    {
+     "file": "gen.routeSelect.1.mp3",
+     "dur": 2.276,
+     "bytes": 9312,
+     "hash": "f4b207ed8c27",
+     "en": "Two targets, Hawk. Your call.",
+     "th": "มีสองเป้าหมาย ฮอว์ก คุณตัดสินใจ",
+     "speaker": "carrier"
+    },
+    {
+     "file": "gen.routeSelect.2.mp3",
+     "dur": 2.212,
+     "bytes": 9120,
+     "hash": "c77ae02fbd6d",
+     "en": "Fork coming up. Left or right, Hawk?",
+     "th": "ทางแยกกำลังมา ซ้ายหรือขวา ฮอว์ก?"
+    }
+   ]
+  },
+  "gen.routeLeft": {
+   "speaker": "lead",
+   "cat": "route",
+   "variants": [
+    {
+     "file": "gen.routeLeft.0.mp3",
+     "dur": 1.487,
+     "bytes": 6144,
+     "hash": "fefb710bcfe3",
+     "en": "Taking the left route.",
+     "th": "ไปเส้นทางซ้าย"
+    },
+    {
+     "file": "gen.routeLeft.1.mp3",
+     "dur": 2.127,
+     "bytes": 8736,
+     "hash": "8f56ce45f553",
+     "en": "Breaking left. Follow me, Rook.",
+     "th": "เลี้ยวซ้าย ตามมา รุก"
+    }
+   ]
+  },
+  "gen.routeRight": {
+   "speaker": "lead",
+   "cat": "route",
+   "variants": [
+    {
+     "file": "gen.routeRight.0.mp3",
+     "dur": 1.508,
+     "bytes": 6240,
+     "hash": "ccdb3cf87302",
+     "en": "Taking the right route.",
+     "th": "ไปเส้นทางขวา"
+    },
+    {
+     "file": "gen.routeRight.1.mp3",
+     "dur": 2.084,
+     "bytes": 8544,
+     "hash": "069ddc070878",
+     "en": "Going right. Stay with me, Rook.",
+     "th": "ไปทางขวา ตามผมมา รุก"
+    }
+   ]
+  },
+  "gen.stageClear": {
+   "speaker": "carrier",
+   "cat": "stageClear",
+   "variants": [
+    {
+     "file": "gen.stageClear.0.mp3",
+     "dur": 3.001,
+     "bytes": 12288,
+     "hash": "2de1d8b6e56f",
+     "en": "Area clear. Outstanding flying, Hawk.",
+     "th": "พื้นที่ปลอดภัย บินได้ยอดเยี่ยม ฮอว์ก"
+    },
+    {
+     "file": "gen.stageClear.1.mp3",
+     "dur": 2.361,
+     "bytes": 9696,
+     "hash": "c5a9eb9884ed",
+     "en": "Sector clear. Proceed to the next waypoint.",
+     "th": "เคลียร์พื้นที่แล้ว มุ่งหน้าสู่จุดต่อไป",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.stageClear.2.mp3",
+     "dur": 1.06,
+     "bytes": 4512,
+     "hash": "b5faa8df8546",
+     "en": "That's how we do it!",
+     "th": "นี่แหละสไตล์เรา!",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.stageClear.3.mp3",
+     "dur": 1.785,
+     "bytes": 7392,
+     "hash": "431d6e36deb9",
+     "en": "Sector clear. Moving on.",
+     "th": "เคลียร์พื้นที่แล้ว ไปต่อ",
+     "speaker": "lead"
+    }
+   ]
+  },
+  "gen.down": {
+   "speaker": "carrier",
+   "cat": "down",
+   "variants": [
+    {
+     "file": "gen.down.0.mp3",
+     "dur": 2.383,
+     "bytes": 9792,
+     "hash": "446c96af97c7",
+     "en": "Hawk is down! Hawk, respond!",
+     "th": "ฮอว์กตกแล้ว! ฮอว์ก ตอบด้วย!"
+    },
+    {
+     "file": "gen.down.1.mp3",
+     "dur": 1.316,
+     "bytes": 5472,
+     "hash": "ee456f37fd77",
+     "en": "Hawk! Hawk, do you read?",
+     "th": "ฮอว์ก! ฮอว์ก ได้ยินไหม?",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.down.2.mp3",
+     "dur": 1.529,
+     "bytes": 6336,
+     "hash": "32f5ec63e799",
+     "en": "Lost contact with Hawk!",
+     "th": "ขาดการติดต่อกับฮอว์ก!",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.down.3.mp3",
+     "dur": 1.337,
+     "bytes": 5568,
+     "hash": "a422f5fce104",
+     "en": "No! Hawk's going down!",
+     "th": "ไม่นะ! ฮอว์กกำลังตก!",
+     "speaker": "wing"
+    }
+   ]
+  },
+  "gen.respawn": {
+   "speaker": "lead",
+   "cat": "respawn",
+   "variants": [
+    {
+     "file": "gen.respawn.0.mp3",
+     "dur": 1.508,
+     "bytes": 6240,
+     "hash": "9d5be4d02c73",
+     "en": "Hawk, back in the fight!",
+     "th": "ฮอว์กกลับเข้าสู่การรบแล้ว!"
+    },
+    {
+     "file": "gen.respawn.1.mp3",
+     "dur": 1.423,
+     "bytes": 5952,
+     "hash": "997b12a8d24c",
+     "en": "Good to have you back, Hawk.",
+     "th": "ดีใจที่คุณกลับมา ฮอว์ก",
+     "speaker": "awacs"
+    },
+    {
+     "file": "gen.respawn.2.mp3",
+     "dur": 1.316,
+     "bytes": 5472,
+     "hash": "7dc9275a743a",
+     "en": "There you are! Let's get them.",
+     "th": "มาแล้ว! ไปจัดการพวกมันกัน",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.respawn.3.mp3",
+     "dur": 2.852,
+     "bytes": 11616,
+     "hash": "1e1562e34d9b",
+     "en": "Spare jet's yours, Hawk. Don't waste it.",
+     "th": "เครื่องสำรองเป็นของคุณแล้ว ฮอว์ก อย่าให้เสียเปล่า",
+     "speaker": "carrier"
+    }
+   ]
+  },
+  "gen.idle": {
+   "speaker": "awacs",
+   "cat": "idle",
+   "variants": [
+    {
+     "file": "gen.idle.0.mp3",
+     "dur": 1.999,
+     "bytes": 8256,
+     "hash": "a4ce2f3fd7e7",
+     "en": "Skywatch. Picture clean for now.",
+     "th": "สกายวอทช์ ตอนนี้น่านฟ้ายังปลอดภัย"
+    },
+    {
+     "file": "gen.idle.1.mp3",
+     "dur": 1.508,
+     "bytes": 6240,
+     "hash": "9c951775386f",
+     "en": "Rook. Fuel and weapons good.",
+     "th": "รุก เชื้อเพลิงและอาวุธพร้อม",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.idle.2.mp3",
+     "dur": 1.849,
+     "bytes": 7680,
+     "hash": "409ccd440aac",
+     "en": "More bandits forming up to the north.",
+     "th": "ข้าศึกกำลังรวมตัวทางเหนือ"
+    },
+    {
+     "file": "gen.idle.3.mp3",
+     "dur": 1.785,
+     "bytes": 7392,
+     "hash": "814dceb426da",
+     "en": "Keep your eyes open, Rook.",
+     "th": "เปิดตาไว้ รุก",
+     "speaker": "lead"
+    },
+    {
+     "file": "gen.idle.4.mp3",
+     "dur": 1.188,
+     "bytes": 4992,
+     "hash": "0564249419b8",
+     "en": "Quiet. Too quiet.",
+     "th": "เงียบ เงียบเกินไป",
+     "speaker": "wing"
+    },
+    {
+     "file": "gen.idle.5.mp3",
+     "dur": 2.873,
+     "bytes": 11712,
+     "hash": "d270542ca032",
+     "en": "Keep pushing, Hawk. We're right behind you.",
+     "th": "บุกต่อไป ฮอว์ก เราอยู่ข้างหลังคุณ",
+     "speaker": "carrier"
+    },
+    {
+     "file": "gen.idle.6.mp3",
+     "dur": 2.127,
+     "bytes": 8736,
+     "hash": "894c1b7d3a2c",
+     "en": "Radar's lighting up. Here they come.",
+     "th": "เรดาร์เริ่มจับเป้าได้ พวกมันมาแล้ว"
+    },
+    {
+     "file": "gen.idle.7.mp3",
+     "dur": 1.785,
+     "bytes": 7392,
+     "hash": "7c1dfd162575",
+     "en": "Stay close, Hawk. I've got your wing.",
+     "th": "อยู่ใกล้ๆ ไว้ ฮอว์ก ผมคุ้มกันปีกให้",
+     "speaker": "wing"
+    }
+   ]
+  },
+  "r.s1.launch": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.s1.launch.0.mp3",
+     "dur": 2.809,
+     "bytes": 11520,
+     "hash": "9c432bca91b7",
+     "en": "Hawk, you are cleared to launch. Good hunting.",
+     "th": "ฮอว์ก อนุญาตให้ขึ้นบิน โชคดี"
+    }
+   ]
+  },
+  "r.s1.feetWet": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s1.feetWet.0.mp3",
+     "dur": 3.3,
+     "bytes": 13440,
+     "hash": "1d72c388b496",
+     "en": "Hawk, bandits inbound from the north, low. Weapons free.",
+     "th": "ฮอว์ก ข้าศึกมาจากทางเหนือ บินต่ำ อนุญาตให้ใช้อาวุธ"
+    }
+   ]
+  },
+  "r.s1.tallyho": {
+   "speaker": "lead",
+   "variants": [
+    {
+     "file": "r.s1.tallyho.0.mp3",
+     "dur": 2.809,
+     "bytes": 11520,
+     "hash": "0eb513398006",
+     "en": "Tally ho! Multiple bandits, twelve o'clock!",
+     "th": "เห็นเป้าแล้ว! ข้าศึกหลายลำ ทิศสิบสองนาฬิกา!"
+    }
+   ]
+  },
+  "r.s1.six": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s1.six.0.mp3",
+     "dur": 2.873,
+     "bytes": 11712,
+     "hash": "59462533d1f6",
+     "en": "Watch your six, Hawk! Bandits closing from behind!",
+     "th": "ระวังข้างหลัง ฮอว์ก! ข้าศึกไล่มาจากด้านหลัง!"
+    }
+   ]
+  },
+  "r.s1.ships": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s1.ships.0.mp3",
+     "dur": 3.748,
+     "bytes": 15264,
+     "hash": "d8e726f17770",
+     "en": "Surface group ahead. Expect SAMs. Stay low, stay fast.",
+     "th": "กองเรือข้าศึกข้างหน้า ระวังจรวด SAM บินต่ำและเร็วไว้!"
+    }
+   ]
+  },
+  "r.s1.eo": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s1.eo.0.mp3",
+     "dur": 3.705,
+     "bytes": 15072,
+     "hash": "16fe4937d62e",
+     "en": "Priority target! Heavy bomber heading for the fleet. Take it down!",
+     "th": "เป้าหมายสำคัญ! เครื่องบินทิ้งระเบิดกำลังมุ่งหน้าไปกองเรือ ยิงมันตก!"
+    }
+   ]
+  },
+  "r.s1.eoDown": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.s1.eoDown.0.mp3",
+     "dur": 2.724,
+     "bytes": 11136,
+     "hash": "810989c39112",
+     "en": "Bomber splashed! Outstanding work, Hawk.",
+     "th": "ยิงเครื่องบินทิ้งระเบิดตกแล้ว! ยอดเยี่ยม ฮอว์ก"
+    }
+   ]
+  },
+  "r.s1.tanker": {
+   "speaker": "tanker",
+   "variants": [
+    {
+     "file": "r.s1.tanker.0.mp3",
+     "dur": 3.513,
+     "bytes": 14304,
+     "hash": "37861cb86c48",
+     "en": "Hawk, Texaco on station. Come get a drink.",
+     "th": "ฮอว์ก เครื่องเติมน้ำมันพร้อมแล้ว เข้ามาเติมได้เลย"
+    }
+   ]
+  },
+  "r.s2.brief": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.s2.brief.0.mp3",
+     "dur": 4.836,
+     "bytes": 19584,
+     "hash": "433618a7d45b",
+     "en": "Canyon run. Stay under the radar ceiling or their SAMs will light you up.",
+     "th": "บินฝ่าหุบเขา อยู่ใต้เพดานเรดาร์ไว้ ไม่งั้นโดน SAM แน่"
+    }
+   ]
+  },
+  "r.s2.ceiling": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s2.ceiling.0.mp3",
+     "dur": 2.148,
+     "bytes": 8832,
+     "hash": "ff62a4cfe0fd",
+     "en": "You're above the ceiling! Get down, Hawk!",
+     "th": "คุณบินสูงเกินเพดานแล้ว! ลดระดับเดี๋ยวนี้ ฮอว์ก!"
+    }
+   ]
+  },
+  "r.s2.xb70": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s2.xb70.0.mp3",
+     "dur": 3.663,
+     "bytes": 14880,
+     "hash": "e2695e091198",
+     "en": "XB-70 spotted running the canyon. Don't let it escape!",
+     "th": "พบ XB-70 บินหนีผ่านหุบเขา อย่าให้มันรอด!"
+    }
+   ]
+  },
+  "r.s2.popup": {
+   "speaker": "lead",
+   "variants": [
+    {
+     "file": "r.s2.popup.0.mp3",
+     "dur": 1.977,
+     "bytes": 8160,
+     "hash": "069ece6f3f46",
+     "en": "Target in sight. Pulling up!",
+     "th": "เห็นเป้าหมายแล้ว ดึงเครื่องขึ้น!"
+    }
+   ]
+  },
+  "r.s2.hit": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.s2.hit.0.mp3",
+     "dur": 2.425,
+     "bytes": 9984,
+     "hash": "5e1eb988f68a",
+     "en": "Direct hit! Now get out of there!",
+     "th": "เข้าเป้าเต็มๆ! ออกมาจากตรงนั้นเร็ว!"
+    }
+   ]
+  },
+  "r.s2.sams": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s2.sams.0.mp3",
+     "dur": 1.743,
+     "bytes": 7200,
+     "hash": "f3f2dc3ebcdd",
+     "en": "SAMs in the air! Break, break!",
+     "th": "SAM ยิงขึ้นมาแล้ว! หลบ หลบ!"
+    }
+   ]
+  },
+  "r.s3.brief": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.s3.brief.0.mp3",
+     "dur": 4.111,
+     "bytes": 16704,
+     "hash": "98c5fd663b9b",
+     "en": "This is it. Enemy strike package over the clouds. Stop them.",
+     "th": "นี่คือศึกสุดท้าย กองบินโจมตีของข้าศึกอยู่เหนือเมฆ หยุดพวกมันให้ได้"
+    }
+   ]
+  },
+  "r.s3.ace": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s3.ace.0.mp3",
+     "dur": 2.745,
+     "bytes": 11232,
+     "hash": "2da53285845c",
+     "en": "Fifth-gen bandit. He's good. Stay on him!",
+     "th": "ข้าศึกเครื่องบินรุ่นที่ห้า ฝีมือดีมาก ตามมันไว้!"
+    }
+   ]
+  },
+  "r.s3.fortress": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.s3.fortress.0.mp3",
+     "dur": 2.148,
+     "bytes": 8832,
+     "hash": "a9453a339a1c",
+     "en": "There's the big one. Target the engines!",
+     "th": "ตัวใหญ่มาแล้ว เล็งที่เครื่องยนต์!"
+    }
+   ]
+  },
+  "r.s3.win": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.s3.win.0.mp3",
+     "dur": 2.937,
+     "bytes": 12000,
+     "hash": "f093b3c809f3",
+     "en": "Mission accomplished. Bring it home, Hawk.",
+     "th": "ภารกิจสำเร็จ กลับบ้านกันเถอะ ฮอว์ก"
+    }
+   ]
+  },
+  "r.gen.goodKill": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.gen.goodKill.0.mp3",
+     "dur": 1.188,
+     "bytes": 4992,
+     "hash": "3dcd1fd89bd8",
+     "en": "Good kill! Good kill!",
+     "th": "ยิงตกสวย! ยิงตกสวย!"
+    }
+   ]
+  },
+  "r.gen.fox2": {
+   "speaker": "lead",
+   "variants": [
+    {
+     "file": "r.gen.fox2.0.mp3",
+     "dur": 1.145,
+     "bytes": 4800,
+     "hash": "610887ecf3e1",
+     "en": "Fox two!",
+     "th": "ฟ็อกซ์ทู!"
+    }
+   ]
+  },
+  "r.gen.missile": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.gen.missile.0.mp3",
+     "dur": 1.337,
+     "bytes": 5568,
+     "hash": "b9e25686a7c3",
+     "en": "Missile launch! Break right!",
+     "th": "มิสไซล์ยิงมา! หักขวา!"
+    }
+   ]
+  },
+  "r.gen.climax": {
+   "speaker": "lead",
+   "variants": [
+    {
+     "file": "r.gen.climax.0.mp3",
+     "dur": 1.081,
+     "bytes": 4608,
+     "hash": "dae89c38a8b6",
+     "en": "Engaging!",
+     "th": "เข้าโจมตี!"
+    }
+   ]
+  },
+  "r.gen.hit": {
+   "speaker": "lead",
+   "variants": [
+    {
+     "file": "r.gen.hit.0.mp3",
+     "dur": 0.932,
+     "bytes": 3936,
+     "hash": "3bd4a8f15327",
+     "en": "I'm hit!",
+     "th": "โดนยิงแล้ว!"
+    }
+   ]
+  },
+  "r.gen.down": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.gen.down.0.mp3",
+     "dur": 2.383,
+     "bytes": 9792,
+     "hash": "446c96af97c7",
+     "en": "Hawk is down! Hawk, respond!",
+     "th": "ฮอว์กตกแล้ว! ฮอว์ก ตอบด้วย!"
+    }
+   ]
+  }
+ }
+}
