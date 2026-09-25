@@ -1,5 +1,5 @@
 import { Effect, BlendFunction } from 'postprocessing';
-import { Color, Uniform } from 'three';
+import { Color, Uniform, Vector2 } from 'three';
 
 // Screen-space "body" effects, applied after tone mapping (LDR):
 //   greyout / tunnel vision under high G, red damage flash, cloud whiteout,
@@ -17,6 +17,8 @@ uniform vec3 uFadeColor;
 uniform float uWarn;
 uniform float uPulse;       // depth of the missile-warning pulse (reduced flashing → small)
 uniform float uTimeG;
+uniform float uBurst;       // Climax activation burst progress 0..1 (0 = off)
+uniform vec2 uBurstC;       // burst centre (uv)
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
   vec3 c = inputColor.rgb;
@@ -53,6 +55,24 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   c = mix(c, cool, uClimax * 0.6);
   c += vec3(0.1, 0.35, 0.9) * uClimax * smoothstep(0.55, 1.1, r) * 0.45;
 
+  // Climax activation: cyan concentric rings racing out from the jet + flash
+  if (uBurst > 0.0) {
+    vec2 q = uv - uBurstC;
+    q.x *= aspect;
+    float rb = length(q);
+    float fade = pow(1.0 - uBurst, 1.4);
+    float rings = 0.0;
+    for (int i = 0; i < 3; i++) {
+      float rad = uBurst * 1.5 - float(i) * 0.17;
+      float d = (rb - rad) / (0.018 + 0.03 * uBurst);
+      rings += rad > 0.0 ? exp(-d * d) * (1.0 - float(i) * 0.25) : 0.0;
+    }
+    vec3 cyan = vec3(0.35, 0.95, 1.3);
+    c += cyan * rings * fade * 0.9;
+    c += vec3(0.55, 0.95, 1.2) * pow(1.0 - uBurst, 4.0) * exp(-rb * 5.0) * 0.8;
+    c = mix(c, c * vec3(0.8, 1.05, 1.25), fade * 0.35);
+  }
+
   // cloud whiteout
   c = mix(c, vec3(0.92, 0.94, 0.96), uWhite);
 
@@ -81,7 +101,9 @@ export class GForceEffect extends Effect {
         ['uFadeColor', new Uniform(new Color(0, 0, 0))],
         ['uWarn', new Uniform(0)],
         ['uPulse', new Uniform(0.6)],
-        ['uTimeG', new Uniform(0)]
+        ['uTimeG', new Uniform(0)],
+        ['uBurst', new Uniform(0)],
+        ['uBurstC', new Uniform(new Vector2(0.5, 0.35))]
       ])
     });
   }

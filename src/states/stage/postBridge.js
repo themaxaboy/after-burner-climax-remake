@@ -21,6 +21,10 @@ export class PostBridge {
     this.climaxFx = 0;
     this.warn = 0;
     this.grey = 0;
+    this.burst = 0; // Climax activation burst progress (0 = off)
+    stage.events.on('climax', (e) => {
+      if (e.phase === 'start') this.burst = 0.001;
+    });
   }
 
   /** Stage enter: apply the stage look (exposure, grade, bloom), honouring `?look=`. */
@@ -50,6 +54,12 @@ export class PostBridge {
     gf.set('uWarn', this.warn);
     gf.set('uPulse', reduced ? 0.15 : 0.6);
     gf.set('uWhite', st.whiteout);
+    if (this.burst > 0) {
+      this.burst += realDt / 0.85;
+      if (this.burst >= 1) this.burst = 0;
+      if (projectPoint(g.rig.camera, st.jet.group.position, _s)) gf.uniforms.get('uBurstC').value.set(_s.x * 0.5 + 0.5, _s.y * 0.5 + 0.5);
+    }
+    gf.set('uBurst', this.burst);
     const cf = post.cameraFX.uniforms;
     const fast = p.throttle > 0 ? clamp((p.speed - p.baseSpeed) / (p.baseSpeed * 0.4), 0, 1) : 0;
     cf.get('uRadial').value = dampTo(cf.get('uRadial').value, fast * 0.9 + this.climaxFx * 0.3, 4, realDt);
@@ -71,7 +81,7 @@ export class PostBridge {
   reset() {
     const g = this.game;
     const gf = g.post.gforce;
-    for (const [k, v] of [['uLetterbox', 0], ['uFade', 0], ['uWhite', 0], ['uGrey', 0], ['uDamage', 0], ['uClimax', 0], ['uWarn', 0]]) gf.set(k, v);
+    for (const [k, v] of [['uLetterbox', 0], ['uFade', 0], ['uWhite', 0], ['uGrey', 0], ['uDamage', 0], ['uClimax', 0], ['uWarn', 0], ['uBurst', 0]]) gf.set(k, v);
     const cf = g.post.cameraFX.uniforms;
     cf.get('uRadial').value = 0;
     cf.get('uHazeStrength').value = 0;
