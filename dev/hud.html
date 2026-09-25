@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HUD Dev</title>
+    <style>
+      #devbar { position: fixed; left: 50%; bottom: 6px; transform: translateX(-50%); z-index: 30; display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;
+        font: 11px/1 system-ui, sans-serif; }
+      #devbar button { background: rgba(8, 12, 18, 0.75); color: #e8eef5; border: 1px solid #334155; border-radius: 4px; padding: 4px 6px; cursor: pointer; }
+      #devbar button.on { background: #7a4a12; border-color: #ffb45a; }
+      body.shot #devbar { display: none; }
+    </style>
+  </head>
+  <body>
+    <canvas id="gl"></canvas>
+    <canvas id="hud"></canvas>
+    <div id="ui"></div>
+    <div id="devbar"></div>
+    <script type="module" src="./hud.js"></script>
+  </body>
+</html>
