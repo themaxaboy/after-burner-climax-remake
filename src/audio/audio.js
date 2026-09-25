@@ -3,16 +3,18 @@
  * continuous jet-engine sound, slow-motion time scale, radio, music.
  *
  * Graph:
- *   worldIn -> worldFilter(LP, slow-mo) -> worldVol --+--> master -> glue comp -> limiter -> soft clip -> out
- *                                           \-> worldSend -> reverbIn
- *   uiIn -> uiVol ------------------------------------+
- *   voiceIn -> voiceVol -------------------------------+
+ *   worldIn -> worldFilter(LP, slow-mo) -> worldDuck -> worldVol --+--> master -> glue comp -> limiter -> soft clip -> out
+ *                                                         \-> worldSend -> reverbIn
+ *   uiIn -> uiVol -------------------------------------------------+
+ *   radio chain (HP -> LP -> presence -> drive -> comp) -> voiceIn  |
+ *   voiceIn -> voiceVol --------------------------------------------+
  *   musicIn -> musicFilter -> musicDuck -> musicVol ---+
  *   musicRev (instances' sends) -> reverbIn
  *   reverbIn -> convolver(procedural IR) -> reverbFilter -> reverbReturn -> master
  *   pooled HRTF PannerNodes -> worldIn
  *
  * Every public method is a safe no-op until init() has resolved (music.play is remembered).
+ * Radio voice clips: decodeVoice() + playVoice() (radio chain, noise bed, squelch, ducking).
  */
 import {
   bufferFromChannels,
@@ -41,6 +43,12 @@ const DEFAULT_VOLUMES = { master: 0.9, sfx: 1, music: 0.7, voice: 1 };
 const WORLD_MIN_CUTOFF = 1200;
 const MUSIC_MIN_CUTOFF = 900;
 const ENGINE_LEVEL = 0.36;
+/** Radio voice: chain output level, noise bed level, and the music / world duck while speaking. */
+const RADIO_LEVEL = 0.9;
+const RADIO_DRIVE = 1.6;
+const RADIO_BED = 0.03;
+const RADIO_DUCK_MUSIC = 0.45;
+const RADIO_DUCK_WORLD = 0.75;
 
 /** Pre-master headroom trim (the glue compressor adds automatic make-up gain). */
 const MASTER_TRIM = 0.75;
@@ -433,9 +441,10 @@ export class AudioEngine {
     // world (sfx) bus
     this._worldIn = g(1);
     this._worldFilter = lp(top);
+    this._worldDuck = g(1); // radio voice ducking
     this._worldVol = g(this._vol.sfx);
     this._worldSend = g(0.18);
-    this._worldIn.connect(this._worldFilter).connect(this._worldVol).connect(this._master);
+    this._worldIn.connect(this._worldFilter).connect(this._worldDuck).connect(this._worldVol).connect(this._master);
     this._worldVol.connect(this._worldSend).connect(this._reverbIn);
 
     // ui + voice
@@ -1005,10 +1014,161 @@ export class AudioEngine {
     st.stop(t + 0.12 + dur);
     st.onended = () => sg.disconnect();
     one(close, t + 0.05 + dur, close.def.gain);
-    const duck = this._musicDuck.gain;
-    duck.setTargetAtTime(0.55, t, 0.05);
-    duck.setTargetAtTime(1, t + dur + 0.2, 0.25);
+    this._radioDuck(t, t + dur + 0.2);
     return 0.06 + dur + close.buffer.duration;
+  }
+
+  /** Decode an encoded voice clip (MP3). Resolves an AudioBuffer, or null (no context / bad data). */
+  decodeVoice(arrayBuffer) {
+    const ctx = this.ctx;
+    if (!ctx || !arrayBuffer || ctx.state === 'closed') return Promise.resolve(null);
+    return new Promise((resolve) => {
+      try {
+        const p = ctx.decodeAudioData(arrayBuffer, resolve, () => resolve(null));
+        if (p && p.catch) p.catch(() => resolve(null));
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+
+  /**
+   * Play a decoded voice clip as a radio transmission: squelch open, the voice through the
+   * radio chain (HP 320 Hz -> LP 3.2 kHz -> +4 dB at 1.8 kHz -> soft drive -> compressor),
+   * a band-passed noise bed under it, squelch close; music and world are ducked meanwhile.
+   * opts { callsign, gain=1 }. Returns { duration (s, whole transmission), done (true once the
+   * transmission is over on the audio clock), stop(fade) } or null.
+   */
+  playVoice(buffer, opts) {
+    if (!this.isReady || !buffer) return null;
+    const o = opts || EMPTY;
+    const ctx = this.ctx;
+    const R = this._radioChain || this._buildRadioChain();
+    const open = this._bank.get('radioOpen');
+    const close = this._bank.get('radioClose');
+    const dest = this._voiceIn;
+    const t0 = ctx.currentTime + 0.02;
+    const tv = t0 + (open ? 0.08 : 0);
+    const tEnd = tv + buffer.duration;
+    const closeDur = close ? close.buffer.duration : 0;
+    const click = (entry, when) => {
+      if (!entry) return null;
+      const s = ctx.createBufferSource();
+      s.buffer = entry.buffer;
+      const g = ctx.createGain();
+      g.gain.value = entry.def.gain ?? 0.35;
+      s.connect(g).connect(dest);
+      s.start(when);
+      s.onended = () => g.disconnect();
+      return s;
+    };
+    click(open, t0);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const vg = ctx.createGain();
+    vg.gain.value = o.gain > 0 ? o.gain : 1;
+    src.connect(vg).connect(R.input);
+    src.start(tv);
+    src.onended = () => vg.disconnect();
+    // noise bed (the pink noise loop rendered at init)
+    const noise = this._noise && this._noise.pink;
+    let bed = null;
+    let bg = null;
+    if (noise) {
+      bed = ctx.createBufferSource();
+      bed.buffer = noise;
+      bed.loop = true;
+      bg = ctx.createGain();
+      bg.gain.setValueAtTime(0, t0);
+      bg.gain.linearRampToValueAtTime(RADIO_BED, t0 + 0.04);
+      bg.gain.setValueAtTime(RADIO_BED, tEnd);
+      bg.gain.linearRampToValueAtTime(0, tEnd + 0.05);
+      bed.connect(bg).connect(R.bed);
+      bed.start(t0, (hashString(o.callsign || '') % 97) / 97 * (noise.duration * 0.8));
+      bed.stop(tEnd + 0.08);
+      bed.onended = () => bg.disconnect();
+    }
+    let closeSrc = click(close, tEnd);
+    this._radioDuck(t0, tEnd + closeDur);
+    let stopped = false;
+    return {
+      duration: tEnd + closeDur - ctx.currentTime,
+      get done() {
+        return stopped || ctx.currentTime >= tEnd + closeDur;
+      },
+      stop: (fade = 0.06) => {
+        if (stopped || !this.ctx) return;
+        stopped = true;
+        const now = ctx.currentTime;
+        if (now >= tEnd + closeDur) return;
+        const f = Math.max(0.01, fade);
+        try {
+          const ramp = (param) => {
+            param.cancelScheduledValues(now);
+            param.setValueAtTime(param.value, now);
+            param.linearRampToValueAtTime(0, now + f);
+          };
+          ramp(vg.gain);
+          src.stop(now + f + 0.01);
+          if (bed) {
+            ramp(bg.gain);
+            bed.stop(now + f + 0.01);
+          }
+          if (now < tEnd && closeSrc) {
+            closeSrc.stop(); // never started: cancel it and close now
+            closeSrc = click(close, now + f * 0.5);
+          }
+        } catch (e) {
+          /* already stopped */
+        }
+        this._radioDuck(now, now + f + closeDur, true);
+      }
+    };
+  }
+
+  /** Radio chain, built on first use: input (voice) and bed (noise) -> voiceIn. */
+  _buildRadioChain() {
+    const ctx = this.ctx;
+    const biquad = (type, f, Q, gain = 0) => {
+      const n = ctx.createBiquadFilter();
+      n.type = type;
+      n.frequency.value = f;
+      n.Q.value = Q;
+      n.gain.value = gain;
+      return n;
+    };
+    const input = ctx.createGain();
+    const hp = biquad('highpass', 320, 0.8);
+    const lp = biquad('lowpass', 3200, 0.9);
+    const presence = biquad('peaking', 1800, 1.1, 4);
+    const drive = ctx.createWaveShaper();
+    drive.curve = makeDriveCurve(RADIO_DRIVE);
+    drive.oversample = '2x';
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -24;
+    comp.knee.value = 6;
+    comp.ratio.value = 8;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.12;
+    const out = ctx.createGain();
+    out.gain.value = RADIO_LEVEL;
+    input.connect(hp).connect(lp).connect(presence).connect(drive).connect(comp).connect(out).connect(this._voiceIn);
+    const bed = biquad('bandpass', 1700, 0.7);
+    bed.connect(biquad('highpass', 450, 0.7)).connect(this._voiceIn);
+    this._radioChain = { input, bed, comp, out };
+    return this._radioChain;
+  }
+
+  /** Duck music and world from t until `until` (release = only schedule the recovery). */
+  _radioDuck(t, until, release = false) {
+    const duck = (param, level) => {
+      param.cancelScheduledValues(t);
+      if (release) param.setValueAtTime(param.value, t);
+      else param.setTargetAtTime(level, t, 0.06);
+      param.setTargetAtTime(1, until, 0.25);
+    };
+    duck(this._musicDuck.gain, RADIO_DUCK_MUSIC);
+    duck(this._worldDuck.gain, RADIO_DUCK_WORLD);
   }
 
   /* ----------------------------------------------------------- frame */
