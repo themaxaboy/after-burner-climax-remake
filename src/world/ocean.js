@@ -40,6 +40,80 @@ export const OCEAN_PRESETS = {
     ],
     detail: 0.7,
     foam: 1.0
+  },
+
+  // ---- arcade vivid presets (LOOK). glitter = sun sparkle band strength.
+  // Deep, glossy, saturated blue with a strong sun-glitter band (stage "ocean").
+  arcadeBlue: {
+    color: [0.002, 0.022, 0.075],
+    scatter: [0.0, 0.07, 0.16],
+    roughness: 0.04,
+    amp: 0.9,
+    waves: [
+      [1.0, 0.25, 0.28, 140],
+      [0.8, 0.55, 0.26, 67],
+      [0.3, -0.9, 0.22, 38],
+      [-0.6, 0.8, 0.2, 21],
+      [0.9, -0.2, 0.18, 12],
+      [-0.2, 1.0, 0.16, 7.3]
+    ],
+    detail: 0.34,
+    foam: 0.55,
+    glitter: 1.0
+  },
+  // Warm sunset sea: dark water, golden reflections and a hot glitter path.
+  sunsetGold: {
+    color: [0.012, 0.02, 0.05],
+    scatter: [0.16, 0.08, 0.03],
+    roughness: 0.05,
+    amp: 1.1,
+    waves: [
+      [1.0, 0.1, 0.3, 150],
+      [0.7, 0.6, 0.28, 74],
+      [0.2, -1.0, 0.24, 40],
+      [-0.7, 0.7, 0.22, 22],
+      [0.9, -0.4, 0.2, 12.5],
+      [-0.1, 1.0, 0.18, 7.6]
+    ],
+    detail: 0.5,
+    foam: 0.7,
+    glitter: 1.5
+  },
+  // Calm turquoise glacier river / fjord water (terrain water plane).
+  glacierRiver: {
+    color: [0.0, 0.12, 0.13],
+    scatter: [0.02, 0.24, 0.2],
+    roughness: 0.03,
+    amp: 0.25,
+    waves: [
+      [1.0, 0.2, 0.18, 60],
+      [0.7, 0.7, 0.16, 31],
+      [0.2, -1.0, 0.14, 17],
+      [-0.7, 0.7, 0.12, 9],
+      [0.9, -0.4, 0.1, 5.5],
+      [-0.1, 1.0, 0.1, 3.3]
+    ],
+    detail: 0.18,
+    foam: 0.15,
+    glitter: 0.6
+  },
+  // Dark icy night sea under the aurora (bonus stage).
+  auroraNight: {
+    color: [0.002, 0.014, 0.024],
+    scatter: [0.0, 0.07, 0.06],
+    roughness: 0.035,
+    amp: 0.8,
+    waves: [
+      [1.0, 0.1, 0.28, 150],
+      [0.7, 0.7, 0.26, 76],
+      [0.2, -1.0, 0.22, 40],
+      [-0.7, 0.7, 0.2, 22],
+      [0.9, -0.4, 0.18, 12],
+      [-0.1, 1.0, 0.16, 7.5]
+    ],
+    detail: 0.4,
+    foam: 0.35,
+    glitter: 0.5
   }
 };
 
@@ -138,6 +212,7 @@ export class Ocean {
       uDetailStrength: { value: 0.5 },
       uScatterColor: { value: new Color() },
       uFoamAmount: { value: 1 },
+      uGlitter: { value: 0.35 },
       uTime: WorldUniforms.uTime,
       uWakes: { value: Array.from({ length: 8 }, () => new Vector4(0, 0, 0, 0)) } // x,z,radius,strength
     };
@@ -218,6 +293,7 @@ export class Ocean {
           uniform float uDetailStrength;
           uniform vec3 uScatterColor;
           uniform float uFoamAmount;
+          uniform float uGlitter;
           uniform float uTime;
           uniform vec4 uWakes[8];
           varying vec3 vOceanWP;
@@ -279,6 +355,11 @@ export class Ocean {
             float crest = clamp(vCrest * 0.35 + 0.5, 0.0, 1.0);
             float grazing = 1.0 - abs(vd.y);
             totalEmissiveRadiance += uScatterColor * uSunColor * (0.25 + towardSun * 1.5) * crest * crest * grazing * (1.0 - oceanFoam);
+            // sun glitter band: sparkles of the (large, stylised) sun on the wave facets
+            vec3 sunV = normalize((viewMatrix * vec4(uSunDir, 0.0)).xyz);
+            float gl = max(dot(reflect(-normalize(vViewPosition), normal), sunV), 0.0);
+            float spark = pow(gl, 1500.0) * 5.0 + pow(gl, 120.0) * 0.1;
+            totalEmissiveRadiance += uSunColor * uGlitter * spark * (1.0 - oceanFoam) * smoothstep(-0.02, 0.08, uSunDir.y);
           }`
         );
     });
@@ -293,7 +374,7 @@ export class Ocean {
   }
 
   setPreset(name) {
-    const p = typeof name === 'string' ? OCEAN_PRESETS[name] : name;
+    const p = (typeof name === 'string' ? OCEAN_PRESETS[name] : name) || OCEAN_PRESETS.arcadeBlue;
     this.preset = p;
     this.material.color.setRGB(p.color[0], p.color[1], p.color[2]);
     this.material.roughness = p.roughness;
@@ -301,6 +382,7 @@ export class Ocean {
     this.uniforms.uWaveAmp.value = p.amp;
     this.uniforms.uDetailStrength.value = p.detail;
     this.uniforms.uFoamAmount.value = p.foam;
+    this.uniforms.uGlitter.value = p.glitter ?? 0.35;
     for (let i = 0; i < 6; i++) {
       const w = p.waves[i];
       this.uniforms.uWaves.value[i].set(w[0], w[1], w[2], w[3]);

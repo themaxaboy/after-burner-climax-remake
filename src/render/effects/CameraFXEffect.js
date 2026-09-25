@@ -1,9 +1,12 @@
 import { Effect, EffectAttribute, BlendFunction } from 'postprocessing';
-import { Matrix4, Uniform, Vector2, Vector4 } from 'three';
+import { Matrix4, Quaternion, Uniform, Vector2, Vector3, Vector4 } from 'three';
 
 // One convolution effect that merges everything that needs to re-sample the
 // scene colour: camera motion blur (reconstructed from depth + previous
 // view-projection), radial speed blur, chromatic aberration and engine heat haze.
+// It is the first effect of the post chain on medium+, so every tap is
+// sanitised (NaN/Inf → 0, clamp to the half-float range): a single bad pixel
+// from a shader would otherwise be spread by bloom into black blocks.
 const fragment = /* glsl */ `
 uniform mat4 uInvViewProj;
 uniform mat4 uPrevViewProj;
@@ -19,6 +22,13 @@ uniform float uHazeStrength;
 uniform float uTimeFX;
 
 float fxHash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+
+// Robust NaN/Inf test on the bit pattern (fast-math compilers may fold x != x).
+vec3 fxSafe(vec3 c) {
+  uvec3 b = floatBitsToUint(c) & 0x7fffffffu;
+  c = mix(c, vec3(0.0), greaterThanEqual(b, uvec3(0x7f800000u)));
+  return clamp(c, 0.0, 65000.0);
+}
 
 vec2 hazeOffset(vec2 uv, vec4 h) {
   if (h.z <= 0.0) return vec2(0.0);
@@ -65,13 +75,12 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, const in float depth,
     acc.r = texture2D(inputBuffer, suv + caDir).r;
     acc.g = texture2D(inputBuffer, suv).g;
     acc.b = texture2D(inputBuffer, suv - caDir).b;
+    acc = fxSafe(acc);
   } else {
     for (int i = 0; i < TAPS; i++) {
       float t = (float(i) + 0.5 + jitter) / float(TAPS) - 0.5;
       vec2 o = suv - blur * t;
-      acc.r += texture2D(inputBuffer, o + caDir).r;
-      acc.g += texture2D(inputBuffer, o).g;
-      acc.b += texture2D(inputBuffer, o - caDir).b;
+      acc += fxSafe(vec3(texture2D(inputBuffer, o + caDir).r, texture2D(inputBuffer, o).g, texture2D(inputBuffer, o - caDir).b));
     }
     acc /= float(TAPS);
   }
@@ -103,6 +112,31 @@ export class CameraFXEffect extends Effect {
     this.shutter = 0.45;
     this._vp = new Matrix4();
     this._havePrev = false;
+    // camera-cut detection (scripted cinematics jump the camera)
+    this.cutDistance = 30; // m of unexpected displacement in one frame
+    this.cutAngle = (25 * Math.PI) / 180;
+    this._pos = new Vector3();
+    this._prevPos = new Vector3();
+    this._prevStep = new Vector3();
+    this._step = new Vector3();
+    this._quat = new Quaternion();
+    this._prevQuat = new Quaternion();
+    this.cuts = 0;
+  }
+
+  /** True when the camera jumped since the last frame (cut): no blur this frame. */
+  _detectCut(camera) {
+    camera.matrixWorld.decompose(this._pos, this._quat, this._step);
+    if (!this._havePrev) {
+      this._prevStep.set(0, 0, 0);
+      return false;
+    }
+    this._step.subVectors(this._pos, this._prevPos);
+    // compare with the previous frame's motion so fast steady flight is not a cut
+    const jump = this._step.distanceTo(this._prevStep);
+    const angle = this._quat.angleTo(this._prevQuat);
+    this._prevStep.copy(this._step);
+    return jump > this.cutDistance || angle > this.cutAngle;
   }
 
   /**
@@ -113,10 +147,14 @@ export class CameraFXEffect extends Effect {
   updateCamera(camera, dt) {
     const u = this.uniforms;
     this._vp.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    if (!this._havePrev) {
+    const cut = this._detectCut(camera);
+    if (cut) this.cuts++;
+    if (!this._havePrev || cut) {
       u.get('uPrevViewProj').value.copy(this._vp);
       this._havePrev = true;
     }
+    this._prevPos.copy(this._pos);
+    this._prevQuat.copy(this._quat);
     u.get('uInvViewProj').value.copy(this._vp).invert();
     // normalise blur to a 60 Hz reference so high refresh rates look the same
     const ref = 1 / 60;

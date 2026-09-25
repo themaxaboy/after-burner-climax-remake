@@ -5,6 +5,9 @@ import {
 import { WorldUniforms, WORLD_FOG_PARS } from '../render/worldUniforms.js';
 import { makeNoise } from './terrain/noise.js';
 
+const _white = new Color(1, 1, 1);
+const _coolShade = new Color(0.36, 0.42, 0.56);
+
 /** Tileable fbm noise texture (R8), used for cheap cloud density lookups. */
 function noiseTexture(size = 256, seed = 7) {
   const n = makeNoise(seed);
@@ -136,11 +139,26 @@ export class CloudDeck {
     this.y = y;
   }
 
+  /**
+   * Without explicit colours the deck follows the current sun: lit tops take
+   * the sun hue (normalised, 30% toward white: white by day, gold at dusk) and
+   * the shaded side is a lifted, cool blue-grey (never a dark grey blob).
+   * The ambient (sky) light is kept mostly white with a hint of the sky hue.
+   */
   setLighting({ lit, shade, ambient, sunI }) {
     const u = this.material.uniforms;
     if (lit) u.uLit.value.copy(lit);
+    else {
+      const sc = WorldUniforms.uSunColor.value;
+      const m = Math.max(sc.r, sc.g, sc.b, 1e-4);
+      u.uLit.value.setRGB(sc.r / m, sc.g / m, sc.b / m).lerp(_white, 0.3);
+    }
     if (shade) u.uShade.value.copy(shade);
-    if (ambient) u.uAmbient.value.copy(ambient);
+    else u.uShade.value.copy(u.uLit.value).multiplyScalar(0.5).lerp(_coolShade, 0.5);
+    if (ambient) {
+      const l = 0.2126 * ambient.r + 0.7152 * ambient.g + 0.0722 * ambient.b;
+      u.uAmbient.value.setRGB(l, l, l).lerp(ambient, 0.4);
+    }
     if (sunI != null) u.uSunI.value = sunI;
   }
 

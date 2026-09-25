@@ -1,8 +1,13 @@
-import { DirectionalLight, Group, HemisphereLight, Scene, Color } from 'three';
+import { DirectionalLight, Group, HemisphereLight, Scene, Color, Vector3 } from 'three';
 import { Sky } from './sky.js';
 import { Ocean } from './ocean.js';
+import { LOOKS } from './looks.js';
+import { params } from '../core/params.js';
 import { WorldUniforms } from '../render/worldUniforms.js';
 import { Shadows } from '../render/shadows.js';
+
+const _up = new Vector3(0, 1, 0);
+const _c = new Color();
 
 /**
  * Stage environment: scene graph root, sky/IBL, sun light, ocean and the
@@ -24,7 +29,8 @@ export class World {
     this.sun.castShadow = false;
     this.scene.add(this.sun);
     this.scene.add(this.sun.target);
-    // subtle bounce from the sea / ground, complements IBL
+    // sky fill from the zenith colour + bounce from the sea / ground (lifts
+    // shadows so nothing crushes to black; complements IBL)
     this.hemi = new HemisphereLight(0x8899aa, 0x0a1a24, 0.0);
     this.scene.add(this.hemi);
 
@@ -36,13 +42,30 @@ export class World {
     this.env = null;
   }
 
-  configure(env) {
+  /**
+   * The env actually used: `?look=<name>` (look dev) overrides the stage's
+   * look values with LOOKS[name], keeping stage-only fields.
+   */
+  resolveEnv(env) {
+    const look = params.look && LOOKS[params.look];
+    return look ? { ...env, ...look, lookName: params.look } : env;
+  }
+
+  configure(envIn) {
+    const env = this.resolveEnv(envIn);
     this.env = env;
     this.sky.configure(env);
     this.scene.environment = this.sky.envMap;
-    this.scene.environmentIntensity = env.envIntensity ?? 1.0;
+    this.scene.environmentIntensity = env.envIntensity ?? 1.3;
     this.sun.color.copy(this.sky.sunColor);
     this.sun.intensity = this.sky.sunLightIntensity() * (env.sunLight ?? 1);
+    // hemisphere fill: sky = zenith colour (half-way to white, luma 1), ground = albedo bounce
+    this.sky.radiance(_up, _c);
+    const l = Math.max(0.2126 * _c.r + 0.7152 * _c.g + 0.0722 * _c.b, 1e-4);
+    this.hemi.color.setRGB(_c.r / l, _c.g / l, _c.b / l).lerp(new Color(1, 1, 1), 0.5);
+    const ga = env.groundAlbedo || [0.05, 0.08, 0.1];
+    this.hemi.groundColor.setRGB(ga[0], ga[1], ga[2]).multiplyScalar(2.5);
+    this.hemi.intensity = env.hemi ?? 0.35;
     if (!this.csm && this.quality.shadows > 0) {
       this.csm = new Shadows({
         scene: this.scene,
@@ -57,6 +80,7 @@ export class World {
       this.csm.setSun(WorldUniforms.uSunDir.value, this.sun.color, this.sun.intensity);
       this.sun.visible = false;
     } else this.sun.visible = true;
+    this._shadowIntensity();
     if (env.ocean) {
       const q = this.quality;
       if (!this.ocean) {
@@ -66,6 +90,13 @@ export class World {
       } else this.ocean.setPreset(env.ocean);
       this.ocean.mesh.visible = true;
     } else if (this.ocean) this.ocean.mesh.visible = false;
+  }
+
+  /** Lighter shadows (arcade look: shade, never black). */
+  _shadowIntensity() {
+    const k = this.env?.shadowIntensity ?? 0.72;
+    this.sun.shadow.intensity = k;
+    for (const l of this.csm?.csm?.lights || []) l.shadow.intensity = k;
   }
 
   addSystem(sys) {
@@ -108,6 +139,7 @@ export class World {
       for (const m of mats) this.csm.setupMaterial(m);
       this.sun.visible = !this.csm.csm;
     } else this.sun.visible = true;
+    this._shadowIntensity();
   }
 }
 

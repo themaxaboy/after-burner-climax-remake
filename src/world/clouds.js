@@ -177,7 +177,8 @@ void main() {
   float thin = 1.0 - t.a;
   vec3 sun = uSunColor * uSunI;
   vec3 amb = mix(uAmbientBottom, uAmbientTop, clamp(N.y * 0.5 + 0.5, 0.0, 1.0));
-  vec3 col = amb * (0.85 + 0.35 * vShade) + sun * (wrap * wrap * 0.42 * vShade + hg * (0.35 + thin * 2.0));
+  // arcade cumulus: white sunlit tops, soft lifted blue-grey bases (never a grey blob)
+  vec3 col = amb * (0.9 + 0.3 * vShade) + sun * (wrap * wrap * 0.38 * (0.55 + 0.45 * vShade) + hg * (0.3 + thin * 1.6));
   col = applyWorldFog(col, vWorld);
   gl_FragColor = vec4(col * a, a);
 }`;
@@ -259,10 +260,29 @@ export class Clouds {
     this._frame = 0;
   }
 
+  /**
+   * @param {number} sunIntensity sun gain
+   * @param {Color} [ambientTop] sky light from above (e.g. zenith radiance)
+   * @param {Color} [ambientBottom] light from below/the horizon
+   * The sky colours are stylised here: the top ambient is kept mostly white
+   * (a hint of the sky hue) and the underside is lifted to at least ~55% of the
+   * top brightness with a cool blue-grey tint, so clouds stay bright and clean
+   * whatever the sky model returns.
+   */
   setLighting(sunIntensity, ambientTop, ambientBottom) {
-    this.material.uniforms.uSunI.value = sunIntensity;
-    if (ambientTop) this.material.uniforms.uAmbientTop.value.copy(ambientTop);
-    if (ambientBottom) this.material.uniforms.uAmbientBottom.value.copy(ambientBottom);
+    const u = this.material.uniforms;
+    u.uSunI.value = sunIntensity;
+    const luma = (c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+    if (ambientTop) {
+      const lt = Math.max(luma(ambientTop), 0.05) * 1.35;
+      u.uAmbientTop.value.setRGB(lt, lt, lt).lerp(ambientTop.clone().multiplyScalar(1.35), 0.35);
+    }
+    if (ambientBottom || ambientTop) {
+      const top = u.uAmbientTop.value;
+      const lb = Math.max(ambientBottom ? luma(ambientBottom) : 0, luma(top) * 0.55);
+      const b = u.uAmbientBottom.value.setRGB(lb * 0.92, lb * 0.98, lb * 1.1);
+      if (ambientBottom) b.lerp(ambientBottom.clone().multiplyScalar(lb / Math.max(luma(ambientBottom), 1e-4)), 0.25);
+    }
   }
 
   /** Place all clusters starting from rail distance s0. */

@@ -15,6 +15,7 @@ uniform float uLetterbox;
 uniform float uFade;
 uniform vec3 uFadeColor;
 uniform float uWarn;
+uniform float uPulse;       // depth of the missile-warning pulse (reduced flashing → small)
 uniform float uTimeG;
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
@@ -36,13 +37,16 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
   // redout (negative G / heavy damage)
   c = mix(c, c * vec3(1.2, 0.25, 0.2), uRed * 0.7);
 
-  // damage flash on edges
-  float edge = smoothstep(0.25, 0.95, r);
-  c = mix(c, vec3(1.0, 0.12, 0.05), uDamage * edge * 0.75);
+  // damage flash on edges: a red tint that keeps most of the brightness
+  // (mixing toward a dark red read as a black pulse on bright skies)
+  float edge = smoothstep(0.3, 1.0, r);
+  float dk = uDamage * edge * 0.6;
+  c = c * (1.0 - dk * vec3(0.0, 0.5, 0.55)) + vec3(0.42, 0.04, 0.02) * dk;
 
-  // missile warning pulse on edges
-  float wp = (0.5 + 0.5 * sin(uTimeG * 18.0)) * uWarn;
-  c = mix(c, vec3(1.0, 0.25, 0.1), wp * smoothstep(0.55, 1.0, r) * 0.35);
+  // missile warning: soft red-orange glow on the edges, gently pulsing
+  float wp = (1.0 - uPulse * (0.5 - 0.5 * sin(uTimeG * 12.0))) * uWarn;
+  float we = smoothstep(0.6, 1.05, r) * wp * 0.3;
+  c = c * (1.0 - we * vec3(0.0, 0.45, 0.6)) + vec3(0.35, 0.08, 0.02) * we;
 
   // Climax: cool tint, slight desaturation & glowing blue edge
   vec3 cool = mix(vec3(lum), c, 0.75) * vec3(0.85, 0.95, 1.15);
@@ -76,6 +80,7 @@ export class GForceEffect extends Effect {
         ['uFade', new Uniform(0)],
         ['uFadeColor', new Uniform(new Color(0, 0, 0))],
         ['uWarn', new Uniform(0)],
+        ['uPulse', new Uniform(0.6)],
         ['uTimeG', new Uniform(0)]
       ])
     });

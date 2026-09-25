@@ -11,8 +11,30 @@ const _p = new Vector3();
 const _q = new Quaternion();
 const _s = new Vector3();
 
-const CAPACITY = { fighterA: 32, stealthB: 16, bomberXB: 3, bomberB52: 3, destroyer: 8, samLauncher: 16, heloCH47: 8, kc10: 2, missile: 8, bunker: 4 };
+// Instances per (model, scale) group: ≥ 48 fighters alive for swarms and Climax.
+const CAPACITY = { fighterA: 64, stealthB: 32, bomberXB: 3, bomberB52: 3, destroyer: 8, samLauncher: 16, heloCH47: 12, kc10: 2, missile: 8, bunker: 4 };
 const SLOT_ORDER = ['body', 'metal', 'glass', 'emissive'];
+
+/**
+ * Render-only scale per model so enemies read clearly at arcade distances
+ * (ENEMY_TYPES[type].visScale wins when present). Collisions use e.radius.
+ */
+export const VIS_SCALE = { fighterA: 1.8, stealthB: 1.6, heloCH47: 1.4, bomberXB: 1.15, bomberB52: 1.15, kc10: 1.15 };
+
+/** Render scale for an enemy type definition. */
+export function visScaleOf(def) {
+  return def?.visScale ?? VIS_SCALE[def?.model] ?? 1;
+}
+
+/**
+ * Shared look uniforms for every enemy material: a Fresnel rim light (sun
+ * tinted) and a reduced share of the aerial-perspective fog, so enemies pop
+ * against bright skies and hazy horizons.
+ */
+export const ENEMY_LOOK = {
+  uEnemyRim: { value: 0.55 },
+  uEnemyFog: { value: 0.45 }
+};
 
 function fallbackGeometry(model) {
   const parts = [];
@@ -44,15 +66,34 @@ function fallbackGeometry(model) {
   return { body: g };
 }
 
-/** Adds per-instance hit flash (emissive pulse) to an instanced material. */
-function addHitFlash(mat) {
-  return addShaderHook(mat, 'hitFlash', (shader) => {
+/**
+ * Adds per-instance hit flash (emissive pulse), a Fresnel rim light and a
+ * reduced fog share to an instanced enemy material (after applyWorldFog).
+ */
+function addEnemyLook(mat) {
+  return addShaderHook(mat, 'enemyLook', (shader) => {
+    shader.uniforms.uEnemyRim = ENEMY_LOOK.uEnemyRim;
+    shader.uniforms.uEnemyFog = ENEMY_LOOK.uEnemyFog;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nattribute float aFlash;\nvarying float vFlash;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFlash = aFlash;');
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying float vFlash;')
-      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(3.0, 1.6, 0.6) * vFlash;');
+      .replace('#include <common>', '#include <common>\nvarying float vFlash;\nuniform float uEnemyRim;\nuniform float uEnemyFog;')
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        totalEmissiveRadiance += vec3(3.0, 1.6, 0.6) * vFlash;
+        {
+          float nv = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
+          float rim = pow(1.0 - nv, 3.0);
+          totalEmissiveRadiance += (uSunColor * 0.8 + vec3(0.25, 0.3, 0.35)) * rim * uEnemyRim;
+        }`
+      )
+      // keep only part of the aerial-perspective fog (see applyWorldFog)
+      .replace(
+        'gl_FragColor.rgb = applyWorldFog(gl_FragColor.rgb, vFogWorldPos);',
+        'gl_FragColor.rgb = mix(gl_FragColor.rgb, applyWorldFog(gl_FragColor.rgb, vFogWorldPos), uEnemyFog);'
+      );
   });
 }
 
@@ -107,7 +148,7 @@ export class EnemyRenderer {
       if (!mat.userData.enemyPatched) {
         mat.userData.enemyPatched = true;
         applyWorldFog(mat);
-        addHitFlash(mat);
+        addEnemyLook(mat);
         this.csm?.setupMaterial(mat);
         this.materials.push(mat);
       }
@@ -146,7 +187,7 @@ export class EnemyRenderer {
       if (g.count >= g.cap) continue;
       _p.lerpVectors(e.prevPos, e.pos, alpha);
       _q.slerpQuaternions(e.prevQuat, e.quat, alpha);
-      _s.set(1, 1, 1);
+      _s.setScalar(visScaleOf(e.def));
       _m.compose(_p, _q, _s);
       _m.toArray(g.matrixAttr.array, g.count * 16);
       g.flash.array[g.count] = e.flash;

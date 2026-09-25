@@ -23,7 +23,7 @@ export class Loop {
     this.running = false;
     this.frame = 0;
     this.alpha = 0;
-    this.onFrameEnd = null;
+    this.onFrameEnd = null; // (realDt, now, workMs) after every rendered frame, same task
     this.minFrameMs = 0; // optional frame-rate cap
     this._raf = 0;
     this._tick = this._tick.bind(this);
@@ -79,7 +79,10 @@ export class Loop {
       if (realDt < 0) realDt = 0;
     }
     this.last = now;
+    const t0 = performance.now();
     this.step(realDt);
-    if (this.onFrameEnd) this.onFrameEnd(realDt, now);
+    // workMs: CPU time of this frame's update + render submission (realDt also
+    // contains vsync waits and GPU back-pressure)
+    if (this.onFrameEnd) this.onFrameEnd(realDt, now, performance.now() - t0);
   }
 }
