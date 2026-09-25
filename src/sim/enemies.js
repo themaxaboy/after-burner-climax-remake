@@ -1,6 +1,6 @@
 import { Matrix4, Quaternion, Vector3 } from 'three';
 import { ENEMY_TYPES } from './enemyTypes.js';
-import { clamp, dampTo } from '../core/math.js';
+import { clamp, dampTo, lerp, smoothstep } from '../core/math.js';
 import { makeFrame } from './rail.js';
 
 const _f = makeFrame();
@@ -13,6 +13,26 @@ const _q = new Quaternion();
 const _z = new Vector3(0, 0, 1);
 
 let NEXT_ID = 1;
+
+/**
+ * Behaviour tunables (see CONTRACTS §5 and src/sim/waves.js).
+ *  headOn: closing speed on top of the player's (m/s), weave amplitude (m), share that dodges a ram
+ *  rammer: lateral acceleration cap (m/s²) and lead (0..1) — a sideways move of > ~45 m in the last
+ *          1.5 s before impact makes it miss
+ *  overtakeClose: relative speed (m/s) and lateral pass distance from the player (m)
+ *  chaser: hold distance behind the player (m), gun burst interval (s), time before overtaking (s)
+ */
+export const ENEMY_TUNING = {
+  headOn: { spd: [180, 240], weave: [20, 60], dodgeShare: 0.5, fire: [650, 1600] },
+  rammer: { spd: [190, 240], accel: 28, gain: 3, lead: 0.5 },
+  overtakeClose: { vrel: [170, 195], pass: [20, 40], handover: 380 },
+  swarmPass: { fire: [450, 1300] },
+  chaser: { hold: -300, gun: [2.6, 3.8], dur: [8, 11] },
+  passBehind: -320 // rail-anchored passers are removed this far behind the player
+};
+
+// behaviours whose aircraft end up behind the player for good: despawn early (off screen)
+const PASSERS = new Set(['headOn', 'rammer', 'swarmPass', 'crossing', 'strafe', 'formation', 'hover']);
 
 export class Enemy {
   constructor() {
@@ -87,6 +107,10 @@ export class EnemyManager {
     e.incoming = 0;
     e.fireCd = 0.6 + this.rng.next() * 1.2;
     e.shotsFired = 0;
+    e.rammer = false;
+    e.noseLight = 0; // 0|1 blinking warning light (rammers) for the renderer
+    e.nearD = Infinity; // closest approach to the player (enemyOps near-miss)
+    e.nearDone = false;
     e.countable = o.countable !== false;
     e.params = o.params || {};
     e.lockable = def.lockable;
@@ -211,7 +235,9 @@ export class EnemyManager {
       // (attached sub-parts are removed with their parent; grace period after spawning)
       if (e.behaviorName !== 'attached' && e.t > 1.5) {
         const rel = this.relS(e, ctx);
-        if (rel < -900 || rel > 9000) this.despawn(e, e.def.big || e.tag != null);
+        if (rel < -900 || rel > 9000 || (rel < ENEMY_TUNING.passBehind && e.anchor === 'rail' && PASSERS.has(e.behaviorName))) {
+          this.despawn(e, e.def.big || e.tag != null);
+        }
       }
     }
   }
@@ -298,42 +324,193 @@ function tryFire(e, dt, ctx, mgr, minRel, maxRel) {
   const r = ctx.rng.next();
   const def = e.def;
   const agg = mgr.difficulty.aggression;
-  if (r < def.missile * 0.55 * agg) ctx.fireMissile(e);
-  else if (r < (def.missile * 0.55 + def.gun * 0.6) * agg) ctx.fireGun(e);
+  const pm = def.missile * 0.7 * agg;
+  if (r < pm) {
+    // enemy missiles are capped globally (count + spacing): fall back to the gun
+    if (!ctx.fireMissile(e) && def.gun > 0) ctx.fireGun(e);
+  } else if (r < pm + def.gun * 0.6 * agg) ctx.fireGun(e);
   e.shotsFired++;
   e.fireCd = 2.2 + ctx.rng.next() * 2.5;
 }
 
+/**
+ * Smooth weave around (x0, y0) that starts from the current position (no
+ * jump). Formation members share `params.ph`, so a group weaves in step.
+ */
 function weave(e, dt, ampX, ampY, freq) {
   const b = e.b;
-  if (b.ph === undefined) b.ph = (e.id * 2.39996) % 6.2832;
+  if (b.ph === undefined) b.ph = e.params.ph ?? (e.id * 2.39996) % 6.2832;
   if (b.x0 === undefined) {
     b.x0 = e.rx;
     b.y0 = e.ry;
+    b.wt0 = e.t;
+  } else if (b.wt0 === undefined) b.wt0 = e.t;
+  const t = e.t - b.wt0;
+  e.rx = b.x0 + (Math.sin(t * freq + b.ph) - Math.sin(b.ph)) * ampX;
+  e.ry = b.y0 + (Math.cos(t * freq * 0.7 + b.ph) - Math.cos(b.ph)) * ampY;
+}
+
+/** Aircraft overtaking from behind never ram the player unseen: keep `sep` m of lateral clearance. */
+function keepClear(e, p, rel, sep, dt) {
+  if (rel < -120 || rel > 50) return;
+  const dx = e.rx - p.x, dy = e.ry - p.y;
+  if (dx * dx + dy * dy >= sep * sep) return;
+  const sx = dx === 0 ? (e.id & 1 ? 1 : -1) : Math.sign(dx);
+  const sy = dy >= 0 ? 1 : -0.5;
+  e.rx += sx * 90 * dt;
+  e.ry += sy * 30 * dt;
+  if (e.b.x0 !== undefined) {
+    e.b.x0 += sx * 90 * dt;
+    e.b.y0 += sy * 30 * dt;
   }
-  e.rx = b.x0 + Math.sin(e.t * freq + b.ph) * ampX;
-  e.ry = b.y0 + Math.cos(e.t * freq * 0.7 + b.ph) * ampY;
+}
+
+/** Switch to `overtake` holding ahead of the player (phase 1: weave, then break or loop back). */
+function toOvertakeAhead(e, ctx) {
+  e.behavior = BEHAVIORS.overtake;
+  e.behaviorName = 'overtake';
+  const b = e.b;
+  for (const k in b) if (k !== 'pf') delete b[k];
+  b.init = 1;
+  b.phase = 1;
+  b.pt = 0;
+  b.loop = ctx.rng.next() < 0.45;
+  b.x0 = e.rx;
+  b.y0 = e.ry;
 }
 
 export const BEHAVIORS = {
-  /** Oncoming fighter: flies toward the player, weaves, may fire once, passes. */
+  /**
+   * Oncoming fighter: rushes at the player (+180–240 m/s on top of the
+   * player's speed from 1300–1800 m: ~3.5 s on screen), weaves 20–60 m, may
+   * fire once, passes. Only half of them sidestep a ram.
+   */
   headOn(e, dt, ctx, mgr) {
     const p = ctx.player;
-    if (!e.b.init) {
-      e.b.init = 1;
-      e.b.spd = e.def.speed * (0.85 + ctx.rng.next() * 0.3);
-      e.b.ax = 8 + ctx.rng.next() * 18;
-      e.b.fq = 0.6 + ctx.rng.next() * 0.8;
+    const b = e.b;
+    const T = ENEMY_TUNING.headOn;
+    if (!b.init) {
+      b.init = 1;
+      const pr = e.params;
+      b.spd = pr.spd ?? (T.spd[0] + ctx.rng.next() * (T.spd[1] - T.spd[0])) * (e.def.speed / 210);
+      b.ax = pr.ax ?? T.weave[0] + ctx.rng.next() * (T.weave[1] - T.weave[0]);
+      b.fq = pr.fq ?? 0.5 + ctx.rng.next() * 0.6;
+      b.dodge = ctx.rng.next() < T.dodgeShare;
     }
-    e.rs -= e.b.spd * dt;
-    weave(e, dt, e.b.ax, e.b.ax * 0.5, e.b.fq);
-    // keep separation when very close so collisions are avoidable but tense
+    e.rs -= b.spd * dt;
     const rel = e.rs - p.s;
-    if (rel < 250 && rel > -50) {
+    // the weave calms down near the pass so the closest approach reads clearly
+    const k = clamp(rel / 600, 0.35, 1);
+    weave(e, dt, b.ax * k, b.ax * 0.4 * k, b.fq);
+    if (b.dodge && rel < 260 && rel > -50) {
       const dx = e.rx - p.x, dy = e.ry - p.y;
-      if (Math.abs(dx) < 16 && Math.abs(dy) < 12) e.b.x0 += Math.sign(dx || 1) * 60 * dt;
+      const r = e.radius + 10;
+      if (Math.abs(dx) < r && Math.abs(dy) < r * 0.75) b.x0 += Math.sign(dx || 1) * 70 * dt;
     }
-    tryFire(e, dt, ctx, mgr, 650, 1900);
+    tryFire(e, dt, ctx, mgr, T.fire[0], T.fire[1]);
+  },
+
+  /**
+   * Kamikaze: charges head-on at the player's predicted position with a
+   * limited lateral acceleration, so a late sideways move dodges it (or shoot
+   * it first). `e.rammer` flags it for the HUD, `e.noseLight` blinks.
+   */
+  rammer(e, dt, ctx, mgr) {
+    const p = ctx.player;
+    const b = e.b;
+    const T = ENEMY_TUNING.rammer;
+    if (!b.init) {
+      b.init = 1;
+      b.spd = e.params.spd ?? T.spd[0] + ctx.rng.next() * (T.spd[1] - T.spd[0]);
+      b.vx = 0;
+      b.vy = 0;
+      b.armed = true;
+      e.rammer = true;
+    }
+    e.rs -= b.spd * dt;
+    const rel = e.rs - p.s;
+    if (b.armed && rel > 0) {
+      const tgo = Math.max(rel / Math.max(p.speed + b.spd, 50), 0.05);
+      const tx = p.x + p.vx * tgo * T.lead, ty = p.y + p.vy * tgo * T.lead;
+      let ax = ((tx - e.rx) / tgo - b.vx) * T.gain;
+      let ay = ((ty - e.ry) / tgo - b.vy) * T.gain;
+      const a = Math.hypot(ax, ay);
+      if (a > T.accel) {
+        ax *= T.accel / a;
+        ay *= T.accel / a;
+      }
+      b.vx += ax * dt;
+      b.vy += ay * dt;
+    } else b.armed = false;
+    e.rx += b.vx * dt;
+    e.ry += b.vy * dt;
+    b.roll = clamp(b.vx * 0.02, -0.6, 0.6);
+    e.noseLight = (e.t * 5) % 1 < 0.5 ? 1 : 0;
+  },
+
+  /**
+   * Comes up from ~250 m behind at +180 m/s relative and passes 20–40 m from
+   * the player (big on screen), then settles ahead as a normal target.
+   */
+  overtakeClose(e, dt, ctx, mgr) {
+    const p = ctx.player;
+    const b = e.b;
+    const T = ENEMY_TUNING.overtakeClose;
+    if (!b.init) {
+      b.init = 1;
+      b.vrel = e.params.vrel ?? T.vrel[0] + ctx.rng.next() * (T.vrel[1] - T.vrel[0]);
+      b.ox = e.rx - p.x;
+      b.oy = e.ry - p.y;
+      const side = Math.sign(b.ox) || (e.id & 1 ? 1 : -1);
+      const pass = e.params.pass ?? T.pass[0] + ctx.rng.next() * (T.pass[1] - T.pass[0]);
+      b.passX = side * pass * 0.92;
+      b.passY = pass * 0.38;
+      b.rel0 = Math.min(e.rs - p.s, -60);
+      b.phase = 0;
+    }
+    const rel = e.rs - p.s;
+    e.rs += (p.speed + b.vrel) * dt;
+    if (b.phase === 0) {
+      // track the player's offset: the pass distance is guaranteed (never an unseen ram)
+      const k = smoothstep(b.rel0, -30, rel);
+      e.rx = p.x + lerp(b.ox, b.passX, k);
+      e.ry = p.y + lerp(b.oy, b.passY, k);
+      if (rel > 40) {
+        b.phase = 1;
+        b.dx = e.rx - p.x * 0.3;
+        b.dy = e.ry - p.y * 0.3;
+      }
+    } else {
+      // pulled ahead: drift out a little, then become a regular target ahead
+      b.dx += Math.sign(b.passX) * 10 * dt;
+      b.dy += 6 * dt;
+      e.rx = p.x * 0.3 + b.dx;
+      e.ry = p.y * 0.3 + b.dy;
+      if (rel > T.handover) toOvertakeAhead(e, ctx);
+    }
+  },
+
+  /** One of a stream crossing the view diagonally (8–12 aircraft, see waves.swarmPass). */
+  swarmPass(e, dt, ctx, mgr) {
+    const p = ctx.player;
+    const b = e.b;
+    if (!b.init) {
+      b.init = 1;
+      const pr = e.params;
+      const side = pr.side ?? (Math.sign(e.rx) || 1);
+      b.vx = -side * (pr.vx ?? 150);
+      b.vy = pr.vy ?? 0;
+      b.close = pr.close ?? 190;
+      b.bankBias = -side * 0.35;
+    }
+    e.rs += (p.speed - b.close) * dt;
+    e.rx += b.vx * dt;
+    e.ry += (b.vy + Math.sin(e.t * 2.2 + e.id) * 6) * dt;
+    if (Math.abs(e.rx) > 1100) {
+      mgr.despawn(e, false);
+      return;
+    }
+    tryFire(e, dt, ctx, mgr, ENEMY_TUNING.swarmPass.fire[0], ENEMY_TUNING.swarmPass.fire[1]);
   },
 
   /** Comes from behind at high speed, passes, flies ahead weaving, then breaks or loops back. */
@@ -351,6 +528,7 @@ export const BEHAVIORS = {
     if (b.phase === 0) {
       e.rs += (p.speed + 170) * dt;
       e.ry = dampTo(e.ry, (e.params.y || 10), 1.2, dt);
+      keepClear(e, p, rel, e.radius + 14, dt);
       if (rel > 420) { b.phase = 1; b.pt = 0; b.x0 = e.rx; b.y0 = e.ry; }
     } else if (b.phase === 1) {
       const target = 520 + Math.sin(e.t) * 60;
@@ -386,8 +564,8 @@ export const BEHAVIORS = {
     const b = e.b;
     if (!b.init) {
       b.init = 1;
-      b.dir = e.rx < 0 ? 1 : -1;
-      b.v = 150 + ctx.rng.next() * 60;
+      b.dir = e.params.dir ?? (e.rx < 0 ? 1 : -1);
+      b.v = e.params.v ?? 150 + ctx.rng.next() * 60;
     }
     e.rs += p.speed * 0.45 * dt;
     e.rx += b.dir * b.v * dt;
@@ -416,29 +594,42 @@ export const BEHAVIORS = {
     }
   },
 
-  /** Sits on the player's six and fires missiles, then overtakes. */
+  /**
+   * Sits on the player's six (−300 m), fires AAMs (they overtake and curl
+   * back) and gun bursts, then overtakes and becomes a target ahead.
+   */
   chaser(e, dt, ctx, mgr) {
     const p = ctx.player;
     const b = e.b;
+    const T = ENEMY_TUNING.chaser;
     if (!b.init) {
       b.init = 1;
       b.fired = 0;
-      e.fireCd = 1.6;
+      b.hold = e.params.hold ?? T.hold;
+      b.dur = e.params.dur ?? T.dur[0] + ctx.rng.next() * (T.dur[1] - T.dur[0]);
+      b.gunCd = 1.2 + ctx.rng.next() * 1.2;
+      e.fireCd = 1.2 + ctx.rng.next() * 0.8;
     }
     const rel = e.rs - p.s;
-    const want = -520;
-    e.rs += (p.speed + (want - rel) * 0.6) * dt;
+    e.rs += (p.speed + (b.hold - rel) * 0.7) * dt;
     weave(e, dt, 25, 12, 0.7);
-    e.fireCd -= dt;
+    const fr = mgr.difficulty.fireRate;
+    e.fireCd -= dt * fr;
     if (e.fireCd <= 0 && b.fired < 2) {
-      ctx.fireMissile(e);
-      b.fired++;
-      e.fireCd = 4.5;
+      if (ctx.fireMissile(e)) {
+        b.fired++;
+        e.fireCd = 3.5;
+      } else e.fireCd = 0.6; // missile cap reached: try again shortly
     }
-    if (e.t > 11) {
+    b.gunCd -= dt * fr;
+    if (b.gunCd <= 0 && rel > b.hold - 120) {
+      ctx.fireGun(e);
+      b.gunCd = T.gun[0] + ctx.rng.next() * (T.gun[1] - T.gun[0]);
+    }
+    if (e.t > b.dur) {
       e.behavior = BEHAVIORS.overtake;
       e.behaviorName = 'overtake';
-      e.b = { init: 0 };
+      for (const k in b) if (k !== 'pf') delete b[k];
     }
   },
 
@@ -477,6 +668,7 @@ export const BEHAVIORS = {
     if (b.phase === 0) {
       e.rs += (p.speed + 120) * dt;
       e.ry = dampTo(e.ry, e.params.y ?? 45, 0.5, dt);
+      keepClear(e, p, rel, e.radius + 14, dt);
       if (rel > 650) { b.phase = 1; b.x0 = e.rx; b.y0 = e.ry; }
     } else if (b.phase === 1) {
       const want = 700 + Math.sin(e.t * 0.3) * 120;
@@ -527,7 +719,7 @@ export const BEHAVIORS = {
       const k = Math.min(b.pt / 2.6, 1);
       e.rs += (p.speed - 260 * Math.sin(k * Math.PI)) * dt;
       e.ry = b.y0 + Math.sin(k * Math.PI) * 140;
-      if (k >= 1) { b.phase = 2; b.pt = 0; e.fireCd = 0.8; }
+      if (k >= 1) { b.phase = 2; b.pt = 0; e.fireCd = 0.8; b.x0 = e.rx; b.y0 = e.ry; b.wt0 = undefined; }
     } else if (b.phase === 2) {
       // on our six: fire, then overshoot back in front
       const want = -380;
@@ -538,6 +730,7 @@ export const BEHAVIORS = {
       if (b.pt > 7) { b.phase = 3; b.pt = 0; }
     } else {
       e.rs += (p.speed + 190) * dt;
+      keepClear(e, p, rel, e.radius + 14, dt);
       if (rel > 380) { b.phase = 0; b.pt = 0; }
     }
     // react to incoming missiles with flares (breaks locks)
