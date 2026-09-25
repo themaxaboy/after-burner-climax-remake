@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Model Lab</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0d1116;
+        color: #d8dee4;
+        font: 12px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+      #ui {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 230px;
+        padding: 10px 12px;
+        background: rgba(12, 16, 22, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        backdrop-filter: blur(6px);
+      }
+      #ui.hidden {
+        display: none;
+      }
+      #ui h1 {
+        font-size: 13px;
+        margin: 0 0 8px;
+        letter-spacing: 0.08em;
+        color: #f2c14e;
+      }
+      #ui label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 4px 0;
+      }
+      #ui select,
+      #ui input[type='range'] {
+        width: 128px;
+      }
+      #ui select {
+        background: #1a212b;
+        color: #d8dee4;
+        border: 1px solid #334;
+        border-radius: 4px;
+        padding: 2px;
+      }
+      #stats {
+        margin-top: 8px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        white-space: pre;
+        color: #9fb0c0;
+      }
+      #title {
+        position: absolute;
+        right: 16px;
+        bottom: 14px;
+        font-size: 18px;
+        letter-spacing: 0.18em;
+        color: rgba(255, 255, 255, 0.75);
+        font-weight: 700;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ui">
+      <h1>MODEL LAB</h1>
+      <label>design <select id="id"></select></label>
+      <label>scheme <select id="scheme"></select></label>
+      <label>LOD <select id="lod"><option>0</option><option>1</option><option>2</option></select></label>
+      <label>camera <select id="cam"><option>threeq</option><option>front</option><option>side</option><option>top</option><option>rear</option><option>below</option></select></label>
+      <label>roll <input id="roll" type="range" min="-1" max="1" step="0.01" value="0" /></label>
+      <label>pitch <input id="pitch" type="range" min="-1" max="1" step="0.01" value="0" /></label>
+      <label>yaw <input id="yaw" type="range" min="-1" max="1" step="0.01" value="0" /></label>
+      <label>speed01 <input id="speed01" type="range" min="0" max="1" step="0.01" value="0" /></label>
+      <label>flaps <input id="flaps" type="range" min="0" max="1" step="0.01" value="0" /></label>
+      <label>gear <input id="gear" type="range" min="0" max="1" step="0.01" value="0" /></label>
+      <label>afterburner <input id="ab" type="range" min="0" max="1" step="0.01" value="0" /></label>
+      <label>wireframe <input id="wire" type="checkbox" /></label>
+      <label>auto-rotate <input id="spin" type="checkbox" /></label>
+      <div id="stats"></div>
+    </div>
+    <div id="title"></div>
+    <script type="module" src="./model-lab.js"></script>
+  </body>
+</html>
