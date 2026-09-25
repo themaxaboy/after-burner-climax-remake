@@ -271,7 +271,7 @@ export class StageState {
     const d = this.def;
     const no = this.game.session.stageNo || d.index;
     this.hud.message(`${t('ui.stage')} ${no}`, { sub: `${d.name} — ${d.subtitle}`, dur: 3.2 });
-    this.hud.message(t('ui.getReady'), { dur: 1.6, color: '#ffd27a', delay: 3.3 });
+    this.hud.message(t('hud.engage'), { style: 'callout', dur: 1.8, delay: 3.3 });
   }
 
   exit() {
@@ -296,10 +296,13 @@ export class StageState {
     // leave global systems clean for the next state
     g.touch.setVisible(false);
     const h = this.hud;
-    h.clearMessages();
-    h.popups.length = 0;
-    h.radioLines.length = 0;
-    h.eo = null;
+    if (h.reset) h.reset();
+    else {
+      h.clearMessages();
+      h.popups.length = 0;
+      h.radioLines.length = 0;
+      h.eo = null;
+    }
     this.timers.length = 0;
     g.audio?.setTimeScale?.(1);
     g.clock.scaleTo(1, 0);
