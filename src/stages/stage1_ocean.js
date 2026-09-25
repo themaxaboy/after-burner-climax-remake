@@ -1,5 +1,7 @@
+// LEGACY v1 stage data (pre-routes, ~3 min stage). Not part of the campaign
+// (see ./campaign.js and ./defs/); kept only as fixture data for the unit
+// tests sim.test.js and terrain.test.js. Delete once they use ./defs/.
 import { buildRail } from './railBuilder.js';
-import { Stage1Logic } from './stage1Logic.js';
 
 // STAGE 1 — BOUNDLESS OCEAN "Dawn Launch"
 // Golden-hour carrier launch, low-level over the sea, fighter waves and a
@@ -112,6 +114,5 @@ export default {
     { at: 42500, end: true }
   ],
   next: ['s2'],
-  startS: 0,
-  createLogic: (stage) => new Stage1Logic(stage)
+  startS: 0
 };

@@ -1,18 +1,18 @@
 import { Matrix4, Vector3 } from 'three';
-import stage1 from '../stages/stage1_ocean.js';
+import { LOOKS } from '../world/looks.js';
 import { Carrier, CARRIER } from '../world/carrier.js';
-import { ShowcasePilot, buildShowcaseJet } from './showcase.js';
+import { ShowcasePilot, buildShowcaseJet, applyLook } from './showcase.js';
 import { overlay } from '../ui/menu.js';
 import { PlayerJet } from '../render/playerJet.js';
 import { saveSettings } from '../core/save.js';
 import { t } from '../ui/i18n.js';
 
-const JETS = [
+export const JETS = [
   { id: 'f14d', name: 'F-14D SUPER TOMCAT', role: 'FLEET DEFENCE INTERCEPTOR', crew: '2', speed: 'MACH 2.34', engines: '2 × TURBOFAN', note: 'VARIABLE-SWEEP WINGS' },
   { id: 'fa18e', name: 'F/A-18E SUPER HORNET', role: 'CARRIER STRIKE FIGHTER', crew: '1', speed: 'MACH 1.8', engines: '2 × TURBOFAN', note: 'LEADING-EDGE EXTENSIONS' },
   { id: 'f15e', name: 'F-15E STRIKE EAGLE', role: 'DUAL-ROLE STRIKE FIGHTER', crew: '2', speed: 'MACH 2.5', engines: '2 × TURBOFAN', note: 'CONFORMAL FUEL TANKS · LAND-BASED' }
 ];
-const SCHEMES = ['standard', 'camo', 'special', 'lowvis'];
+export const SCHEMES = ['standard', 'camo', 'special', 'lowvis'];
 
 const _v = new Vector3();
 const _m = new Matrix4();
@@ -33,9 +33,7 @@ export class HangarState {
 
   async enter() {
     const g = this.game;
-    g.world.configure({ ...stage1.env, elev: 3.5, azim: 60 });
-    g.renderer.toneMappingExposure = 0.6;
-    g.post.grade.setGrade('goldenHour');
+    applyLook(g, LOOKS.hangar);
     const built = await buildShowcaseJet(g, JETS[this.jetIndex].id, SCHEMES[this.schemeIndex]);
     this.models = built.models;
     this.fx = built.fx;
@@ -136,13 +134,16 @@ export class HangarState {
 
   _go() {
     const g = this.game;
+    if (this._going) return;
+    this._going = true;
     g.session.jet = JETS[this.jetIndex].id;
     g.session.scheme = SCHEMES[this.schemeIndex];
+    g.session.jetName = JETS[this.jetIndex].name;
     g.settings.jet = g.session.jet;
     g.settings.scheme = g.session.scheme;
     saveSettings(g.settings);
     g.audio?.play('uiSelect');
-    g.flow.toBriefing(0);
+    g.flow.startCampaign();
   }
 
   update(dt) {

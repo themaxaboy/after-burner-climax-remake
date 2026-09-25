@@ -1,5 +1,7 @@
+// LEGACY v1 stage data (pre-routes, ~3 min stage). Not part of the campaign
+// (see ./campaign.js and ./defs/); kept only as fixture data for the unit
+// tests sim.test.js and terrain.test.js. Delete once they use ./defs/.
 import { buildRail } from './railBuilder.js';
-import { Stage3Logic } from './stage3Logic.js';
 
 // STAGE 3 — SEA OF TWILIGHT "Final Line"
 // Above a sea of clouds at dusk: stealth fighters, a dogfighting ace and the
@@ -87,6 +89,5 @@ export default {
     { at: 33200, cue: 'descend' },
     { at: 46000, end: true }
   ],
-  next: [],
-  createLogic: (stage) => new Stage3Logic(stage)
+  next: []
 };

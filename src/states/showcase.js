@@ -54,6 +54,20 @@ export class ShowcasePilot {
   }
 }
 
+/**
+ * Menu / panel screens: configure the world for a look preset (LOOKS.*) and
+ * apply its exposure, grade and bloom like a stage does.
+ */
+export function applyLook(game, env) {
+  const g = game;
+  g.world.configure({ ...env });
+  g.renderer.toneMappingExposure = env.toneExposure ?? 0.6;
+  g.post.grade.setGrade(env.grade || 'neutral');
+  const bl = env.bloom || {};
+  g.post.bloom.luminanceMaterial.threshold = bl.threshold ?? 1.0;
+  g.post.bloom.intensity = bl.intensity ?? 0.9;
+}
+
 /** Load models + FX and build a showcase jet in the world. */
 export async function buildShowcaseJet(game, jetId, scheme) {
   const [models, fxMod] = await Promise.all([loadModels(), loadFX()]);
