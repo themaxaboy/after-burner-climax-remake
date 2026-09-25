@@ -30,9 +30,10 @@ try {
 const info = await page.evaluate(() => {
   const g = window.__game;
   if (!g) return null;
+  g.loop.stop();
   return { frame: g.frameCount, dbg: g.state?.debugText?.(), gpu: g.gpu, preset: g.preset?.name, calls: g.renderer.info.render.calls, tris: g.renderer.info.render.triangles, progs: g.renderer.info.programs?.length };
 });
-await page.screenshot({ path: out });
+await page.screenshot({ path: out, timeout: 120000 });
 console.log(JSON.stringify({ ms: Date.now() - t0, info }, null, 0));
-for (const e of errors.slice(0, 30)) console.log(e);
+for (const e of [...new Set(errors)].slice(0, 30)) console.log(e);
 await browser.close();

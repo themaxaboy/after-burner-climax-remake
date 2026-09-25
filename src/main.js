@@ -17,9 +17,19 @@ async function boot() {
     return;
   }
   const stageIndex = params.stage || 1;
+  game.events.on('stageComplete', () => {
+    const next = STAGES[game.session.stageIndex + 1];
+    if (next) {
+      game.session.stageIndex++;
+      game.setState(new StageState(game, next));
+    } else {
+      game.session.stageIndex = 0;
+      game.setState(new StageState(game, STAGES[0]));
+    }
+  });
+  game.session.stageIndex = stageIndex - 1;
   game.setState(new StageState(game, STAGES[stageIndex - 1]));
   game.start();
-  document.getElementById('boot')?.classList.add('hidden');
 }
 
 function showFatal(e) {
