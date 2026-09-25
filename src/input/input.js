@@ -139,6 +139,14 @@ export class Input {
     }
   }
 
+  /** Swallow this step's edges (a menu consumed them). */
+  consumeEdges() {
+    for (const a of ACTIONS) {
+      this.pressed[a] = false;
+      this.released[a] = false;
+    }
+  }
+
   /** Programmatic hold (used by touch buttons / autopilot). */
   setHold(a, down) {
     this._setAction(a, down);

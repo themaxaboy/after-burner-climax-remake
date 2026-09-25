@@ -19,6 +19,9 @@ import { HUD } from './ui/hud.js';
 import { Scoring } from './sim/scoring.js';
 import { setLang } from './ui/i18n.js';
 import { loadAudio } from './render/assets.js';
+import { Menu, overlay } from './ui/menu.js';
+import { createOptionsMenu } from './ui/screens/options.js';
+import { t } from './ui/i18n.js';
 
 /**
  * Top-level orchestrator: owns renderer, post chain, world, input, loop and
@@ -46,7 +49,8 @@ export class Game {
     const renderer = (this.renderer = createRenderer(this.canvas));
     const gl = renderer.getContext();
     this.gpu = gpuInfo(gl);
-    const presetName = params.quality || this.settings.quality || detectPreset(gl);
+    this.detectedPreset = detectPreset(gl);
+    const presetName = params.quality || this.settings.quality || this.detectedPreset;
     this.preset = PRESETS[presetName] || PRESETS.high;
     this.settings.quality = this.settings.quality || null;
 
@@ -101,6 +105,7 @@ export class Game {
       if (params.frames && this.activeFrames === params.frames) this.markReady();
     };
 
+    this.applyFpsCap();
     addEventListener('resize', () => this.resize());
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.state?.onHidden?.();
@@ -167,11 +172,44 @@ export class Game {
 
   showPause(on) {
     this.events.emit('pause', on);
+    if (on && !this.pauseUI) {
+      const root = overlay('fade-in');
+      root.style.background = 'rgba(2,6,14,0.45)';
+      const resume = () => this.state?.togglePause?.();
+      const menu = new Menu({
+        game: this,
+        className: 'menu-main',
+        title: t('menu.paused'),
+        onBack: resume,
+        items: [
+          { label: t('menu.resume'), onSelect: resume },
+          { label: t('menu.restart'), onSelect: () => { resume(); this.flow?.restartStage(); } },
+          {
+            label: t('menu.options'),
+            onSelect: () => {
+              menu.el.classList.add('hidden');
+              this.pauseUI.sub = createOptionsMenu(this, () => {
+                this.pauseUI.sub.destroy();
+                this.pauseUI.sub = null;
+                menu.el.classList.remove('hidden');
+              }).mount(root);
+            }
+          },
+          { label: t('menu.quit'), onSelect: () => { resume(); this.flow?.toTitle(); } }
+        ]
+      }).mount(root);
+      this.uiRoot.appendChild(root);
+      this.pauseUI = { root, menu, sub: null };
+    } else if (!on && this.pauseUI) {
+      this.pauseUI.root.remove();
+      this.pauseUI = null;
+    }
   }
 
   onStageComplete(results) {
     this.session.results.push(results);
     this.events.emit('stageComplete', results);
+    this.flow?.onStageComplete(results);
   }
 
   markReady() {
@@ -202,6 +240,10 @@ export class Game {
     if (this.input.pressed.debug) this.perf.toggle();
     WorldUniforms.uTime.value = this.clock.worldTime;
     WorldUniforms.uRealTime.value = this.clock.realTime;
+    if (this.pauseUI) {
+      (this.pauseUI.sub || this.pauseUI.menu).update(this.input);
+      this.input.consumeEdges();
+    }
     if (this.state && !this.state.loading) this.state.update(dt, wdt);
     this.input.endStep();
     if (this.audio?.isReady) this._audioListener();
@@ -273,6 +315,12 @@ export class Game {
     hud.style.height = h + 'px';
     this.hudScale = hdpr;
     this.state?.onResize?.(w, h);
+  }
+
+  applyFpsCap() {
+    const cap = this.settings.fpsCap || 0;
+    this.loop.minFrameMs = cap ? 1000 / cap - 1.5 : 0;
+    this.dynres.setTargetFps(cap || 60);
   }
 
   setQuality(name) {

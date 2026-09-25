@@ -3,6 +3,7 @@ import { Game } from './game.js';
 import { params } from './core/params.js';
 import { StageState } from './states/stageState.js';
 import { STAGES } from './stages/campaign.js';
+import { Flow } from './states/flow.js';
 
 async function boot() {
   const game = new Game({
@@ -16,19 +17,14 @@ async function boot() {
     showFatal(e);
     return;
   }
-  const stageIndex = params.stage || 1;
-  game.events.on('stageComplete', () => {
-    const next = STAGES[game.session.stageIndex + 1];
-    if (next) {
-      game.session.stageIndex++;
-      game.setState(new StageState(game, next));
-    } else {
-      game.session.stageIndex = 0;
-      game.setState(new StageState(game, STAGES[0]));
-    }
-  });
-  game.session.stageIndex = stageIndex - 1;
-  game.setState(new StageState(game, STAGES[stageIndex - 1]));
+  game.flow = new Flow(game);
+  if (params.stage >= 1 && params.stage <= STAGES.length) {
+    // direct stage entry (testing / benchmarks)
+    game.session.stageIndex = params.stage - 1;
+    game.setState(new StageState(game, STAGES[params.stage - 1]));
+  } else {
+    game.flow.toTitle();
+  }
   game.start();
 }
 

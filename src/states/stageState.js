@@ -18,6 +18,7 @@ import { EnemyRenderer } from '../render/enemyRenderer.js';
 import { MissileRenderer } from '../render/missileRenderer.js';
 import { t } from '../ui/i18n.js';
 import { Clouds } from '../world/clouds.js';
+import { TouchSource } from '../input/touch.js';
 import { Color } from 'three';
 
 const _v = new Vector3();
@@ -196,6 +197,9 @@ export class StageState {
     g.setLoading?.(1, 'READY');
     this.loading = false;
     if (!this.stageLogic?.handlesMusic) g.audio?.music?.play(def.music || 'stage1');
+    this.touchMode = TouchSource.isTouchDevice();
+    g.touch.setVisible(this.touchMode);
+    g.hud.touchLayout = this.touchMode;
     if (!this.stageLogic?.skipIntroMessage) this._introMessage();
   }
 
@@ -234,6 +238,30 @@ export class StageState {
     this.fx.dispose?.();
     this.stageLogic?.dispose?.();
     g.session.climaxGauge = this.climax.gauge;
+    // leave global systems clean for the next state
+    g.touch.setVisible(false);
+    const h = this.hud;
+    h.clearMessages();
+    h.popups.length = 0;
+    h.radioLines.length = 0;
+    h.eo = null;
+    clearTimeout(this._eoClear);
+    g.audio?.stopLoop?.('vulcan');
+    g.audio?.stopLoop?.('missileAlert');
+    g.audio?.setTimeScale?.(1);
+    g.clock.scaleTo(1, 0);
+    g.clock.paused = false;
+    g.dynres.locked = false;
+    const gf = g.post.gforce;
+    for (const [k, v] of [['uLetterbox', 0], ['uFade', 0], ['uWhite', 0], ['uGrey', 0], ['uDamage', 0], ['uClimax', 0], ['uWarn', 0]]) gf.set(k, v);
+    const cf = g.post.cameraFX.uniforms;
+    cf.get('uRadial').value = 0;
+    cf.get('uHazeStrength').value = 0;
+    g.post.cameraFX.resetHistory();
+    g.rig.cine = null;
+    g.rig.fov = g.rig.baseFov;
+    g.rig.camera.fov = g.rig.baseFov;
+    g.rig.camera.updateProjectionMatrix();
   }
 
   // ------------------------------------------------------------ hook tables
@@ -507,8 +535,11 @@ export class StageState {
     const p = this.player;
     this.time += dt;
 
-    if (input.pressed.pause) this.togglePause();
     if (this.paused) return;
+    if (input.pressed.pause) {
+      this.togglePause();
+      return;
+    }
 
     const logic = this.stageLogic;
     logic?.preUpdate?.(dt, wdt);

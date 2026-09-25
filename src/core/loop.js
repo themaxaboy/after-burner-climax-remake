@@ -24,6 +24,7 @@ export class Loop {
     this.frame = 0;
     this.alpha = 0;
     this.onFrameEnd = null;
+    this.minFrameMs = 0; // optional frame-rate cap
     this._raf = 0;
     this._tick = this._tick.bind(this);
   }
@@ -66,6 +67,7 @@ export class Loop {
   _tick(now) {
     if (!this.running) return;
     this._raf = requestAnimationFrame(this._tick);
+    if (this.minFrameMs > 0 && this.last >= 0 && now - this.last < this.minFrameMs) return;
     let realDt;
     if (this.fixedDt > 0) realDt = this.fixedDt;
     else {

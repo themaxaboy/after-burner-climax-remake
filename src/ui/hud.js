@@ -274,7 +274,7 @@ export class HUD {
   }
 
   _climax(c, s, W, H, u) {
-    const x = 34 * u, y = H - 46 * u;
+    const x = 34 * u, y = this.touchLayout ? 118 * u : H - 46 * u;
     const w = 230 * u, h = 12 * u;
     const v = clamp(s.climaxGauge, 0, 1);
     const ready = v >= 1 && !s.climax;
@@ -305,7 +305,7 @@ export class HUD {
 
   _armor(c, s, W, H, u) {
     const w = 230 * u, h = 12 * u;
-    const x = W - 34 * u - w, y = H - 46 * u;
+    const x = W - 34 * u - w, y = this.touchLayout ? 78 * u : H - 46 * u;
     const v = clamp(s.armor / 100, 0, 1);
     const low = v < 0.3;
     const col = low ? (Math.sin(this.t * 12) > 0 ? '#ff3b30' : '#ff8a70') : v < 0.6 ? '#ffc93b' : '#7dffb0';
@@ -336,7 +336,7 @@ export class HUD {
   }
 
   _missiles(c, s, W, H, u) {
-    const x = W / 2, y = H - 30 * u;
+    const x = W / 2, y = this.touchLayout ? 96 * u : H - 30 * u;
     this._glowText(c, `MSL ${String(s.missiles).padStart(2, '0')}`, x - 70 * u, y, s.missiles > 0 ? '#ffffff' : '#ff5a4a', 16 * u, 'center', 700);
     const th = s.throttle;
     const label = th > 0 ? 'FAST' : th < 0 ? 'SLOW' : 'NORMAL';
