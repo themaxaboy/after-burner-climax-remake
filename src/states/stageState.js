@@ -644,7 +644,7 @@ export class StageState {
 
     this.jet.update(p, alpha, realDt, worldTime);
     this.enemyRenderer.update(this.enemies, alpha);
-    this.missileRenderer.update(this.missiles, alpha);
+    this.missileRenderer.update(this.missiles, alpha, g.rig.camera);
     this.fxHooks.render(alpha);
 
     this.stageLogic?.render?.(alpha, realDt);

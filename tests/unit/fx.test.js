@@ -600,12 +600,12 @@ describe('FxHooks (stage presentation)', () => {
     stage.climax.active = false;
     const [en, strong, pl, cx] = log.trails;
     const grow = TRAIL_DEFAULTS.missile.width1 / TRAIL_DEFAULTS.missile.width0;
-    expect([en.width, en.width * grow]).toEqual([2, 16]);
+    expect([en.width, en.width * grow]).toEqual([2, 10]);
     expect(en.life).toBeCloseTo(3.5);
     expect(en.opacity).toBeGreaterThanOrEqual(0.9);
     expect(Math.min(...en.color)).toBeGreaterThan(0.9);
     expect(strong.color[0] - strong.color[1]).toBeGreaterThan(0.2);
-    expect([pl.width, pl.width * grow]).toEqual([1.5, 12]);
+    expect([pl.width, pl.width * grow]).toEqual([1.5, 7.5]);
     expect(cx.life).toBeCloseTo(MISSILE_TRAILS.climaxLife);
     // salvo missiles fired right after release also get short trails
     stage.events.emit('climax', { phase: 'end', salvo: 20 });

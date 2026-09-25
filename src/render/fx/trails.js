@@ -248,7 +248,7 @@ void main() {
   float wpx = w * pxPerM;
   if (wpx < 1.5) { amul = wpx / 1.5; w = 1.5 / pxPerM; }
   // fade ribbons the camera flies through (thick missile smoke must not white/black out the view)
-  amul *= smoothstep(0.5, 1.8, depth / max(w, 0.1));
+  amul *= smoothstep(0.9, 3.2, depth / max(w, 0.1));
   // looking down the trail axis: the flat ribbon under-represents the tube
   // (may push the opacity above 1: the fragment shader clamps the final alpha)
   amul *= 1.0 + (1.0 - clamp(sl * 2.5, 0.0, 1.0)) * 0.6;

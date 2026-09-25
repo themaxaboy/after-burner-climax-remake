@@ -60,10 +60,10 @@ export const TRAIL_KINDS = { missile: 0, vortex: 1, contrail: 2, smoke: 3, fire:
 
 /**
  * Default look of each ribbon trail kind. width0 -> width1 over life (m), life (s).
- * missile: the thick white rocket smoke of the original (enemy missiles 2 -> 16 m over 3.5 s).
+ * missile: the thick white rocket smoke of the original (enemy missiles 2 -> 10 m over 3.5 s).
  */
 export const TRAIL_DEFAULTS = {
-  missile: { width0: 2.0, width1: 16.0, life: 3.5, color: [0.96, 0.96, 0.97], opacity: 0.95, headGlow: true },
+  missile: { width0: 2.0, width1: 10.0, life: 3.5, color: [0.96, 0.96, 0.97], opacity: 0.95, headGlow: true },
   vortex: { width0: 0.25, width1: 0.9, life: 0.6, color: [1, 1, 1], opacity: 0.4, headGlow: false },
   contrail: { width0: 1.2, width1: 10.0, life: 4.0, color: [0.97, 0.97, 1.0], opacity: 0.55, headGlow: false },
   smoke: { width0: 2.0, width1: 14.0, life: 4.0, color: [0.14, 0.135, 0.13], opacity: 0.8, headGlow: false },

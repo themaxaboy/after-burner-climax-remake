@@ -72,7 +72,9 @@ export class MissileRenderer {
     this.materials = [mat, this.glowMat];
   }
 
-  update(missiles, alpha) {
+  /** @param {Camera} [camera] dims exhaust glows that pass close to the lens (no screen-filling orbs) */
+  update(missiles, alpha, camera) {
+    const cam = camera ? camera.position : null;
     let n = 0;
     const arr = this.mesh.instanceMatrix.array;
     const garr = this.glow.instanceMatrix.array;
@@ -89,12 +91,18 @@ export class MissileRenderer {
       _m.toArray(arr, n * 16);
       // glow at the tail, flicker, only after ignition
       const lit = m.t > m.dropT ? 1 : 0.05;
-      const fl = lit * (0.85 + Math.sin(m.t * 90 + m.seed) * 0.15) * (enemy ? ENEMY_GLOW_SCALE : 1);
+      let fl = lit * (0.85 + Math.sin(m.t * 90 + m.seed) * 0.15) * (enemy ? ENEMY_GLOW_SCALE : 1);
+      let near = 1;
+      if (cam) {
+        const d = _p.distanceTo(cam);
+        near = d < 90 ? Math.max(0.12, (d - 12) / 78) : 1;
+        fl *= 0.55 + 0.45 * near;
+      }
       _p.addScaledVector(_d, -1.9 * bs);
       _s.set(fl, fl, fl * 2.2);
       _m.compose(_p, _q, _s);
       _m.toArray(garr, n * 16);
-      _col.copy(enemy ? (m.strong ? MISSILE_GLOW.strong : MISSILE_GLOW.enemy) : MISSILE_GLOW.player).toArray(carr, n * 3);
+      _col.copy(enemy ? (m.strong ? MISSILE_GLOW.strong : MISSILE_GLOW.enemy) : MISSILE_GLOW.player).multiplyScalar(near).toArray(carr, n * 3);
       n++;
       if (n >= 96) break;
     }
