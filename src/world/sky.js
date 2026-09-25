@@ -262,6 +262,11 @@ export class Sky {
     return this.envRT.texture;
   }
 
+  /** Sky radiance along a direction (linear, same scale as the dome). */
+  radiance(dir, out = new Color()) {
+    return atmosphereJS(dir, this.sunDir, this.params, 200, out);
+  }
+
   get envMap() {
     return this.envRT ? this.envRT.texture : null;
   }

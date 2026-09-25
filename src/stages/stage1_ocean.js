@@ -47,7 +47,7 @@ export default {
     cloudCover: 0.26,
     cloudDensity: 0.85,
     cloudHeight: 1.0,
-    cirrus: 0.55,
+    cirrus: 0.3,
     stars: 0,
     fogDensity: 0.00011,
     fogFalloff: 0.0012,
@@ -55,7 +55,7 @@ export default {
     ocean: 'goldSwell',
     grade: 'goldenHour',
     toneExposure: 0.55,
-    clouds: { count: 1.0, minY: 350, maxY: 1400, spread: 2600 }
+    clouds: { count: 1.0, minY: 140, maxY: 1300, spread: 2600, puffSize: [180, 420], sun: 1.15, ambient: 2.1 }
   },
   timeline: [
     { at: 700, radio: 'r.s1.feetWet' },

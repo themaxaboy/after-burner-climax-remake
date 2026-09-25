@@ -2,15 +2,18 @@ import { DirectionalLight, Group, HemisphereLight, Scene, Color } from 'three';
 import { Sky } from './sky.js';
 import { Ocean } from './ocean.js';
 import { WorldUniforms } from '../render/worldUniforms.js';
+import { Shadows } from '../render/shadows.js';
 
 /**
  * Stage environment: scene graph root, sky/IBL, sun light, ocean and the
  * per-stage environment systems (terrain, clouds...) plugged in by stages.
  */
 export class World {
-  constructor(renderer, quality) {
+  constructor(renderer, quality, camera) {
     this.renderer = renderer;
     this.quality = quality;
+    this.camera = camera;
+    this.csm = null;
     this.scene = new Scene();
     this.scene.name = 'world';
     this.sky = new Sky(renderer);
@@ -40,10 +43,25 @@ export class World {
     this.scene.environmentIntensity = env.envIntensity ?? 1.0;
     this.sun.color.copy(this.sky.sunColor);
     this.sun.intensity = this.sky.sunLightIntensity() * (env.sunLight ?? 1);
+    if (!this.csm && this.quality.shadows > 0) {
+      this.csm = new Shadows({
+        scene: this.scene,
+        camera: this.camera,
+        preset: this.quality,
+        sunDir: WorldUniforms.uSunDir.value,
+        sunColor: this.sun.color,
+        intensity: this.sun.intensity
+      });
+    }
+    if (this.csm && this.csm.csm) {
+      this.csm.setSun(WorldUniforms.uSunDir.value, this.sun.color, this.sun.intensity);
+      this.sun.visible = false;
+    } else this.sun.visible = true;
     if (env.ocean) {
       const q = this.quality;
       if (!this.ocean) {
         this.ocean = new Ocean({ rings: 60 + q.oceanRings * 10, segments: q.oceanRes + 32, preset: env.ocean });
+        this.csm?.setupMaterial(this.ocean.material);
         this.scene.add(this.ocean.mesh);
       } else this.ocean.setPreset(env.ocean);
       this.ocean.mesh.visible = true;
@@ -70,6 +88,26 @@ export class World {
     this.sun.target.position.copy(camera.position);
     this.sun.target.updateMatrixWorld();
     for (let i = 0; i < this.systems.length; i++) this.systems[i].update(dt, camera);
+    this.csm?.update();
+  }
+
+  /** Rebuild quality-dependent parts (shadows) after a preset change. */
+  setQuality(q) {
+    this.quality = q;
+    const mats = this.csm ? [...this.csm.materials] : [];
+    this.csm?.dispose();
+    this.csm = null;
+    for (const m of mats) {
+      delete m.defines.USE_CSM;
+      delete m.defines.CSM_CASCADES;
+      delete m.defines.CSM_FADE;
+      m.needsUpdate = true;
+    }
+    if (q.shadows > 0) {
+      this.csm = new Shadows({ scene: this.scene, camera: this.camera, preset: q, sunDir: WorldUniforms.uSunDir.value, sunColor: this.sun.color, intensity: this.sun.intensity });
+      for (const m of mats) this.csm.setupMaterial(m);
+      this.sun.visible = !this.csm.csm;
+    } else this.sun.visible = true;
   }
 }
 

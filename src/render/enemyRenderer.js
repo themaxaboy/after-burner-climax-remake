@@ -97,7 +97,7 @@ export class EnemyRenderer {
         mat.userData.enemyPatched = true;
         applyWorldFog(mat);
         addHitFlash(mat);
-        if (this.csm) this.csm.setupMaterial(mat);
+        this.csm?.setupMaterial(mat);
         this.materials.push(mat);
       }
       const gg = geo.clone();

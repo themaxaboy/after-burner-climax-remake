@@ -1,4 +1,4 @@
-import { NoToneMapping, PCFSoftShadowMap, SRGBColorSpace, WebGLRenderer, VSMShadowMap } from 'three';
+import { NoToneMapping, PCFShadowMap, SRGBColorSpace, WebGLRenderer } from 'three';
 
 export function createRenderer(canvas) {
   const renderer = new WebGLRenderer({
@@ -14,10 +14,9 @@ export function createRenderer(canvas) {
   renderer.toneMapping = NoToneMapping; // AgX happens in the post chain
   renderer.toneMappingExposure = 1;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.shadowMap.type = PCFShadowMap;
   renderer.info.autoReset = false;
   renderer.debug.checkShaderErrors = import.meta.env ? import.meta.env.DEV : true;
   return renderer;
 }
 
-export { VSMShadowMap };

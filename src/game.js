@@ -50,7 +50,7 @@ export class Game {
     this.settings.quality = this.settings.quality || null;
 
     this.rig = new CameraRig(innerWidth / innerHeight);
-    this.world = new World(renderer, this.preset);
+    this.world = new World(renderer, this.preset, this.rig.camera);
 
     if (this.preset.ao) {
       try {
@@ -278,7 +278,7 @@ export class Game {
     this.preset = p;
     this.settings.quality = name;
     saveSettings(this.settings);
-    this.world.quality = p;
+    this.world.setQuality(p);
     this.dynres.setPreset(p);
     this.post.build(p);
     this.resize();

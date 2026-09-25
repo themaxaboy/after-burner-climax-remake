@@ -17,6 +17,8 @@ import { PlayerJet } from '../render/playerJet.js';
 import { EnemyRenderer } from '../render/enemyRenderer.js';
 import { MissileRenderer } from '../render/missileRenderer.js';
 import { t } from '../ui/i18n.js';
+import { Clouds } from '../world/clouds.js';
+import { Color } from 'three';
 
 const _v = new Vector3();
 const _v2 = new Vector3();
@@ -141,6 +143,28 @@ export class StageState {
     this.lastGunSfx = 0;
     this.lastHitSfx = 0;
 
+    // cloud banks
+    const cdef = def.env.clouds;
+    if (cdef && g.preset.clouds > 0) {
+      this.clouds = new Clouds({
+        rail: this.rail,
+        count: Math.round(g.preset.clouds * (cdef.count ?? 1)),
+        seed: seed + 7,
+        minY: cdef.minY,
+        maxY: cdef.maxY,
+        spread: cdef.spread,
+        layer: cdef.layer || null,
+        puffSize: cdef.puffSize,
+        atlasSize: g.preset.name === 'low' ? 512 : 1024
+      });
+      const sky = g.world.sky;
+      const top = sky.radiance(_v.set(0, 1, 0), new Color());
+      const bottom = new Color().copy(g.world.sky.radiance(_v.set(0.3, 0.02, -0.95).normalize(), new Color())).multiplyScalar(0.55);
+      this.clouds.setLighting((sky.params.sunIntensity * sky.params.exposure) / Math.PI * (cdef.sun ?? 1), top.multiplyScalar(cdef.ambient ?? 1), bottom);
+      this.clouds.init(p.s);
+      scene.add(this.clouds.mesh);
+    }
+
     // hooks for stage-specific systems (carrier launch, canyon, bosses...)
     this.stageLogic = def.createLogic ? def.createLogic(this) : null;
     await this.stageLogic?.init?.();
@@ -186,6 +210,10 @@ export class StageState {
     const g = this.game;
     g.world.dynamic.remove(this.jet.group);
     this.enemyRenderer.dispose();
+    if (this.clouds) {
+      g.world.scene.remove(this.clouds.mesh);
+      this.clouds.dispose();
+    }
     g.world.scene.remove(this.missileRenderer.mesh, this.missileRenderer.glow);
     this.fx.dispose?.();
     this.stageLogic?.dispose?.();
@@ -675,6 +703,10 @@ export class StageState {
     this.stageLogic?.render?.(alpha, realDt);
     if (!this.stageLogic?.cameraOverride) g.rig.update(p, this.rail, alpha, realDt, { climax: this.climax.active });
     g.world.update(realDt, cam);
+    if (this.clouds) {
+      this.clouds.update(realDt, cam, p.s);
+      this.whiteout = this.clouds.whiteout;
+    }
 
     // reticle: 600 m ahead of the jet, projected; eased toward the assist target
     _v.copy(this.jet.group.position).addScaledVector(p.forward, 600);
