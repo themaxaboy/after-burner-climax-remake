@@ -40,9 +40,8 @@ export class FxHooks {
     this._fullI = 0;
     this._lastBoomT = -1e9;
     this._salvoUntil = -1e9;
-    /** flash light pool: [{light, peak, t0, x, y, z, vx, vy, vz}] (created in warmup) */
+    /** flash light pool: [{light, peak, t0, d, x, y, z, vx, vy, vz}] (created in warmup) */
     this.lights = null;
-    this._lastLightT = 0;
     this.stats = { full: 0, lite: 0 };
     this._alpha = 1;
     this._renderTrail = this._renderTrail.bind(this);
@@ -79,7 +78,8 @@ export class FxHooks {
   /** Reserve a full explosion slot; false = over budget, use the lite recipe. */
   _allowFull(now) {
     const T = this._fullT;
-    const max = Math.min(T.length, this.fx.Q?.liteBurst ?? FX_TUNE.throttle.full);
+    const full = FX_TUNE.throttle.full;
+    const max = Math.min(T.length, full, this.fx.Q?.liteBurst ?? full); // per-quality budget (low: 2)
     let n = 0;
     for (let i = 0; i < T.length; i++) if (now - T[i] < FX_TUNE.throttle.window) n++;
     if (n >= max) return false;
