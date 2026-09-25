@@ -1,0 +1,14 @@
+{
+  "name": "After Burner Climax — Web Remake",
+  "short_name": "AB Climax",
+  "description": "Fan-made web remake of the arcade jet shooter. Three stages, Climax mode, 2026-style graphics.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05070c",
+  "theme_color": "#05070c",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

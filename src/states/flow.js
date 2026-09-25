@@ -17,6 +17,10 @@ export class Flow {
   }
 
   toHangar() {
+    // user gesture: go fullscreen + landscape on phones
+    if (matchMedia('(pointer: coarse)').matches && !document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.({ navigationUI: 'hide' }).then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {});
+    }
     this.game.setState(new HangarState(this.game));
   }
 

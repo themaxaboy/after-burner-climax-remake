@@ -14,6 +14,7 @@ const _up = new Vector3(0, 1, 0);
 export class TitleState {
   constructor(game) {
     this.game = game;
+    this.kind = 'title';
     this.loading = true;
     this.t = 0;
   }

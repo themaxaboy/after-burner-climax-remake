@@ -18,6 +18,8 @@ async function boot() {
     return;
   }
   game.flow = new Flow(game);
+  if (params.bench && !params.stage) params.stage = 1;
+  if (params.bench) params.god = true;
   if (params.stage >= 1 && params.stage <= STAGES.length) {
     // direct stage entry (testing / benchmarks)
     game.session.stageIndex = params.stage - 1;

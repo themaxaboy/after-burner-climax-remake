@@ -88,7 +88,7 @@ export class HUD {
     c.textAlign = align;
     c.textBaseline = 'alphabetic';
     c.shadowColor = color;
-    c.shadowBlur = size * 0.5;
+    c.shadowBlur = this.lowFx ? 0 : size * 0.5;
     c.fillStyle = color;
     c.fillText(text, x, y);
     c.shadowBlur = 0;

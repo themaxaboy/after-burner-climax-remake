@@ -75,6 +75,7 @@ class PanelState {
 export class BriefingState extends PanelState {
   constructor(game, stageIndex, stageDef) {
     super(game, stageDef.env, { music: 'anthem' });
+    this.kind = 'briefing';
     this.stageIndex = stageIndex;
     this.def = stageDef;
   }
@@ -101,6 +102,7 @@ export class BriefingState extends PanelState {
 export class ResultsState extends PanelState {
   constructor(game, results) {
     super(game, results.stage.env, { music: 'results' });
+    this.kind = 'results';
     this.r = results;
     this.accept = 1.2;
   }
@@ -139,6 +141,7 @@ export class ResultsState extends PanelState {
 export class EndingState extends PanelState {
   constructor(game, env) {
     super(game, env, { music: 'anthem' });
+    this.kind = 'ending';
     this.accept = 2;
   }
 

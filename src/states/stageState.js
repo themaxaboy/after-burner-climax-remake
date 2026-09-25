@@ -41,6 +41,7 @@ export const DAMAGE = {
 export class StageState {
   constructor(game, stageDef, opts = {}) {
     this.game = game;
+    this.kind = 'stage';
     this.def = stageDef;
     this.opts = opts;
     this.loading = true;
@@ -208,6 +209,7 @@ export class StageState {
     this.enemyRenderer.warmup(true);
     this.missileRenderer.warmup(true);
     this.fx.warmup?.();
+    this.fx.vaporCone?.(this.jet.group, 1); // lazily created mesh: compile it now
     g.rig.update(this.player, this.rail, 1, 1 / 60);
     g.world.update(0, g.rig.camera);
     try {
@@ -216,6 +218,7 @@ export class StageState {
       console.warn('compileAsync failed', e);
     }
     g.renderWorld(1 / 60);
+    this.fx.vaporCone?.(this.jet.group, 0);
     this.enemyRenderer.warmup(false);
     this.missileRenderer.warmup(false);
   }

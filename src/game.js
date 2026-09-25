@@ -22,6 +22,7 @@ import { loadAudio } from './render/assets.js';
 import { Menu, overlay } from './ui/menu.js';
 import { createOptionsMenu } from './ui/screens/options.js';
 import { t } from './ui/i18n.js';
+import { Bench } from './core/bench.js';
 
 /**
  * Top-level orchestrator: owns renderer, post chain, world, input, loop and
@@ -75,6 +76,7 @@ export class Game {
     this.mouse.enabled = !!this.settings.mouseFlight;
     this.touch = this.input.addSource(new TouchSource(this.uiRoot));
     if (params.autopilot || params.bench) this.autopilot = this.input.addSource(new Autopilot(this));
+    if (params.bench) this.bench = new Bench(this, params.benchSeconds);
 
     this.dynres = new DynamicResolution(this.preset, this.settings.fpsCap || 60);
     this.dynres.enabled = !params.fixed && !params.frames;
@@ -83,6 +85,7 @@ export class Game {
     if (params.debug) this.perf.toggle(true);
     this.hud = new HUD(this.hudCanvas);
     this.hud.colorblind = !!this.settings.colorblindReticle;
+    this.hud.lowFx = this.preset.name === 'low';
     setLang(params.lang || this.settings.lang || 'en');
     this.rig.shakeScale = this.settings.shake ?? 1;
     this._initAudio();
@@ -103,6 +106,7 @@ export class Game {
       this._lastFrameStart = performance.now();
       void ms;
       if (params.frames && this.activeFrames === params.frames) this.markReady();
+      this.bench?.frame(realDt);
     };
 
     this.applyFpsCap();
@@ -332,6 +336,7 @@ export class Game {
     this.world.setQuality(p);
     this.dynres.setPreset(p);
     this.post.build(p);
+    this.hud.lowFx = p.name === 'low';
     this.resize();
     this.events.emit('quality', p);
   }

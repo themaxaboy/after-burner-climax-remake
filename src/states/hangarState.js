@@ -22,6 +22,7 @@ const _up = new Vector3(0, 1, 0);
 export class HangarState {
   constructor(game) {
     this.game = game;
+    this.kind = 'hangar';
     this.loading = true;
     this.t = 0;
     this.jetIndex = Math.max(0, JETS.findIndex((j) => j.id === game.session.jet));
