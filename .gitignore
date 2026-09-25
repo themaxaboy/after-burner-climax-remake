@@ -5,3 +5,4 @@ dist/
 tests/e2e/out/
 .vite/
 .voice-cache/
+.claude/worktrees/
