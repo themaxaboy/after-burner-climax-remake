@@ -5,7 +5,8 @@ const _v = new Vector3();
 
 /**
  * Player aircraft visual: procedural model (or placeholder), afterburner
- * flames, wingtip vortex trails under G, vapor cone at FAST, control surfaces.
+ * flames, wingtip vortex trails under G / during jinks, vapor cone at FAST and
+ * at the start of the Climax afterburn (`player.boost`), control surfaces.
  */
 export class PlayerJet {
   constructor({ models, fx, jetId = 'fa18e', scheme = 'standard', csm = null }) {
@@ -47,6 +48,7 @@ export class PlayerJet {
     if (this.afterburner) this.group.add(this.afterburner.object);
     this.vortex = [null, null];
     this.vapor = 0;
+    this.boostT = -1; // s since the Climax afterburn started (-1 = off)
     this.hardpointIndex = 0;
   }
 
@@ -94,11 +96,16 @@ export class PlayerJet {
         time: timeSec
       });
     }
-    if (this.afterburner) this.afterburner.set(0.55 + player.throttle * 0.3 + 0.15, player.afterburner);
-    // wingtip vortices under high G / hard turns
+    const boost = player.boost > 0;
+    this.boostT = boost ? (this.boostT < 0 ? 0 : this.boostT + realDt) : -1;
+    if (this.afterburner) {
+      if (boost) this.afterburner.set(1, 1);
+      else this.afterburner.set(0.55 + player.throttle * 0.3 + 0.15, player.afterburner);
+    }
+    // wingtip vortices under high G / hard turns / jinks / afterburn
     const fx = this.fx;
     if (fx?.createTrail) {
-      const pull = player.gLoad > 3.2 || Math.abs(player.bank) > 0.9;
+      const pull = player.gLoad > 3.2 || Math.abs(player.bank) > 1.0 || player.jinkT > 0 || boost;
       for (let i = 0; i < 2; i++) {
         if (pull) {
           if (!this.vortex[i]) this.vortex[i] = fx.createTrail({ kind: 'vortex', width: 0.16, life: 0.32 });
@@ -110,7 +117,8 @@ export class PlayerJet {
       }
     }
     // vapor cone when punching through to FAST
-    const targetVapor = player.throttle > 0 && player.speed > player.baseSpeed * 1.2 && player.speed < player.baseSpeed * 1.38 ? 1 : 0;
+    const punch = player.throttle > 0 && player.speed > player.baseSpeed * 1.2 && player.speed < player.baseSpeed * 1.38;
+    const targetVapor = punch || (boost && this.boostT < 0.7) ? 1 : 0;
     this.vapor += (targetVapor - this.vapor) * Math.min(1, realDt * 5);
     if (fx?.vaporCone) fx.vaporCone(g, this.vapor);
   }

@@ -18,26 +18,46 @@ export function projectPoint(camera, p, out) {
   return depth > 0;
 }
 
+/** Hidden catch radius (half-height units) per assist level 0/1/2. */
+export const LOCK_RADIUS = [0.075, 0.095, 0.115];
+export const MAX_LOCKS_PER_TARGET = 4;
+
 /**
- * Sweep-to-lock targeting in screen space (After Burner style):
- * targets that stay inside the lock circle around the reticle for a short
- * dwell are added to the lock list (max 8; up to 32 in Climax, instant).
- * Missile presses consume locks in order; each lock remembers how many
- * missiles are already in flight toward it.
+ * Sweep-to-lock targeting in screen space (After Burner style).
+ *
+ * Passing the (small) reticle over a target locks it after a short dwell.
+ * Each target needs `lockNeed = min(4, ceil(hpLeft / missileDamage))`
+ * missiles; it stays lockable while `locks + incoming < lockNeed` (pending
+ * locks plus player missiles already in flight, which MissileSystem keeps in
+ * `e.incoming`). After each lock the target rests `relockTime` before it can
+ * take another one, so tough targets collect several locks while one-shot
+ * targets never get a second lock or a second missile. `e.xMark` is set once
+ * the missiles in flight cover the need (the HUD draws a red ✕).
+ *
+ * `consume()` hands out the oldest valid pending lock (FIFO). Climax widens
+ * the circle, removes the dwell and raises the cap to `climaxMax`.
  */
 export class LockOn {
   constructor() {
-    this.locks = []; // enemies
+    this.locks = []; // pending lock entries (enemies, oldest first)
     this.lockIds = []; // enemy ids at lock time (pool slots get reused)
-    this.max = 8;
-    this.reticle = { x: 0, y: -0.05 }; // NDC
+    this.max = 6; // per-jet capacity (PLAYER_JETS[id].lockCap)
+    this.climaxMax = 64;
+    this.reticle = { x: 0, y: -0.05 }; // NDC centre of the drawn reticle
+    this.reticleSize = 0.032; // drawn bracket, fraction of screen height
     this.reticleWorld = new Vector3();
-    this.radius = 0.1; // in NDC-Y units (fraction of half-height)
+    this.radius = LOCK_RADIUS[2]; // current catch radius (NDC-Y / half-height units)
+    this.climaxRadius = 0.45;
     this.climax = false;
     this.assist = 2;
     this.minRange = 120;
     this.maxRange = 4200;
-    this.assistTarget = null; // best target for vulcan magnetism
+    this.missileDamage = 12;
+    this.dwellTime = 0.06; // s under the reticle before a lock
+    this.relockTime = 0.3; // s rest between two locks on the same target
+    this.climaxRelock = 0.1;
+    this.offscreenDrop = 1.2; // s off screen before a pending lock is dropped
+    this.assistTarget = null; // best target near the reticle (vulcan, dumb-fire)
     this.newLocks = 0; // locks acquired this step (for sfx)
     this.aspect = 16 / 9;
     this._s = new Vector3();
@@ -50,16 +70,42 @@ export class LockOn {
     this.assistTarget = null;
   }
 
-  /** Current valid locks as {e, id} pairs (for Climax salvos). */
+  /** Current valid locks as {e, id} pairs. */
   snapshot(out = []) {
     out.length = 0;
     for (let i = 0; i < this.locks.length; i++) out.push({ e: this.locks[i], id: this.lockIds[i] });
     return out;
   }
 
+  get count() {
+    return this.locks.length;
+  }
+
+  get capacity() {
+    return this.climax ? this.climaxMax : this.max;
+  }
+
   lockRadius() {
-    const base = 0.105 * (1 + 0.35 * this.assist);
-    return this.climax ? base * 3.6 : base;
+    return this.climax ? this.climaxRadius : LOCK_RADIUS[this.assist] ?? LOCK_RADIUS[2];
+  }
+
+  /** Missiles needed to destroy `e` from its current hp (1..4). */
+  lockNeed(e) {
+    const hp = e.hp != null ? e.hp : this.missileDamage;
+    return Math.max(1, Math.min(MAX_LOCKS_PER_TARGET, Math.ceil(hp / this.missileDamage)));
+  }
+
+  /** Alive, lockable and not yet covered by pending locks + missiles in flight. */
+  canTarget(e) {
+    if (!e || !e.active || e.dead || e.dying || !e.lockable) return false;
+    return (e.locks || 0) + (e.incoming || 0) < this.lockNeed(e);
+  }
+
+  /** Refresh the per-enemy lock bookkeeping (need, ✕ mark). */
+  refresh(e) {
+    const need = (e.lockNeed = this.lockNeed(e));
+    const inc = e.incoming || 0;
+    e.xMark = inc > 0 && (e.locks || 0) + inc >= need;
   }
 
   /**
@@ -72,15 +118,29 @@ export class LockOn {
     this.newLocks = 0;
     const R = this.lockRadius();
     this.radius = R;
-    const max = this.climax ? 32 : this.max;
+    const cap = this.capacity;
     const rx = this.reticle.x, ry = this.reticle.y;
     const aspect = this.aspect;
+    const projK = 1 / Math.tan(((camera.fov || 60) * Math.PI) / 360); // metres/depth → half-height units
+    const dwellNeed = this.climax ? 0 : this.dwellTime;
+    const relock = this.climax ? this.climaxRelock : this.relockTime;
     let best = null, bestScore = Infinity;
     const list = enemies.list;
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
+      if (e._lkId !== e.id) {
+        // fresh enemy (or a recycled pool slot)
+        e._lkId = e.id;
+        e.dwell = 0;
+        e.relockT = 0;
+        e.offT = 0;
+        e.xMark = false;
+      }
+      if (e.relockT > 0) e.relockT -= dt;
+      this.refresh(e);
       if (!e.active || !e.lockable || e.dead || e.dying) {
         e.onScreen = false;
+        e.dwell = 0;
         continue;
       }
       const onScreen = projectPoint(camera, e.lockPos, this._s);
@@ -89,6 +149,7 @@ export class LockOn {
       e.onScreen = onScreen && Math.abs(this._s.x) < 1.05 && Math.abs(this._s.y) < 1.05;
       e.sx = this._s.x;
       e.sy = this._s.y;
+      e.offT = e.onScreen ? 0 : e.offT + dt;
       if (!e.onScreen || dist < this.minRange || dist > this.maxRange) {
         e.dwell = 0;
         continue;
@@ -97,25 +158,26 @@ export class LockOn {
       const dx = (this._s.x - rx) * aspect, dy = this._s.y - ry;
       const d = Math.hypot(dx, dy);
       // projected size helps big targets lock more easily
-      const projR = Math.min(0.2, (e.radius / Math.max(this._s.z, 1)) * 1.6);
-      const inside = d < R + projR;
+      const projR = Math.min(0.2, (e.radius / Math.max(this._s.z, 1)) * projK);
+      const reach = R + projR;
       e.screenD = d;
-      if (inside) {
-        e.dwell = (e.dwell || 0) + dt;
-        const maxPer = e.def.big ? 4 : 1;
-        const need = this.climax ? 0 : 0.09;
-        if (e.dwell >= need && e.locks < maxPer && this.locks.length < max) {
-          e.locks++;
-          e.lockT = 0;
+      const lockable = (e.locks || 0) + (e.incoming || 0) < e.lockNeed;
+      if (d < reach) {
+        e.dwell += dt;
+        if (lockable && e.relockT <= 0 && e.dwell >= dwellNeed && this.locks.length < cap) {
+          e.locks = (e.locks || 0) + 1;
           this.locks.push(e);
           this.lockIds.push(e.id);
           this.newLocks++;
-          if (e.def.big) e.dwell = need - 0.25; // re-lock big targets after a pause
+          e.relockT = relock;
+          e.dwell = 0;
+          this.refresh(e);
         }
       } else e.dwell = 0;
-      // assist target for the vulcan: closest to reticle, prefer threats / EO targets
-      const score = d / (R + projR) + dist / this.maxRange * 0.3 - (e.def.threat || 0) * 0.15 - (e.tag ? 0.5 : 0);
-      if (d < R * 2 && score < bestScore) {
+      // assist target: closest to the reticle, prefer threats / EO targets and
+      // targets that still need missiles
+      const score = d / reach + (dist / this.maxRange) * 0.3 - (e.def.threat || 0) * 0.15 - (e.tag ? 0.5 : 0) + (lockable ? 0 : 0.6);
+      if (d < reach * 2 && score < bestScore) {
         bestScore = score;
         best = e;
       }
@@ -125,22 +187,29 @@ export class LockOn {
     for (let i = this.locks.length - 1; i >= 0; i--) {
       const e = this.locks[i];
       const same = e.id === this.lockIds[i];
-      if (!same || !e.active || e.dead || e.dying || !e.lockable || (e.dist > this.maxRange * 1.2) || (!e.onScreen && (e.lockT = (e.lockT || 0) + dt) > 1.2)) {
-        if (same) e.locks = Math.max(0, e.locks - 1);
+      if (!same || !e.active || e.dead || e.dying || !e.lockable || e.dist > this.maxRange * 1.2 || e.offT > this.offscreenDrop) {
+        if (same) {
+          e.locks = Math.max(0, e.locks - 1);
+          this.refresh(e);
+        }
         this.locks.splice(i, 1);
         this.lockIds.splice(i, 1);
       }
     }
   }
 
-  /** Next lock to fire at (FIFO); removes it from the list. */
+  /**
+   * Oldest valid pending lock → its enemy (moved from `locks` to about-to-fire:
+   * the caller launches a missile at it right away, which bumps `e.incoming`),
+   * or null when there is none.
+   */
   consume() {
     while (this.locks.length) {
       const e = this.locks.shift();
       const id = this.lockIds.shift();
       if (e.id !== id) continue; // slot was recycled
       e.locks = Math.max(0, e.locks - 1);
-      if (e.active && !e.dead) return e;
+      if (e.active && !e.dead && !e.dying) return e;
     }
     return null;
   }
@@ -149,4 +218,3 @@ export class LockOn {
     return e.locks > 0;
   }
 }
-

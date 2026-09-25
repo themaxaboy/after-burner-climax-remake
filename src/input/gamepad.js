@@ -1,6 +1,8 @@
+import { SnapDetector } from './input.js';
+
 // Standard-mapping gamepad provider.
-//   LS: move   A: missile   B/X: Climax   RT: fast   LT: slow
-//   LB/RB: barrel roll   Y: flare   Start: pause   D-pad: menu nav
+//   LS: move   A: missile (hold: ripple)   B/X: Climax (hold)   RT: fast   LT: slow
+//   LB/RB or a stick snap from side to side: barrel roll   Y: flare   Start: pause   D-pad: menu nav
 const DEAD = 0.14;
 const BTN = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, LS: 10, RS: 11, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 
@@ -21,6 +23,7 @@ export class GamepadSource {
     this.prev = new Uint8Array(17);
     this.index = -1;
     this.connected = false;
+    this.snap = new SnapDetector(0.18, 0.8);
     if (typeof window !== 'undefined') {
       window.addEventListener('gamepadconnected', (e) => {
         this.index = e.gamepad.index;
@@ -43,7 +46,7 @@ export class GamepadSource {
     return null;
   }
 
-  poll(input) {
+  poll(input, dt = 1 / 120) {
     const pad = this._pad();
     if (!pad) return;
     const lx = dz(pad.axes[0] || 0);
@@ -60,12 +63,15 @@ export class GamepadSource {
         // roll buttons & menu confirm are momentary
         if (action === 'rollL' || action === 'rollR') {
           if (d) input.press(action);
-        } else input.setHold(action, !!d);
+        } else if (action === 'climax') input.setHold('climax', down(BTN.B) || down(BTN.X));
+        else input.setHold(action, !!d);
         if (bi === BTN.A) input.setHold('confirm', !!d);
         if (bi === BTN.B) input.setHold('back', !!d);
         this.prev[bi] = d;
       }
     }
+    const snap = this.snap.update(lx, dt);
+    if (snap) input.press(snap < 0 ? 'rollL' : 'rollR');
     if (Math.abs(lx) > 0 || Math.abs(ly) > 0) {
       input.moveX += lx;
       input.moveY += -ly;

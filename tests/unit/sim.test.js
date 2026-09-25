@@ -73,14 +73,22 @@ describe('missile guidance', () => {
 });
 
 describe('missile stock', () => {
-  it('regenerates about 2 per second up to 50', () => {
-    const s = new MissileStock(50, 2);
-    for (let i = 0; i < 10; i++) s.take();
-    expect(s.count).toBe(40);
-    for (let i = 0; i < 120 * 3; i++) s.update(1 / 120);
-    expect(s.count).toBe(46);
+  it('holds 8 ready missiles and reloads 3 per second from an infinite reserve', () => {
+    const s = new MissileStock();
+    expect(s.max).toBe(8);
+    expect(s.ready).toBe(8);
+    expect(s.reload).toBe(0);
+    for (let i = 0; i < 8; i++) expect(s.take()).toBe(true);
+    expect(s.take()).toBe(false);
+    for (let i = 0; i < 60; i++) s.update(1 / 120);
+    expect(s.ready).toBe(1);
+    expect(s.reload).toBeGreaterThan(0.4);
+    expect(s.reload).toBeLessThan(0.6);
     for (let i = 0; i < 120 * 10; i++) s.update(1 / 120);
-    expect(s.count).toBe(50);
+    expect(s.ready).toBe(8);
+    expect(s.count).toBe(8);
+    s.infinite = true;
+    for (let i = 0; i < 100; i++) expect(s.take()).toBe(true);
   });
 });
 
@@ -103,7 +111,7 @@ describe('lock-on', () => {
     expect(projectPoint(cam, new Vector3(0, 0, 100), o)).toBe(false);
   });
 
-  it('locks targets under the reticle after a short dwell, max 8', () => {
+  it('locks targets under the reticle after a short dwell, up to the jet capacity', () => {
     const lo = new LockOn();
     lo.reticle.x = 0;
     lo.reticle.y = 0;
@@ -111,23 +119,26 @@ describe('lock-on', () => {
     for (let i = 0; i < 12; i++) list.push(enemy(i + 1, (i - 6) * 3, 0, -1500));
     list.push(enemy(99, 900, 0, -1000)); // far off to the side
     const mgr = { list };
-    lo.update(0.05, mgr, cam, new Vector3());
+    lo.update(0.03, mgr, cam, new Vector3());
     expect(lo.locks.length).toBe(0);
-    lo.update(0.06, mgr, cam, new Vector3());
-    expect(lo.locks.length).toBe(8);
+    lo.update(0.04, mgr, cam, new Vector3());
+    expect(lo.locks.length).toBe(6);
     expect(list[12].locks).toBe(0);
+    lo.max = 8;
+    lo.update(0.07, mgr, cam, new Vector3());
+    expect(lo.locks.length).toBe(8);
   });
 
-  it('climax locks instantly with a larger circle and up to 32', () => {
+  it('climax locks instantly with a huge circle and up to 64', () => {
     const lo = new LockOn();
     lo.climax = true;
     lo.reticle.x = 0;
     lo.reticle.y = 0;
     const list = [];
-    for (let i = 0; i < 40; i++) list.push(enemy(i + 1, (i % 8 - 4) * 40, (Math.floor(i / 8) - 2) * 30, -1500));
+    for (let i = 0; i < 80; i++) list.push(enemy(i + 1, (i % 10 - 5) * 30, (Math.floor(i / 10) - 4) * 15, -1500));
     lo.update(1 / 120, { list }, cam, new Vector3());
-    expect(lo.locks.length).toBeGreaterThan(8);
-    expect(lo.locks.length).toBeLessThanOrEqual(32);
+    expect(lo.radius).toBeCloseTo(0.45);
+    expect(lo.locks.length).toBe(64);
   });
 
   it('consume returns locks in order', () => {
@@ -171,6 +182,20 @@ describe('scoring', () => {
     expect(s.stars).toBe(0);
     expect(Scoring.rankLetter(96)).toBe('S');
   });
+  it('near miss pays 500; the combo window is 4 s and freezes', () => {
+    const s = new Scoring();
+    expect(s.comboWindow).toBe(4);
+    expect(s.nearMiss()).toBe(500);
+    expect(s.stage).toBe(500);
+    s.kill({ def: { score: 1000 } });
+    s.frozen = true;
+    s.update(10, -1, 0);
+    expect(s.combo).toBe(1);
+    s.frozen = false;
+    s.update(4.1, -1, 0);
+    expect(s.combo).toBe(0);
+    expect(s.climaxClear(3)).toBe(6000);
+  });
   it('flight score accrues at NEUTRAL and FAST only', () => {
     const s = new Scoring();
     s.update(1, -1, 1000);
@@ -183,17 +208,23 @@ describe('scoring', () => {
 });
 
 describe('climax', () => {
-  it('fills, activates, drains and caps mash damage at 2x', () => {
+  it('needs a full gauge, drains while active, caps mash damage at 2x, then salvo → afterburn', () => {
     const c = new Climax();
     expect(c.activate()).toBe(false);
     c.gauge = 1;
     expect(c.activate()).toBe(true);
+    expect(c.phase).toBe('active');
     for (let i = 0; i < 30; i++) c.mash();
     expect(c.damageMul).toBe(2);
     let ended = false;
     for (let i = 0; i < 120 * 6 && !ended; i++) ended = c.update(1 / 120);
     expect(ended).toBe(true);
     expect(c.gauge).toBe(0);
+    expect(c.phase).toBe('salvo');
+    c.salvoDone();
+    expect(c.phase).toBe('afterburn');
+    for (let i = 0; i < 120 * 2.1; i++) c.update(1 / 120);
+    expect(c.phase).toBe('idle');
     c.onKill(false, 1);
     expect(c.gauge).toBeGreaterThan(0.05);
   });

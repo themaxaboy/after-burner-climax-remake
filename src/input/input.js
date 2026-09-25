@@ -24,6 +24,36 @@ const KEYMAP = {
   F3: 'debug', Backquote: 'debug'
 };
 
+/**
+ * Stick-snap roll gesture (arcade stick): the stick goes from one side
+ * (|x| ≥ thresh) to the other within `window` seconds. `update` returns the
+ * snap direction (-1 / 1) on the step it happens, else 0.
+ */
+export class SnapDetector {
+  constructor(window = 0.18, thresh = 0.8) {
+    this.window = window;
+    this.thresh = thresh;
+    this.side = 0; // last extreme visited
+    this.t = 1e9; // s since the stick left that extreme
+    this.cool = 0;
+  }
+
+  update(x, dt) {
+    this.t += dt;
+    if (this.cool > 0) this.cool -= dt;
+    const s = x >= this.thresh ? 1 : x <= -this.thresh ? -1 : 0;
+    if (s === 0) return 0;
+    let out = 0;
+    if (this.side === -s && this.t <= this.window && this.cool <= 0) {
+      out = s;
+      this.cool = 0.3;
+    }
+    this.side = s;
+    this.t = 0;
+    return out;
+  }
+}
+
 export class Input {
   constructor(target = window) {
     this.target = target;

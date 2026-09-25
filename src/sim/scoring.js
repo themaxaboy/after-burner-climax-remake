@@ -7,9 +7,13 @@ export function comboBonusAt(n) {
   return (n - SCORE.comboHighStart) % SCORE.comboHighStep === 0 ? SCORE.comboHighBonus : 0;
 }
 
+export const NEAR_MISS_POINTS = 500;
+export const CLIMAX_CLEAR_PER_TARGET = 2000;
+
 /**
  * Arcade scoring: kill points, combo chain with bonus steps, speed-based
  * flight score, Emergency Order bonuses, down rate and rank stars.
+ * The combo window (4 s) is frozen while `frozen` is set (Climax).
  */
 export class Scoring {
   constructor() {
@@ -30,12 +34,16 @@ export class Scoring {
     this.time = 0;
     this.shotsHit = 0;
     this.lastBonus = 0;
+    this.comboWindow = SCORE.comboWindow;
+    this.frozen = false; // Climax: the combo timer doesn't run
+    this.nearMisses = 0;
+    this.climaxBonus = 0;
     this.events = []; // popups {text, value, t}
   }
 
   update(dt, throttle, metres) {
     this.time += dt;
-    if (this.comboTimer > 0) {
+    if (this.comboTimer > 0 && !this.frozen) {
       this.comboTimer -= dt;
       if (this.comboTimer <= 0) this.combo = 0;
     }
@@ -57,7 +65,7 @@ export class Scoring {
     this.kills++;
     this.combo++;
     this.bestCombo = Math.max(this.bestCombo, this.combo);
-    this.comboTimer = SCORE.comboWindow;
+    this.comboTimer = this.comboWindow;
     const base = enemy.def.score;
     this.add(base);
     const bonus = comboBonusAt(this.combo);
@@ -66,6 +74,23 @@ export class Scoring {
       this.lastBonus = bonus;
     }
     return { base, bonus };
+  }
+
+  /** Enemy passed very close: flat bonus. Returns the points. */
+  nearMiss() {
+    this.nearMisses++;
+    this.add(NEAR_MISS_POINTS);
+    return NEAR_MISS_POINTS;
+  }
+
+  /** Every target locked in one Climax was destroyed: bonus per target. Returns the points. */
+  climaxClear(n) {
+    if (!(n > 0)) return 0;
+    const bonus = CLIMAX_CLEAR_PER_TARGET * n;
+    this.climaxBonus += bonus;
+    this.lastBonus = bonus;
+    this.add(bonus);
+    return bonus;
   }
 
   /** Taking damage breaks the chain. */
