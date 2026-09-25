@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terrain Lab</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #05070c; overflow: hidden; font: 12px/1.35 system-ui, sans-serif; color: #dfe6ee; }
+      canvas#gl { display: block; width: 100vw; height: 100vh; }
+      #panel { position: fixed; top: 8px; left: 8px; background: rgba(8, 12, 18, 0.72); border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px; padding: 8px; max-width: 360px; }
+      #panel h1 { font-size: 12px; margin: 0 0 6px; letter-spacing: 0.08em; color: #ffb45a; }
+      #panel button { background: #1b2430; color: #e8eef5; border: 1px solid #334155; border-radius: 4px; padding: 3px 6px; cursor: pointer; font: inherit; margin: 1px; }
+      #panel button.on { background: #7a4a12; border-color: #ffb45a; }
+      #stats { font: 11px/1.4 ui-monospace, monospace; white-space: pre; margin-top: 6px; }
+      #caution { position: fixed; top: 18%; left: 50%; transform: translateX(-50%); font: bold 28px system-ui; color: #ffd24a; text-shadow: 0 0 8px #000; }
+      body.shot #panel { display: none; }
+    </style>
+  </head>
+  <body>
+    <canvas id="gl"></canvas>
+    <div id="caution"></div>
+    <div id="panel">
+      <h1>TERRAIN LAB</h1>
+      <div id="scenes"></div>
+      <div id="cams"></div>
+      <div id="stats"></div>
+      <div style="opacity: 0.7; margin-top: 4px">?scene=canyon|valley|fjord|dunes &amp;s=metres &amp;cam=chase|high|side|low &amp;q=low..ultra &amp;look=&lt;LOOKS name&gt; &amp;steer=0 &amp;shot=1&amp;warm=sec</div>
+    </div>
+    <script type="module" src="./terrain.js"></script>
+  </body>
+</html>
