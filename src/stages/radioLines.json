@@ -1,0 +1,50 @@
+{
+  "r.ocean.launch": { "speaker": "carrier", "variants": [{ "en": "Cat's hot, Hawk. Cleared to launch.", "th": "แคตพร้อมแล้ว ฮอว์ก อนุญาตให้ขึ้นบิน" }] },
+  "r.ocean.feetWet": { "speaker": "awacs", "variants": [{ "en": "Feet wet. Bandits north, low and fast.", "th": "ออกทะเลแล้ว ข้าศึกทางเหนือ บินต่ำและเร็ว" }] },
+  "r.ocean.tally": { "speaker": "lead", "variants": [{ "en": "Tally ho! Twelve o'clock!", "th": "เห็นเป้าแล้ว! สิบสองนาฬิกา!" }, { "en": "Contact! Bandits dead ahead!", "th": "เจอแล้ว! ข้าศึกตรงหน้า!" }] },
+  "r.ocean.six": { "speaker": "wing", "variants": [{ "en": "Bandits on your six!", "th": "ข้าศึกอยู่ข้างหลังนาย!" }] },
+  "r.ocean.ships": { "speaker": "awacs", "variants": [{ "en": "Surface group ahead. SAMs up!", "th": "กองเรือข้างหน้า ระวังจรวดแซม!" }] },
+  "r.ocean.clear": { "speaker": "carrier", "variants": [{ "en": "Good start. Push on to the highlands.", "th": "เริ่มได้ดี มุ่งหน้าสู่ที่ราบสูง" }] },
+
+  "r.emerald.brief": { "speaker": "awacs", "variants": [{ "en": "Entering the valley. Keep it low.", "th": "เข้าหุบเขาแล้ว บินต่ำไว้" }] },
+  "r.emerald.helos": { "speaker": "awacs", "variants": [{ "en": "Troop helos in the valley! Stop that airlift!", "th": "เฮลิคอปเตอร์ขนทหารในหุบเขา! หยุดการลำเลียงนั่น!" }] },
+  "r.emerald.fighters": { "speaker": "awacs", "variants": [{ "en": "Fast movers over the peaks!", "th": "เครื่องบินเร็วเหนือยอดเขา!" }] },
+  "r.emerald.ridge": { "speaker": "wing", "variants": [{ "en": "Watch the ridgeline!", "th": "ระวังสันเขา!" }] },
+
+  "r.canyon.brief": { "speaker": "carrier", "variants": [{ "en": "The Gauntlet. Thread the rocks, Hawk.", "th": "ช่องเขามรณะ ร้อยผ่านโขดหินให้ได้ ฮอว์ก" }] },
+  "r.canyon.arch": { "speaker": "wing", "variants": [{ "en": "Rock arch ahead! Go under!", "th": "ซุ้มหินข้างหน้า! มุดลอดไป!" }] },
+  "r.canyon.xb70": { "speaker": "awacs", "variants": [{ "en": "Heavy bomber in the canyon! Bring it down!", "th": "เครื่องบินทิ้งระเบิดหนักในหุบเขา! ยิงมันลงมา!" }] },
+  "r.canyon.route": { "speaker": "awacs", "variants": [{ "en": "Canyon splits! Pick your route!", "th": "หุบเขาแยกทาง! เลือกเส้นทาง!" }] },
+
+  "r.sunset.brief": { "speaker": "awacs", "variants": [{ "en": "Enemy fleet on the horizon.", "th": "กองเรือข้าศึกที่ขอบฟ้า" }] },
+  "r.sunset.fleet": { "speaker": "lead", "variants": [{ "en": "Ships in sight. Going in!", "th": "เห็นเรือแล้ว บุกเลย!" }] },
+  "r.sunset.b52": { "speaker": "awacs", "variants": [{ "en": "Heavy bomber headed for the fleet! Splash it!", "th": "เครื่องบินทิ้งระเบิดมุ่งหน้าไปที่กองเรือ! ยิงให้ตก!" }] },
+  "r.sunset.tanker": { "speaker": "tanker", "variants": [{ "en": "Pelican on station. Plug in, Hawk.", "th": "เพลิแกนประจำจุดแล้ว เข้ามาเติมได้ ฮอว์ก" }] },
+
+  "r.glacier.brief": { "speaker": "awacs", "variants": [{ "en": "Fjord run. Ice walls both sides.", "th": "บินเลาะฟยอร์ด กำแพงน้ำแข็งสองข้าง" }] },
+  "r.glacier.aa": { "speaker": "awacs", "variants": [{ "en": "Flak on the banks! Take out six sites!", "th": "ปืนต่อสู้อากาศยานริมฝั่ง! ทำลายหกจุด!" }] },
+  "r.glacier.tight": { "speaker": "wing", "variants": [{ "en": "Tight squeeze! Stay in the middle!", "th": "แคบมาก! อยู่ตรงกลางไว้!" }] },
+
+  "r.dunes.brief": { "speaker": "awacs", "variants": [{ "en": "Open desert. They'll come from behind.", "th": "ทะเลทรายโล่ง มันจะไล่มาจากข้างหลัง" }] },
+  "r.dunes.six": { "speaker": "wing", "variants": [{ "en": "Bogeys on our tail!", "th": "ข้าศึกไล่หลังเรามา!" }, { "en": "Check six! They're closing!", "th": "ดูข้างหลัง! มันกำลังเข้ามา!" }] },
+  "r.dunes.cruise": { "speaker": "awacs", "variants": [{ "en": "Cruise missiles! Guns only, shoot them down!", "th": "ขีปนาวุธร่อน! ใช้ปืนเท่านั้น ยิงให้ร่วง!" }] },
+  "r.dunes.route": { "speaker": "awacs", "variants": [{ "en": "Two ways out. Choose!", "th": "มีทางออกสองทาง เลือกเลย!" }] },
+
+  "r.clouds.brief": { "speaker": "awacs", "variants": [{ "en": "Above the cloud sea. Stay sharp.", "th": "เหนือทะเลเมฆแล้ว ตื่นตัวไว้" }] },
+  "r.clouds.ace": { "speaker": "awacs", "variants": [{ "en": "Enemy ace inbound! He's good, stay on him!", "th": "เอซข้าศึกมาแล้ว! ฝีมือดี ตามให้ติด!" }] },
+  "r.clouds.stealth": { "speaker": "wing", "variants": [{ "en": "Stealth fighters, two o'clock!", "th": "เครื่องบินล่องหน สองนาฬิกา!" }] },
+
+  "r.strike.brief": { "speaker": "carrier", "variants": [{ "en": "Stay under the radar or their SAMs wake up.", "th": "บินใต้เรดาร์ไว้ ไม่งั้นแซมจะตื่น" }] },
+  "r.strike.ceiling": { "speaker": "awacs", "variants": [{ "en": "You're painted! Get down!", "th": "เรดาร์จับได้แล้ว! ลดระดับ!" }] },
+  "r.strike.popup": { "speaker": "lead", "variants": [{ "en": "Target in sight. Pulling up!", "th": "เห็นเป้าหมายแล้ว ดึงขึ้น!" }] },
+  "r.strike.hit": { "speaker": "carrier", "variants": [{ "en": "Direct hit! Get out of there!", "th": "เข้าเป้าจัง! รีบออกมา!" }] },
+  "r.strike.sams": { "speaker": "awacs", "variants": [{ "en": "SAMs in the air! Break!", "th": "แซมขึ้นฟ้าแล้ว! หักหลบ!" }] },
+
+  "r.fortress.brief": { "speaker": "carrier", "variants": [{ "en": "This is it, Hawk. Hold the line.", "th": "ครั้งสุดท้ายแล้ว ฮอว์ก ยึดแนวไว้" }] },
+  "r.fortress.boss": { "speaker": "awacs", "variants": [{ "en": "Sky fortress! Hit the engines!", "th": "ป้อมบินลอยฟ้า! ยิงเครื่องยนต์!" }] },
+  "r.fortress.win": { "speaker": "carrier", "variants": [{ "en": "Fortress down! Bring it home.", "th": "ป้อมบินร่วงแล้ว! กลับบ้านได้" }] },
+  "r.fortress.approach": { "speaker": "carrier", "variants": [{ "en": "On glide slope. Call the ball.", "th": "อยู่ในแนวร่อนแล้ว รายงานเมื่อเห็นไฟนำ" }] },
+
+  "r.aurora.brief": { "speaker": "awacs", "variants": [{ "en": "Unknown sector... look at that sky.", "th": "เขตที่ไม่มีในแผนที่... ดูท้องฟ้านั่นสิ" }] },
+  "r.aurora.swarm": { "speaker": "wing", "variants": [{ "en": "They're not shooting back! Free kills!", "th": "มันไม่ยิงตอบ! ยิงได้ตามสบาย!" }] }
+}

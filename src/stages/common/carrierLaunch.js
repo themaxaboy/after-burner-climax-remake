@@ -1,7 +1,7 @@
-import { Matrix4, Vector3, Quaternion } from 'three';
-import { Carrier, CARRIER } from '../world/carrier.js';
-import { makeFrame } from '../sim/rail.js';
-import { clamp, dampTo, easeInOutCubic, lerp } from '../core/math.js';
+import { Matrix4, Vector3 } from 'three';
+import { Carrier, CARRIER } from '../../world/carrier.js';
+import { makeFrame } from '../../sim/rail.js';
+import { easeInOutCubic } from '../../core/math.js';
 
 const _f = makeFrame();
 const _v = new Vector3();
@@ -10,18 +10,24 @@ const _m = new Matrix4();
 const _up = new Vector3(0, 1, 0);
 
 /**
- * Stage 1 set pieces: golden-hour catapult launch from the carrier
- * (cinematic cameras, steam, letterbox, anthem) and the aerial refuelling
- * interlude at the end of the stage.
+ * Catapult launch from the carrier at the start of the rail: cinematic deck
+ * cameras, steam, letterbox, anthem; hands over to the chase camera and the
+ * stage music once airborne. The rail must start on the bow catapult at deck
+ * height (start y 21.7) with `rail.startS: 0`.
+ *
+ * opts: { radio: key spoken on the deck, hideAfter: rail metres after which
+ *         the carrier is hidden }
  */
-export class Stage1Logic {
-  constructor(stage) {
+export class CarrierLaunch {
+  constructor(stage, opts = {}) {
     this.stage = stage;
     this.game = stage.game;
+    this.opts = opts;
     this.phase = 'deck';
     this.t = 0;
     this.lockControls = true;
     this.cameraOverride = false;
+    this.handlesMusic = false;
     this.hud = { hideCombat: true, hideGauges: true };
     this.skipIntroMessage = true;
   }
@@ -30,7 +36,7 @@ export class Stage1Logic {
     const st = this.stage;
     const g = this.game;
     const rail = st.rail;
-    // bow (launch point) lies CAT_LEN metres down the rail from the jet's start
+    // bow (launch point) lies catLen metres down the rail from the jet's start
     this.catLen = Math.abs(CARRIER.catEnd - CARRIER.catStart);
     rail.frameAt(this.catLen, _f);
     const bow = _f.pos.clone().setY(0);
@@ -47,7 +53,7 @@ export class Stage1Logic {
     g.world.ocean?.setWake(2, bowW.x, bowW.z, 30, 0.5);
 
     const p = st.player;
-    if (g.params.skipIntro || g.params.t > 0 || g.params.stage > 1 || g.params.bench) {
+    if (g.params.skipIntro || g.params.t > 0 || g.params.bench) {
       this._skip();
       return;
     }
@@ -65,22 +71,24 @@ export class Stage1Logic {
     this.handlesMusic = true;
     g.post.gforce.set('uLetterbox', 1);
     g.audio?.music?.play('anthem', { fadeIn: 1 });
-    this.stage._radio('r.s1.launch');
+    if (this.opts.radio) st._radio(this.opts.radio);
   }
 
   _skip() {
     const st = this.stage;
     const p = st.player;
-    p.s = Math.max(p.s, 900);
+    p.s = Math.max(p.s, this.catLen + 500);
     p.autoSpeed = null;
     p.speed = p.baseSpeed;
     p.controlLock = 0;
+    p.gear = 0;
     p.computePose(st.rail);
     p.prevPos.copy(p.pos);
     p.prevQuat.copy(p.quat);
     this.phase = 'flight';
     this.lockControls = false;
     this.cameraOverride = false;
+    this.handlesMusic = false;
     this.hud.hideCombat = false;
     this.hud.hideGauges = false;
     this.skipIntroMessage = false;
@@ -89,6 +97,7 @@ export class Stage1Logic {
   preUpdate(dt) {
     const st = this.stage;
     const p = st.player;
+    if (this.phase === 'flight') return;
     this.t += dt;
     if (this.phase === 'deck') {
       p.autoSpeed = 0;
@@ -127,19 +136,19 @@ export class Stage1Logic {
         this.hud.hideCombat = false;
         this.hud.hideGauges = false;
         this.game.post.gforce.set('uLetterbox', 0);
-        this.game.audio?.music?.play(this.stage.def.music, { fadeIn: 2 });
-        this.stage._introMessage();
+        this.game.audio?.music?.play(st.def.music, { fadeIn: 2 });
+        this.handlesMusic = false;
+        this.skipIntroMessage = false;
+        st._introMessage();
       }
-    } else if (this.phase === 'refuel') {
-      this._updateRefuel(dt);
     }
   }
 
   update(dt) {
     const deckPhase = this.phase === 'deck' || this.phase === 'cat';
-    this.carrier.update(dt, deckPhase ? 1 : this.phase === 'climb' ? 0.4 : 0);
+    if (this.carrier.group.visible) this.carrier.update(dt, deckPhase ? 1 : this.phase === 'climb' ? 0.4 : 0);
     // hide the carrier once far behind
-    if (this.phase === 'flight' && this.stage.player.s > 9000) this.carrier.group.visible = false;
+    if (this.phase === 'flight' && this.stage.player.s > (this.opts.hideAfter ?? 6000)) this.carrier.group.visible = false;
   }
 
   /** Cinematic cameras for the deck + launch. */
@@ -147,8 +156,7 @@ export class Stage1Logic {
     if (!this.cameraOverride) return;
     const st = this.stage;
     const cam = this.game.rig.camera;
-    const jet = st.jet.group;
-    const jp = jet.position;
+    const jp = st.jet.group.position;
     const t = this.phase === 'deck' ? this.t : 4.2 + this.t;
     if (t < 2.1) {
       // front quarter, low on the deck, slow push in
@@ -158,7 +166,7 @@ export class Stage1Logic {
       cam.position.copy(_v);
       _v2.copy(jp).add(_v.set(0, 1.2, 2));
     } else if (t < 4.2) {
-      // rear three-quarter looking forward along the catapult with the sunset ahead
+      // rear three-quarter looking forward along the catapult
       const k = (t - 2.1) / 2.1;
       this.carrier.deckPoint(CARRIER.catX - 10 + k * 2, CARRIER.catStart + 26, _v);
       _v.y += 4.5;
@@ -182,78 +190,13 @@ export class Stage1Logic {
     cam.updateMatrixWorld();
   }
 
-  // ------------------------------------------------------------- refuelling
-  cue(name) {
-    if (name === 'refuel') this._startRefuel();
-  }
-
-  _startRefuel() {
-    const st = this.stage;
-    const models = st.models;
-    this.phase = 'refuel';
-    this.t = 0;
-    this.lockControls = true;
-    this.hud.hideCombat = true;
-    this.game.post.gforce.set('uLetterbox', 1);
-    // clear the sky
-    for (const e of st.enemies.list.slice()) st.enemies.despawn(e);
-    if (models?.buildAircraft) {
-      try {
-        this.tanker = models.buildAircraft('kc10', { lod: 0, scheme: 'standard' });
-        for (const m of Object.values(this.tanker.materials)) {
-          if (m && !m.userData.worldFog) {
-            m.userData.worldFog = true;
-            this.game.world.csm?.setupMaterial(m);
-          }
-        }
-        this.tanker.root.traverse((o) => {
-          if (o.isMesh) o.castShadow = o.receiveShadow = true;
-        });
-        this.game.world.dynamic.add(this.tanker.root);
-      } catch (e) {
-        console.warn('tanker failed', e);
-      }
-    }
-    this.tankerRel = { ds: 420, y: 38 };
-    this.game.audio?.music?.play('anthem', { fadeIn: 2 });
-  }
-
-  _updateRefuel(dt) {
-    const st = this.stage;
-    const p = st.player;
-    p.controlLock = 1;
-    // fly into the pre-contact position behind the tanker's boom
-    this.tankerRel.ds = dampTo(this.tankerRel.ds, 55, 0.45, dt);
-    p.x = dampTo(p.x, 0, 1.5, dt);
-    p.y = dampTo(p.y, 20, 1.2, dt);
-    p.vx = p.vy = 0;
-    if (this.tanker) {
-      const s = p.s + this.tankerRel.ds;
-      st.rail.frameAt(s, _f);
-      const root = this.tanker.root;
-      root.position.copy(_f.pos).addScaledVector(_f.U, this.tankerRel.y + Math.sin(this.t * 0.8) * 0.6);
-      _m.makeBasis(_f.R, _f.U, _v.copy(_f.T).negate());
-      root.quaternion.setFromRotationMatrix(_m);
-      this.tanker.animate?.({ roll: 0, pitch: 0, yaw: 0, speed01: 0.5, time: this.t, boom: clamp(this.t / 4, 0, 1) });
-      const boom = root.getObjectByName('boom');
-      if (boom) boom.rotation.x = lerp(0, -0.55, clamp((this.t - 1) / 3, 0, 1));
-    }
-    if (this.t > 2.5 && !this._contact) {
-      this._contact = true;
-      this.stage._radio('r.s1.tanker');
-    }
-    if (this.t > 8.5) this.game.post.gforce.set('uFade', clamp((this.t - 8.5) / 1.2, 0, 1));
-  }
-
   dispose() {
     const g = this.game;
     g.world.scene.remove(this.carrier.group);
     this.carrier.dispose();
-    if (this.tanker) g.world.dynamic.remove(this.tanker.root);
     for (let i = 0; i < 3; i++) g.world.ocean?.setWake(i, 0, 0, 0, 0);
     g.post.gforce.set('uLetterbox', 0);
-    g.post.gforce.set('uFade', 0);
   }
 }
 
-export { Quaternion };
+export const carrierLaunch = (opts) => (stage) => new CarrierLaunch(stage, opts);

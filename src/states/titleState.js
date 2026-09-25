@@ -1,6 +1,6 @@
 import { Matrix4, Vector3 } from 'three';
-import stage1 from '../stages/stage1_ocean.js';
-import { ShowcasePilot, buildShowcaseJet } from './showcase.js';
+import { LOOKS } from '../world/looks.js';
+import { ShowcasePilot, buildShowcaseJet, applyLook } from './showcase.js';
 import { Menu, overlay } from '../ui/menu.js';
 import { createOptionsMenu } from '../ui/screens/options.js';
 import { t } from '../ui/i18n.js';
@@ -22,11 +22,7 @@ export class TitleState {
   async enter() {
     const g = this.game;
     g.setLoading?.(0.2, 'LOADING');
-    g.world.configure({ ...stage1.env, cloudCover: 0.3 });
-    g.renderer.toneMappingExposure = stage1.env.toneExposure ?? 0.55;
-    g.post.grade.setGrade(stage1.env.grade);
-    g.post.bloom.luminanceMaterial.threshold = 1;
-    g.post.bloom.intensity = 0.9;
+    applyLook(g, LOOKS.title);
     const { fx, jet } = await buildShowcaseJet(g, g.session.jet, g.session.scheme);
     this.fx = fx;
     this.jet = jet;

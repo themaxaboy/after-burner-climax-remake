@@ -1,5 +1,7 @@
+// LEGACY v1 stage data (pre-routes, ~3 min stage). Not part of the campaign
+// (see ./campaign.js and ./defs/); kept only as fixture data for the unit
+// tests sim.test.js and terrain.test.js. Delete once they use ./defs/.
 import { buildRail } from './railBuilder.js';
-import { Stage2Logic } from './stage2Logic.js';
 
 // STAGE 2 — CANYON GRANDEUR "The Run"
 // Desert approach, a 22 km canyon run under the radar ceiling (XB-70
@@ -149,6 +151,5 @@ export default {
     { at: 34800, spawn: { type: 'fighterA', formation: 'V3', behavior: 'headOn', y: 20 } },
     { at: 35700, end: true }
   ],
-  next: ['s3'],
-  createLogic: (stage) => new Stage2Logic(stage)
+  next: ['s3']
 };

@@ -1,10 +1,18 @@
-import stage1 from './stage1_ocean.js';
-import stage2 from './stage2_canyon.js';
-import stage3 from './stage3_twilight.js';
+import ocean from './defs/ocean.js';
+import emerald from './defs/emerald.js';
+import canyon from './defs/canyon.js';
+import sunset from './defs/sunset.js';
+import glacier from './defs/glacier.js';
+import dunes from './defs/dunes.js';
+import aurora from './defs/aurora.js';
+import clouds from './defs/clouds.js';
+import strike from './defs/strike.js';
+import fortress from './defs/fortress.js';
 
-// Stage graph. `next` lists stage ids; more than one entry would show a route
-// select map (framework ready for future branching stages).
-export const STAGES = [stage1, stage2, stage3];
+// Every stage in route order (see ./routes.js for the graph with its forks
+// and the bonus stage). `index` is the 1-based position used by ?stage=<n>.
+export const STAGES = [ocean, emerald, canyon, sunset, glacier, dunes, aurora, clouds, strike, fortress];
+STAGES.forEach((s, i) => (s.index = i + 1));
 
 export const STAGE_BY_ID = Object.fromEntries(STAGES.map((s) => [s.id, s]));
 
