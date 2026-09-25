@@ -1,5 +1,5 @@
 import {
-  BoxGeometry, ConeGeometry, DynamicDrawUsage, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshStandardMaterial,
+  BoxGeometry, ConeGeometry, CylinderGeometry, DynamicDrawUsage, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshStandardMaterial,
   Quaternion, Vector3, BufferGeometry
 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -22,7 +22,17 @@ function fallbackGeometry(model) {
   if (ship) {
     parts.push(new BoxGeometry(18, 10, 150).translate(0, 3, 0));
     parts.push(new BoxGeometry(10, 12, 30).translate(0, 14, 10));
-  } else if (model === 'samLauncher' || model === 'bunker') {
+  } else if (model === 'bunker') {
+    // hardened command bunker: half-cylinder shelter, berms, blast door, radar mast
+    const shelter = new CylinderGeometry(14, 14, 44, 18, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateY(Math.PI / 2);
+    parts.push(shelter);
+    parts.push(new BoxGeometry(34, 5, 58).translate(0, 2.5, 0));
+    parts.push(new BoxGeometry(12, 10, 1.5).translate(0, 5, -22.5));
+    parts.push(new BoxGeometry(6, 8, 6).translate(9, 16, 10));
+    parts.push(new CylinderGeometry(0.4, 0.6, 18, 6).translate(9, 29, 10));
+    parts.push(new BoxGeometry(7, 0.3, 3).translate(9, 36, 10));
+    for (const x of [-22, 22]) parts.push(new BoxGeometry(6, 7, 70).translate(x, 3.5, 0));
+  } else if (model === 'samLauncher') {
     parts.push(new BoxGeometry(4, 3, 8).translate(0, 1.5, 0));
     parts.push(new BoxGeometry(3, 1.5, 6).rotateX(-0.6).translate(0, 4, 0));
   } else {
@@ -83,7 +93,8 @@ export class EnemyRenderer {
     }
     if (!geos || !mats) {
       geos = fallbackGeometry(model);
-      mats = { body: new MeshStandardMaterial({ color: 0x6d7680, metalness: 0.3, roughness: 0.5 }) };
+      const concrete = model === 'bunker';
+      mats = { body: new MeshStandardMaterial({ color: concrete ? 0x9a938a : 0x6d7680, metalness: concrete ? 0 : 0.3, roughness: concrete ? 0.9 : 0.5 }) };
     }
     const flash = new InstancedBufferAttribute(new Float32Array(cap), 1);
     flash.setUsage(DynamicDrawUsage);

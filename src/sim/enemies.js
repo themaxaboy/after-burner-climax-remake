@@ -96,6 +96,7 @@ export class EnemyManager {
     e.escapeTimer = o.timeLimit || 0;
     e.escaped = false;
     e.heading = o.heading || 0;
+    e._railS = undefined;
     for (const k in e.b) delete e.b[k];
     if (e.anchor === 'world' && o.world) e.pos.set(o.world.x, o.world.y, o.world.z);
     e.prevPos.copy(e.pos);
@@ -247,7 +248,7 @@ export class EnemyManager {
     }
     e.lockPos.copy(e.pos);
     this.hooks.onDyingTick?.(e, dt);
-    const seaHit = ctx.groundHeight ? e.pos.y < ctx.groundHeight(e.pos.x, e.pos.z) + 2 : e.pos.y < 2;
+    const seaHit = ctx.groundHeight ? e.pos.y < ctx.groundHeight(e.pos.x, e.pos.z, e) + 2 : e.pos.y < 2;
     if (e.dying <= 0 || seaHit) {
       e.dying = 0;
       this.hooks.onExplode?.(e, seaHit ? (ctx.groundHeight ? 'ground' : 'water') : e.def.big ? 'big' : 'air');

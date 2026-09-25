@@ -98,6 +98,7 @@ export class MissileSystem {
     m.lost = false;
     m.dropT = owner === 'player' ? 0.18 : 0.1;
     m.id = (Missile.nextId = (Missile.nextId || 0) + 1);
+    m._railS = undefined;
     if (target && owner === 'player') target.incoming = (target.incoming || 0) + 1;
     this.hooks.onLaunch?.(m);
     return m;
@@ -210,7 +211,7 @@ export class MissileSystem {
       }
       m.vel.setLength(newSp);
       m.pos.addScaledVector(m.vel, dt);
-      if (ctx.groundHeight && m.pos.y < ctx.groundHeight(m.pos.x, m.pos.z)) {
+      if (ctx.groundHeight && (m.t * 120) % 3 < 1 && m.pos.y < ctx.groundHeight(m.pos.x, m.pos.z, m)) {
         this._end(m, 'ground');
         continue;
       }

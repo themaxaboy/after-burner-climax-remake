@@ -24,6 +24,7 @@ const _v = new Vector3();
 const _v2 = new Vector3();
 const _s = new Vector3();
 const _frame = makeFrame();
+const _UP = new Vector3(0, 1, 0);
 
 // Damage values (percent of armor). "arcade" mirrors the original's brutality.
 export const DAMAGE = {
@@ -123,7 +124,7 @@ export class StageState {
         this.missiles.flares(e.pos, e.vel, e.id, 0.7);
         this.fx.flareBurst(e.pos, e.vel);
       },
-      seaHeight: g.world.ocean ? (x, z) => g.world.ocean.heightAt(x, z, g.clock.worldTime) : null,
+      seaHeight: def.env.ocean && g.world.ocean ? (x, z) => g.world.ocean.heightAt(x, z, g.clock.worldTime) : null,
       groundHeight: def.groundHeight ? (x, z) => def.groundHeight(x, z) : null,
       enemyN: 1,
       enemyMissileG: 1
@@ -335,8 +336,11 @@ export class StageState {
       player: () => this.player,
       worldPoint: (s, x, y, ground) => {
         this.rail.frameAt(s, _frame);
-        const out = { x: _frame.pos.x + _frame.R.x * x, y: 0, z: _frame.pos.z + _frame.R.z * x };
-        out.y = ground && this.ctx.groundHeight ? this.ctx.groundHeight(out.x, out.z) + (y || 0) : y || 0;
+        _v.crossVectors(_frame.T, _UP).normalize(); // horizontal right
+        const out = { x: _frame.pos.x + _v.x * x, y: 0, z: _frame.pos.z + _v.z * x };
+        const logic = this.stageLogic;
+        const gh = ground ? (logic?.groundAt ? logic.groundAt(s, x) : 0) : 0;
+        out.y = gh + (y || 0);
         return out;
       },
       railHeading: (s) => {
@@ -483,7 +487,7 @@ export class StageState {
     // altitude floor in rail-up units (rail up is ~world up)
     this.rail.frameAt(p.s, _frame);
     let ground = 0;
-    if (this.ctx?.groundHeight) ground = this.ctx.groundHeight(_frame.pos.x + _frame.R.x * p.x, _frame.pos.z + _frame.R.z * p.x);
+    if (this.stageLogic?.groundAt) ground = this.stageLogic.groundAt(p.s, p.x);
     this._lim = this._lim || { minY: 0 };
     this._lim.minY = ground + minAlt - _frame.pos.y;
     return this._lim;
@@ -875,6 +879,7 @@ export class StageState {
     }
     s.enemyBehind = behind;
     s.radarWarning = this.stageLogic?.radarWarning || null;
+    s.timer = logicHud?.timer || null;
     s.stageName = `STAGE ${this.def.index}  ${this.def.name}`;
     this.hud.draw(realDt, s, g.hudScale);
   }

@@ -101,7 +101,7 @@ export class PlayerJet {
       const pull = player.gLoad > 3.2 || Math.abs(player.bank) > 0.9;
       for (let i = 0; i < 2; i++) {
         if (pull) {
-          if (!this.vortex[i]) this.vortex[i] = fx.createTrail({ kind: 'vortex', width: 0.5, life: 0.6 });
+          if (!this.vortex[i]) this.vortex[i] = fx.createTrail({ kind: 'vortex', width: 0.16, life: 0.32 });
           this.vortex[i].push(_v.copy(this.wingtips[i]).applyMatrix4(g.matrixWorld));
         } else if (this.vortex[i]) {
           this.vortex[i].stop();

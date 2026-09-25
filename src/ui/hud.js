@@ -350,6 +350,14 @@ export class HUD {
 
   _eo(c, s, W, H, u) {
     const eo = s.eo;
+    if (!eo && s.timer) {
+      const tm = s.timer;
+      const v = Math.max(0, tm.value);
+      const txt = `${Math.floor(v / 60)}:${String(Math.floor(v % 60)).padStart(2, '0')}.${String(Math.floor((v * 10) % 10))}`;
+      this._glowText(c, tm.label, W / 2, 30 * u, 'rgba(255,220,120,0.85)', 11 * u, 'center', 700);
+      this._glowText(c, txt, W / 2, 58 * u, v < 15 ? '#ff5a4a' : '#ffffff', 26 * u, 'center', 900);
+      return;
+    }
     if (!eo) return;
     const x = W / 2, y = 34 * u;
     const active = eo.status === 'active';
