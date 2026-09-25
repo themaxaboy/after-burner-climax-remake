@@ -45,16 +45,17 @@ Reference material (read-only), in the session scratchpad:
 
 | Stream | Owns (create/modify) |
 |---|---|
-| INT | `src/states/stageState.js`, `src/game.js`, `src/main.js`, `src/core/params.js`, `src/core/events.js`, `src/ui/i18n.js`, `tests/e2e/smoke.mjs`, `package.json`, `README.md`, `docs/overhaul/*` |
+| INT | `src/states/stageState.js`, `src/game.js` (except LOOK's resize/dynres/renderWorld code), `src/main.js`, `src/core/params.js`, `src/core/events.js`, `src/ui/i18n.js`, `package.json`, `README.md`, `docs/overhaul/*` |
 | LOOK | `src/world/looks.js`, `src/game.js` (only resize/dynres/renderWorld code), `src/render/composer.js`, `src/render/effects/*`, `src/render/renderer.js`, `src/world/{sky,atmosphere,ocean,clouds,cloudDeck,world}.js`, `src/render/{enemyRenderer,missileRenderer}.js`, `src/states/stage/postBridge.js`, `src/core/quality.js`, `src/core/loop.js`, `src/core/lumaProbe.js` (new), `tests/e2e/{flicker,vivid}.mjs` (new), `tests/unit/look.test.js` (new) |
 | FLIGHT | `src/sim/{player,lockon,weapons,climax,scoring,reticle}.js`, `src/render/cameraRig.js`, `src/render/playerJet.js`, `src/input/*`, `src/models/aircraftBuilder.js` (only `PLAYER_JETS` metadata), `src/states/stage/combat.js`, `src/ui/screens/options.js`, `tests/unit/{flight,lock,climax}.test.js` (new) |
 | ENEMY | `src/sim/{enemies,enemyTypes,director,waves,missiles,enemyGuns}.js`, `src/states/stage/enemyOps.js`, `tests/unit/{waves,missiles}.test.js` (new) |
 | FX | `src/render/fx/*`, `src/render/fxStub.js`, `src/audio/sfxBank.js`, `src/states/stage/fxHooks.js`, `tests/unit/fx.test.js` |
-| WORLD | `src/world/terrain/*`, `src/stages/common/terrainRun.js` (baseline stub exists), `public/textures/*`, `scripts/fetch-textures.mjs`, `tests/unit/terrain.test.js` |
-| STAGES | `src/stages/**` (except `common/terrainRun.js`), `src/states/{flow,panelState,titleState,hangarState,showcase}.js`, `src/ui/strings/stages_{en,th}.js`, `tests/unit/routes.test.js` (new), `tests/e2e/routes.mjs` (new) |
-| HUD | `src/ui/hud.js`, `src/ui/hud/*` (new), `src/ui/routeMap.js` (new), `src/ui/ui.css`, `src/ui/menu.js`, `src/ui/strings/{en,th}.js`, `public/fonts/*` (new), `index.html`, `src/states/stage/hudBridge.js` |
+| WORLD | `src/world/terrain/*`, `src/stages/common/terrainRun.js` (baseline stub exists), `public/textures/*`, `scripts/fetch-textures.mjs`, `tests/unit/terrain.test.js`, `dev/terrain.*` (new dev page, not built) |
+| STAGES | `src/stages/**` (except `common/terrainRun.js`), `src/states/{flow,panelState,titleState,hangarState,showcase}.js`, `src/ui/strings/stages_{en,th}.js`, `tests/unit/routes.test.js` (new), `tests/e2e/routes.mjs` (new), `tests/e2e/smoke.mjs`, `src/stages/radioLines.json` (new) |
+| HUD | `src/ui/hud.js`, `src/ui/hud/*` (new), `src/ui/routeMap.js` (new), `src/ui/ui.css`, `src/ui/menu.js`, `src/ui/strings/{en,th}.js`, `public/fonts/*` (new), `index.html`, `src/states/stage/hudBridge.js`, `dev/hud.*` (new dev page, not built) |
 | RADIO | `src/audio/radio.js`, `src/audio/audio.js` (radio/voice section + a `playVoice` API), `src/audio/voice/*` (new), `scripts/voices/*` (new), `public/audio/voice/*` (new), `tests/unit/radio.test.js` (new) |
 
+- `tests/unit/sim.test.js` is shared: FLIGHT may edit only the player/lockon/climax/weapons/scoring cases, ENEMY only the enemies/missiles/director cases (keep edits hunk-local so merges are clean).
 - Tests you don't own may be *read*.
 - If a change you make breaks another stream's existing unit test, note it in your report; don't edit that test.
 - Don't edit `package.json`. List any scripts or dependencies you need in your report.
@@ -253,7 +254,7 @@ waves: {
 - **Missiles**
   - Object fields: `m.owner` (`'player'` or enemy id), `m.pos`, `m.prevPos`, `m.vel`, `m.t`, `m.dropT`, `m.target`, `m.strong` (red variant), `m.alive`.
   - Enemy missiles use the cinematic model: arc and helix, then terminal homing. A roll during `player.evadeWindow` makes them `'lost'`.
-  - They can be shot by the vulcan (`MissileSystem.shootables()`).
+  - They can be shot by the vulcan. ENEMY provides `missiles.shootables(out) → out` (the enemy missiles currently shootable, each with `pos`, `vel`, `radius` ≈ 4, `active`) and `missiles.shootDown(m)` (destroys it; `onEnd` reason `'shot'`). FLIGHT's `Vulcan` tests bullets against them as extra targets.
   - `missiles.threat(pos, vel) → {m, tgo}` for the HUD warning.
   - Enemy missile damage is applied by StageState: `difficulty.missile` (×1.3 if `m.strong`).
 - **enemyOps:** `threat` (render-time snapshot `{tgo, sx, sy, behind, strong}` or null), `enemyMissile(e)`, `update()` (collisions and near-miss → `events.emit('nearMiss', …)`, `scoring.nearMiss?.()`), `enemyBehind()`.
