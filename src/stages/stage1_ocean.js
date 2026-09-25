@@ -1,14 +1,18 @@
 import { buildRail } from './railBuilder.js';
+import { Stage1Logic } from './stage1Logic.js';
 
 // STAGE 1 — BOUNDLESS OCEAN "Dawn Launch"
 // Golden-hour carrier launch, low-level over the sea, fighter waves and a
 // destroyer group; ends with an aerial refuelling interlude.
+// Starts on the carrier's bow catapult (deck height), climbs out low over the sea.
 const points = buildRail({
-  start: [0, 60, 21000],
+  start: [0, 21.7, 21000],
   heading: 0,
   seed: 11,
+  step: 200,
   segs: [
-    { len: 3000, turn: 0, alt: 55 },
+    { len: 400, turn: 0, alt: 21.7 },
+    { len: 2600, turn: 0, alt: 55 },
     { len: 4000, turn: 18, alt: 70 },
     { len: 4000, turn: -30, alt: 45 },
     { len: 5000, turn: 12, alt: 90 },
@@ -107,5 +111,7 @@ export default {
     { at: 40500, cue: 'refuel' },
     { at: 42500, end: true }
   ],
-  next: ['s2']
+  next: ['s2'],
+  startS: 0,
+  createLogic: (stage) => new Stage1Logic(stage)
 };

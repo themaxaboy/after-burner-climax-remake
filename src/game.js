@@ -8,6 +8,7 @@ import { Input } from './input/input.js';
 import { GamepadSource } from './input/gamepad.js';
 import { MouseSource } from './input/mouse.js';
 import { TouchSource } from './input/touch.js';
+import { Autopilot } from './input/autopilot.js';
 import { createRenderer } from './render/renderer.js';
 import { PostFX } from './render/composer.js';
 import { CameraRig } from './render/cameraRig.js';
@@ -69,6 +70,7 @@ export class Game {
     this.mouse = this.input.addSource(new MouseSource(this.canvas));
     this.mouse.enabled = !!this.settings.mouseFlight;
     this.touch = this.input.addSource(new TouchSource(this.uiRoot));
+    if (params.autopilot || params.bench) this.autopilot = this.input.addSource(new Autopilot(this));
 
     this.dynres = new DynamicResolution(this.preset, this.settings.fpsCap || 60);
     this.dynres.enabled = !params.fixed && !params.frames;
@@ -96,7 +98,7 @@ export class Game {
       this.dynres.push(frameMs, realDt);
       this._lastFrameStart = performance.now();
       void ms;
-      if (params.frames && this.frameCount === params.frames) this.markReady();
+      if (params.frames && this.activeFrames === params.frames) this.markReady();
     };
 
     addEventListener('resize', () => this.resize());
@@ -216,6 +218,7 @@ export class Game {
     if (this.audio?.isReady) this.audio.update(realDt);
     if (this.state && !this.state.loading) {
       this.state.render(alpha, realDt);
+      this.activeFrames = (this.activeFrames || 0) + 1;
     }
     const info = r.info;
     this.perf.update(realDt, {

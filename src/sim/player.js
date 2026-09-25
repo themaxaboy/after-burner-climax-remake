@@ -60,6 +60,7 @@ export class Player {
     this.stickX = 0;
     this.stickY = 0;
     this.distanceFlown = 0;
+    this.gear = 0;
   }
 
   setThrottle(state) {
@@ -140,7 +141,7 @@ export class Player {
     this.bank = dampTo(this.bank, bankTarget, 6, dt);
     const pitchTarget = clamp(this.vy / this.verticalSpeed, -1, 1) * 16 * DEG;
     this.pitch = dampTo(this.pitch, pitchTarget, 6, dt);
-    const yawTarget = clamp(this.vx / this.speed, -0.35, 0.35) * 0.9;
+    const yawTarget = clamp(this.vx / Math.max(this.speed, 40), -0.35, 0.35) * 0.9;
     this.yaw = dampTo(this.yaw, yawTarget, 6, dt);
 
     // control surface deflections for the model animation

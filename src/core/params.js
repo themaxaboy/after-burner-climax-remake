@@ -6,6 +6,7 @@
 //   ?climax=1    force Climax at start           ?debug=1    perf overlay
 //   ?jet=f14d|fa18e|f15e  ?scheme=standard|camo|special|lowvis  ?turbo=N sim speed
 //   ?mute=1  ?lang=en|th  ?shot=name (camera preset)  ?god=1 invulnerable
+//   ?warp=SECONDS  run the full simulation (no rendering) before the first frame
 function parse(search) {
   const q = new URLSearchParams(search);
   const num = (k, d) => (q.has(k) && q.get(k) !== '' && !Number.isNaN(+q.get(k)) ? +q.get(k) : d);
@@ -29,7 +30,8 @@ function parse(search) {
     lang: str('lang', null),
     shot: str('shot', null),
     god: bool('god'),
-    skipIntro: bool('skipintro')
+    skipIntro: bool('skipintro'),
+    warp: num('warp', 0)
   };
 }
 

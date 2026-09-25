@@ -31,8 +31,12 @@ const info = await page.evaluate(() => {
   const g = window.__game;
   if (!g) return null;
   g.loop.stop();
+  const boot = document.getElementById('boot');
+  if (boot) boot.style.display = 'none';
   return { frame: g.frameCount, dbg: g.state?.debugText?.(), gpu: g.gpu, preset: g.preset?.name, calls: g.renderer.info.render.calls, tris: g.renderer.info.render.triangles, progs: g.renderer.info.programs?.length };
 });
+// render one fresh frame inside rAF so the capture is not stale
+await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => { window.__game?.loop.step(1 / 60); requestAnimationFrame(() => r()); })));
 await page.screenshot({ path: out, timeout: 120000 });
 console.log(JSON.stringify({ ms: Date.now() - t0, info }, null, 0));
 for (const e of [...new Set(errors)].slice(0, 30)) console.log(e);

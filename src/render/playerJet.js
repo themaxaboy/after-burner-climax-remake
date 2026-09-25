@@ -90,7 +90,7 @@ export class PlayerJet {
         yaw: player.surfaces.yaw,
         speed01,
         flaps: player.throttle < 0 ? 0.6 : 0,
-        gear: 0,
+        gear: player.gear || 0,
         time: timeSec
       });
     }

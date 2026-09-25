@@ -175,11 +175,22 @@ export class StageState {
       this._activateClimax();
     }
 
+    if (g.params.warp > 0) {
+      const steps = Math.floor(g.params.warp * 120);
+      for (let i = 0; i < steps; i++) {
+        g.clock.advanceReal(1 / 120);
+        const wdt = (1 / 120) * g.clock.timeScale;
+        g.clock.advanceWorld(wdt);
+        this.update(1 / 120, wdt);
+        if (i % 30 === 0) g.rig.update(this.player, this.rail, 1, 0.25);
+      }
+    }
+
     g.setLoading?.(0.7, 'COMPILING SHADERS');
     await this._precompile();
     g.setLoading?.(1, 'READY');
     this.loading = false;
-    g.audio?.music?.play(def.music || 'stage1');
+    if (!this.stageLogic?.handlesMusic) g.audio?.music?.play(def.music || 'stage1');
     if (!this.stageLogic?.skipIntroMessage) this._introMessage();
   }
 
