@@ -30,7 +30,7 @@ function parse(search) {
     autopilot: bool('autopilot'),
     quality: str('quality', null),
     bench: bool('bench'),
-    benchSeconds: num('bench', 0) > 1 ? num('bench', 0) : 90,
+    benchSeconds: num('bench', 0) > 1 ? num('bench', 0) : 50,
     climax: bool('climax'),
     debug: bool('debug'),
     jet: str('jet', null),

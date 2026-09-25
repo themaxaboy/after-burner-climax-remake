@@ -33,8 +33,531 @@
    "callsign": "TEXACO"
   }
  },
- "totalBytes": 1108416,
+ "totalBytes": 1449888,
  "lines": {
+  "r.ocean.launch": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.ocean.launch.0.mp3",
+     "dur": 2.319,
+     "bytes": 9504,
+     "hash": "1402b9ed98ca",
+     "en": "Cat's hot, Hawk. Cleared to launch.",
+     "th": "แคตพร้อมแล้ว ฮอว์ก อนุญาตให้ขึ้นบิน"
+    }
+   ]
+  },
+  "r.ocean.feetWet": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.ocean.feetWet.0.mp3",
+     "dur": 2.468,
+     "bytes": 10080,
+     "hash": "dcc32702122b",
+     "en": "Feet wet. Bandits north, low and fast.",
+     "th": "ออกทะเลแล้ว ข้าศึกทางเหนือ บินต่ำและเร็ว"
+    }
+   ]
+  },
+  "r.ocean.tally": {
+   "speaker": "lead",
+   "variants": [
+    {
+     "file": "r.ocean.tally.0.mp3",
+     "dur": 1.764,
+     "bytes": 7296,
+     "hash": "628866987021",
+     "en": "Tally ho! Twelve o'clock!",
+     "th": "เห็นเป้าแล้ว! สิบสองนาฬิกา!"
+    },
+    {
+     "file": "r.ocean.tally.1.mp3",
+     "dur": 2.084,
+     "bytes": 8544,
+     "hash": "d0c2228520da",
+     "en": "Contact! Bandits dead ahead!",
+     "th": "เจอแล้ว! ข้าศึกตรงหน้า!"
+    }
+   ]
+  },
+  "r.ocean.six": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.ocean.six.0.mp3",
+     "dur": 1.167,
+     "bytes": 4896,
+     "hash": "797c4ed56d19",
+     "en": "Bandits on your six!",
+     "th": "ข้าศึกอยู่ข้างหลังนาย!"
+    }
+   ]
+  },
+  "r.ocean.ships": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.ocean.ships.0.mp3",
+     "dur": 1.849,
+     "bytes": 7680,
+     "hash": "5c06dfca8bcc",
+     "en": "Surface group ahead. SAMs up!",
+     "th": "กองเรือข้างหน้า ระวังจรวดแซม!"
+    }
+   ]
+  },
+  "r.ocean.clear": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.ocean.clear.0.mp3",
+     "dur": 2.447,
+     "bytes": 9984,
+     "hash": "6cf67a5d1add",
+     "en": "Good start. Push on to the highlands.",
+     "th": "เริ่มได้ดี มุ่งหน้าสู่ที่ราบสูง"
+    }
+   ]
+  },
+  "r.emerald.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.emerald.brief.0.mp3",
+     "dur": 1.892,
+     "bytes": 7776,
+     "hash": "021019258ff3",
+     "en": "Entering the valley. Keep it low.",
+     "th": "เข้าหุบเขาแล้ว บินต่ำไว้"
+    }
+   ]
+  },
+  "r.emerald.helos": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.emerald.helos.0.mp3",
+     "dur": 2.617,
+     "bytes": 10752,
+     "hash": "a595a5bfa6c4",
+     "en": "Troop helos in the valley! Stop that airlift!",
+     "th": "เฮลิคอปเตอร์ขนทหารในหุบเขา! หยุดการลำเลียงนั่น!"
+    }
+   ]
+  },
+  "r.emerald.fighters": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.emerald.fighters.0.mp3",
+     "dur": 1.636,
+     "bytes": 6816,
+     "hash": "fa8e2b9db135",
+     "en": "Fast movers over the peaks!",
+     "th": "เครื่องบินเร็วเหนือยอดเขา!"
+    }
+   ]
+  },
+  "r.emerald.ridge": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.emerald.ridge.0.mp3",
+     "dur": 1.103,
+     "bytes": 4608,
+     "hash": "2422778888ef",
+     "en": "Watch the ridgeline!",
+     "th": "ระวังสันเขา!"
+    }
+   ]
+  },
+  "r.canyon.brief": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.canyon.brief.0.mp3",
+     "dur": 2.468,
+     "bytes": 10080,
+     "hash": "97ed3b112e4c",
+     "en": "The Gauntlet. Thread the rocks, Hawk.",
+     "th": "ช่องเขามรณะ ร้อยผ่านโขดหินให้ได้ ฮอว์ก"
+    }
+   ]
+  },
+  "r.canyon.arch": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.canyon.arch.0.mp3",
+     "dur": 1.465,
+     "bytes": 6144,
+     "hash": "0c65054e069c",
+     "en": "Rock arch ahead! Go under!",
+     "th": "ซุ้มหินข้างหน้า! มุดลอดไป!"
+    }
+   ]
+  },
+  "r.canyon.xb70": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.canyon.xb70.0.mp3",
+     "dur": 2.404,
+     "bytes": 9888,
+     "hash": "73f1b1c5ee5a",
+     "en": "Heavy bomber in the canyon! Bring it down!",
+     "th": "เครื่องบินทิ้งระเบิดหนักในหุบเขา! ยิงมันลงมา!"
+    }
+   ]
+  },
+  "r.canyon.route": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.canyon.route.0.mp3",
+     "dur": 1.764,
+     "bytes": 7296,
+     "hash": "0796adda591a",
+     "en": "Canyon splits! Pick your route!",
+     "th": "หุบเขาแยกทาง! เลือกเส้นทาง!"
+    }
+   ]
+  },
+  "r.sunset.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.sunset.brief.0.mp3",
+     "dur": 1.657,
+     "bytes": 6912,
+     "hash": "e63f003c0843",
+     "en": "Enemy fleet on the horizon.",
+     "th": "กองเรือข้าศึกที่ขอบฟ้า"
+    }
+   ]
+  },
+  "r.sunset.fleet": {
+   "speaker": "lead",
+   "variants": [
+    {
+     "file": "r.sunset.fleet.0.mp3",
+     "dur": 1.913,
+     "bytes": 7872,
+     "hash": "6a24070805e5",
+     "en": "Ships in sight. Going in!",
+     "th": "เห็นเรือแล้ว บุกเลย!"
+    }
+   ]
+  },
+  "r.sunset.b52": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.sunset.b52.0.mp3",
+     "dur": 2.425,
+     "bytes": 9984,
+     "hash": "f62e19006ca8",
+     "en": "Heavy bomber headed for the fleet! Splash it!",
+     "th": "เครื่องบินทิ้งระเบิดมุ่งหน้าไปที่กองเรือ! ยิงให้ตก!"
+    }
+   ]
+  },
+  "r.sunset.tanker": {
+   "speaker": "tanker",
+   "variants": [
+    {
+     "file": "r.sunset.tanker.0.mp3",
+     "dur": 3.023,
+     "bytes": 12288,
+     "hash": "f68eb479660f",
+     "en": "Pelican on station. Plug in, Hawk.",
+     "th": "เพลิแกนประจำจุดแล้ว เข้ามาเติมได้ ฮอว์ก"
+    }
+   ]
+  },
+  "r.glacier.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.glacier.brief.0.mp3",
+     "dur": 2.383,
+     "bytes": 9792,
+     "hash": "19a5d093a6af",
+     "en": "Fjord run. Ice walls both sides.",
+     "th": "บินเลาะฟยอร์ด กำแพงน้ำแข็งสองข้าง"
+    }
+   ]
+  },
+  "r.glacier.aa": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.glacier.aa.0.mp3",
+     "dur": 2.212,
+     "bytes": 9120,
+     "hash": "f598db46559f",
+     "en": "Flak on the banks! Take out six sites!",
+     "th": "ปืนต่อสู้อากาศยานริมฝั่ง! ทำลายหกจุด!"
+    }
+   ]
+  },
+  "r.glacier.tight": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.glacier.tight.0.mp3",
+     "dur": 1.551,
+     "bytes": 6432,
+     "hash": "480600a8529a",
+     "en": "Tight squeeze! Stay in the middle!",
+     "th": "แคบมาก! อยู่ตรงกลางไว้!"
+    }
+   ]
+  },
+  "r.dunes.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.dunes.brief.0.mp3",
+     "dur": 2.233,
+     "bytes": 9216,
+     "hash": "e71050190733",
+     "en": "Open desert. They'll come from behind.",
+     "th": "ทะเลทรายโล่ง มันจะไล่มาจากข้างหลัง"
+    }
+   ]
+  },
+  "r.dunes.six": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.dunes.six.0.mp3",
+     "dur": 1.188,
+     "bytes": 4992,
+     "hash": "02aca3e160c2",
+     "en": "Bogeys on our tail!",
+     "th": "ข้าศึกไล่หลังเรามา!"
+    },
+    {
+     "file": "r.dunes.six.1.mp3",
+     "dur": 1.359,
+     "bytes": 5664,
+     "hash": "87487507bee5",
+     "en": "Check six! They're closing!",
+     "th": "ดูข้างหลัง! มันกำลังเข้ามา!"
+    }
+   ]
+  },
+  "r.dunes.cruise": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.dunes.cruise.0.mp3",
+     "dur": 2.511,
+     "bytes": 10272,
+     "hash": "6d1825712174",
+     "en": "Cruise missiles! Guns only, shoot them down!",
+     "th": "ขีปนาวุธร่อน! ใช้ปืนเท่านั้น ยิงให้ร่วง!"
+    }
+   ]
+  },
+  "r.dunes.route": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.dunes.route.0.mp3",
+     "dur": 1.337,
+     "bytes": 5568,
+     "hash": "daa54f8a3cd4",
+     "en": "Two ways out. Choose!",
+     "th": "มีทางออกสองทาง เลือกเลย!"
+    }
+   ]
+  },
+  "r.clouds.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.clouds.brief.0.mp3",
+     "dur": 2.02,
+     "bytes": 8352,
+     "hash": "82d5ba2a4f2c",
+     "en": "Above the cloud sea. Stay sharp.",
+     "th": "เหนือทะเลเมฆแล้ว ตื่นตัวไว้"
+    }
+   ]
+  },
+  "r.clouds.ace": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.clouds.ace.0.mp3",
+     "dur": 2.596,
+     "bytes": 10656,
+     "hash": "7115f6c7dede",
+     "en": "Enemy ace inbound! He's good, stay on him!",
+     "th": "เอซข้าศึกมาแล้ว! ฝีมือดี ตามให้ติด!"
+    }
+   ]
+  },
+  "r.clouds.stealth": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.clouds.stealth.0.mp3",
+     "dur": 1.551,
+     "bytes": 6432,
+     "hash": "3454bd727d27",
+     "en": "Stealth fighters, two o'clock!",
+     "th": "เครื่องบินล่องหน สองนาฬิกา!"
+    }
+   ]
+  },
+  "r.strike.brief": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.strike.brief.0.mp3",
+     "dur": 3.471,
+     "bytes": 14112,
+     "hash": "c27503c1adfd",
+     "en": "Stay under the radar or their SAMs wake up.",
+     "th": "บินใต้เรดาร์ไว้ ไม่งั้นแซมจะตื่น"
+    }
+   ]
+  },
+  "r.strike.ceiling": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.strike.ceiling.0.mp3",
+     "dur": 1.508,
+     "bytes": 6240,
+     "hash": "b619354e70db",
+     "en": "You're painted! Get down!",
+     "th": "เรดาร์จับได้แล้ว! ลดระดับ!"
+    }
+   ]
+  },
+  "r.strike.popup": {
+   "speaker": "lead",
+   "variants": [
+    {
+     "file": "r.strike.popup.0.mp3",
+     "dur": 1.977,
+     "bytes": 8160,
+     "hash": "069ece6f3f46",
+     "en": "Target in sight. Pulling up!",
+     "th": "เห็นเป้าหมายแล้ว ดึงขึ้น!"
+    }
+   ]
+  },
+  "r.strike.hit": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.strike.hit.0.mp3",
+     "dur": 2.169,
+     "bytes": 8928,
+     "hash": "49af0ecbe8a2",
+     "en": "Direct hit! Get out of there!",
+     "th": "เข้าเป้าจัง! รีบออกมา!"
+    }
+   ]
+  },
+  "r.strike.sams": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.strike.sams.0.mp3",
+     "dur": 1.743,
+     "bytes": 7200,
+     "hash": "5198c9756fb0",
+     "en": "SAMs in the air! Break!",
+     "th": "แซมขึ้นฟ้าแล้ว! หักหลบ!"
+    }
+   ]
+  },
+  "r.fortress.brief": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.fortress.brief.0.mp3",
+     "dur": 2.255,
+     "bytes": 9216,
+     "hash": "8d95f6666a11",
+     "en": "This is it, Hawk. Hold the line.",
+     "th": "ครั้งสุดท้ายแล้ว ฮอว์ก ยึดแนวไว้"
+    }
+   ]
+  },
+  "r.fortress.boss": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.fortress.boss.0.mp3",
+     "dur": 1.935,
+     "bytes": 7968,
+     "hash": "bf170afa034c",
+     "en": "Sky fortress! Hit the engines!",
+     "th": "ป้อมบินลอยฟ้า! ยิงเครื่องยนต์!"
+    }
+   ]
+  },
+  "r.fortress.win": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.fortress.win.0.mp3",
+     "dur": 2.105,
+     "bytes": 8640,
+     "hash": "f5844ab4b3cc",
+     "en": "Fortress down! Bring it home.",
+     "th": "ป้อมบินร่วงแล้ว! กลับบ้านได้"
+    }
+   ]
+  },
+  "r.fortress.approach": {
+   "speaker": "carrier",
+   "variants": [
+    {
+     "file": "r.fortress.approach.0.mp3",
+     "dur": 2.383,
+     "bytes": 9792,
+     "hash": "ee6cba102ec0",
+     "en": "On glide slope. Call the ball.",
+     "th": "อยู่ในแนวร่อนแล้ว รายงานเมื่อเห็นไฟนำ"
+    }
+   ]
+  },
+  "r.aurora.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.aurora.brief.0.mp3",
+     "dur": 2.212,
+     "bytes": 9120,
+     "hash": "f2b320b6d645",
+     "en": "Unknown sector... look at that sky.",
+     "th": "เขตที่ไม่มีในแผนที่... ดูท้องฟ้านั่นสิ"
+    }
+   ]
+  },
+  "r.aurora.swarm": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.aurora.swarm.0.mp3",
+     "dur": 1.743,
+     "bytes": 7200,
+     "hash": "482e6762f910",
+     "en": "They're not shooting back! Free kills!",
+     "th": "มันไม่ยิงตอบ! ยิงได้ตามสบาย!"
+    }
+   ]
+  },
   "gen.stageStart": {
    "speaker": "awacs",
    "cat": "stageStart",

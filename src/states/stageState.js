@@ -251,7 +251,8 @@ export class StageState {
     this.missileRenderer.warmup(true);
     this.fx.warmup?.();
     this.fxHooks.warmup?.();
-    this.fx.vaporCone?.(this.jet.group, 1); // lazily created mesh: compile it now
+    this.fx.vaporCone?.(this.jet.group, 1); // lazily shown mesh: make it visible so the warm-up frame builds its programs
+    this.fx.vapor?.update?.(1);
     g.rig.update(this.player, this.rail, 1, 1 / 60);
     g.world.update(0, g.rig.camera);
     try {
@@ -261,6 +262,10 @@ export class StageState {
     }
     g.renderWorld(1 / 60);
     this.fx.vaporCone?.(this.jet.group, 0);
+    if (this.fx.vapor) {
+      this.fx.vapor.value = 0;
+      this.fx.vapor.update(0);
+    }
     this.enemyRenderer.warmup(false);
     this.missileRenderer.warmup(false);
   }

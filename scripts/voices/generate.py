@@ -310,7 +310,7 @@ def main():
             continue
         line = lines[j['key']]
         entry = out_lines.setdefault(j['key'], {'speaker': line.get('speaker'), 'cat': line.get('cat'), 'variants': []})
-        if entry['cat'] is None:
+        if 'cat' in entry and entry['cat'] is None:
             del entry['cat']
         var = {'file': r['file'], 'dur': r['dur'], 'bytes': r['bytes'], 'hash': r.get('hash', j['hash']), 'en': j['en'], 'th': j['th']}
         if j['speaker'] != line.get('speaker'):

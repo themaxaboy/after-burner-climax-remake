@@ -108,7 +108,7 @@ export class BossFortress {
       for (let i = 0; i < 6; i++) {
         st.schedule(0.03 + i * 0.05, () => {
           _v.copy(this.killCam?.pos || at).add(_v2.set(st.rng.range(-25, 25), st.rng.range(-6, 6), st.rng.range(-15, 15)));
-          st.fx.explosion(_v, { size: 2.4, kind: 'big' });
+          st.fx.explosion(_v, { size: 3.6, kind: 'big' });
         });
       }
       if (this.opts.radio?.win) st._radio(this.opts.radio.win);

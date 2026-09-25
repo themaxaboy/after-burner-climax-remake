@@ -6,7 +6,7 @@ import radioLines from '../../stages/radioLines.json';
 // Radio speakers → on-screen callsigns (all original). The RADIO stream owns
 // the voiced lines; until it switches to radioLines.json, `radio.say(key)`
 // reads `[callsign, text]` from these tables.
-export const CALLSIGNS = { awacs: 'HAWKEYE', lead: 'HAWK', wing: 'RAVEN', carrier: 'BOSS', tanker: 'PELICAN' };
+export const CALLSIGNS = { awacs: 'SKYWATCH', lead: 'HAWK', wing: 'ROOK', carrier: 'BOSS', tanker: 'TEXACO' }; // same as src/audio/voice/speakers.json
 
 /** `{ key: [CALLSIGN, text] }` for every stage radio line in `lang` (first variant). */
 export function radioStrings(lang) {
