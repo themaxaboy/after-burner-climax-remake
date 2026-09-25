@@ -63,15 +63,14 @@ const LOOK_LIMITS = {
   strike: { sat: 0.3 }
 };
 
-const STAGE_CASES = [
-  { name: 'stage1', q: { stage: '1' }, band: 'blue' },
-  { name: 'stage2', q: { stage: '2' }, band: 'red', look: 'canyonRed' },
-  { name: 'stage3', q: { stage: '3' }, band: 'golden', look: 'clouds' }
-];
-const LOOK_CASES = [
-  ['1', 'oceanDay'], ['2', 'emerald'], ['2', 'canyonRed'], ['1', 'sunset'], ['2', 'glacier'],
-  ['2', 'dunes'], ['3', 'clouds'], ['3', 'fortress'], ['2', 'strike'], ['1', 'aurora'], ['1', 'title'], ['1', 'hangar']
-].map(([stage, look]) => ({ name: `look-${look}`, q: { stage, look }, band: LOOK_BAND[look], look }));
+// every stage in its own look (stage id → look name for the hue band / limits)
+const STAGE_LOOK = {
+  ocean: 'oceanDay', emerald: 'emerald', canyon: 'canyonRed', sunset: 'sunset', glacier: 'glacier', dunes: 'dunes',
+  aurora: 'aurora', clouds: 'clouds', strike: 'strike', fortress: 'fortress'
+};
+const STAGE_CASES = Object.entries(STAGE_LOOK).map(([stage, look]) => ({ name: `stage-${stage}`, q: { stage }, band: LOOK_BAND[look], look }));
+// menu looks previewed over the ocean stage
+const LOOK_CASES = [['ocean', 'title'], ['ocean', 'hangar']].map(([stage, look]) => ({ name: `look-${look}`, q: { stage, look }, band: LOOK_BAND[look], look }));
 
 const REF_CASES = [
   { name: 'ref-ocean-maxres', file: 'maxresdefault.jpg', crop: [0, 0, 1280, 720], band: 'blue' },
