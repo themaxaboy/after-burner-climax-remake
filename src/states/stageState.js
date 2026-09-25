@@ -226,7 +226,7 @@ export class StageState {
   _introMessage() {
     const d = this.def;
     this.hud.message(`${t('ui.stage')} ${d.index}`, { sub: `${d.name} — ${d.subtitle}`, dur: 3.2 });
-    setTimeout(() => this.hud?.message(t('ui.getReady'), { dur: 1.6, color: '#ffd27a' }), 3300);
+    this.hud.message(t('ui.getReady'), { dur: 1.6, color: '#ffd27a', delay: 3.3 });
   }
 
   exit() {

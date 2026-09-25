@@ -25,8 +25,8 @@ export class HUD {
     this.eo = null;
   }
 
-  message(text, { sub = '', dur = 2.5, style = 'top', color = null } = {}) {
-    this.messages.push({ text, sub, t: 0, dur, style, color });
+  message(text, { sub = '', dur = 2.5, style = 'top', color = null, delay = 0 } = {}) {
+    this.messages.push({ text, sub, t: -delay, dur, style, color });
   }
 
   clearMessages() {
@@ -447,7 +447,13 @@ export class HUD {
         continue;
       }
     }
-    const m = this.messages[this.messages.length - 1];
+    let m = null;
+    for (let i = this.messages.length - 1; i >= 0; i--) {
+      if (this.messages[i].t >= 0) {
+        m = this.messages[i];
+        break;
+      }
+    }
     if (!m) return;
     const inA = Math.min(1, m.t * 3), outA = Math.min(1, (m.dur - m.t) * 2.5);
     const a = Math.min(inA, outA);

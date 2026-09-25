@@ -96,7 +96,8 @@ export class HangarState {
       this.orbit -= (e.clientX - this.dragX) * 0.006;
       this.dragX = e.clientX;
     });
-    addEventListener('pointerup', () => (this.dragX = null));
+    this._onUp = () => (this.dragX = null);
+    addEventListener('pointerup', this._onUp);
     g.uiRoot.appendChild(this.root);
     this._refreshUI();
   }
@@ -181,6 +182,7 @@ export class HangarState {
 
   exit() {
     const g = this.game;
+    removeEventListener('pointerup', this._onUp);
     this.root?.remove();
     g.world.dynamic.remove(this.jet.group);
     g.world.scene.remove(this.carrier.group);
