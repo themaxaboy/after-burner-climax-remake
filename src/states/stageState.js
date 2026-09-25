@@ -135,7 +135,7 @@ export class StageState {
     this.missiles = new MissileSystem({ max: 96, rng: this.rng, hooks: this._missileHooks() });
     this.vulcan = new Vulcan({ rng: this.rng, hooks: this._gunHooks() });
     this.enemyGuns = new EnemyGuns({ rng: this.rng, hooks: { onPlayerHit: (pos) => this.playerHit(this.difficulty.gun, 'gun', pos) } });
-    this.stock = new MissileStock(50, 2);
+    this.stock = new MissileStock();
     this.lockon = new LockOn();
     this.lockon.assist = g.settings.assist ?? 2;
     this.climax = new Climax();
@@ -590,6 +590,7 @@ export class StageState {
     p.y = Math.max(p.y, 10);
     p.vx = p.vy = 0;
     this.jet.setVisible(true);
+    g.rig.snap?.();
     this.missiles.reset();
     this.fxHooks.clearTrails();
     this.events.emit('respawn', {});

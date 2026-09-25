@@ -58,7 +58,7 @@ export function createOptionsMenu(game, onBack) {
     },
     {
       type: 'select', label: tr('opt.climaxMode', 'CLIMAX BUTTON'),
-      options: [{ value: false, label: tr('opt.climaxHold', 'HOLD') }, { value: true, label: tr('opt.climaxToggle', 'PRESS = ON / OFF') }],
+      options: [{ value: false, label: tr('opt.climaxHold', 'HOLD') }, { value: true, label: tr('opt.climaxPress', 'PRESS = ON / OFF') }],
       get: () => !!s.climaxToggle,
       set: (v) => { s.climaxToggle = v; save(); }
     },

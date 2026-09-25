@@ -10,6 +10,8 @@ export const DEFAULT_SETTINGS = {
   assist: 2, // 0 off, 1 low, 2 high
   autoFire: true,
   missileMode: 'tap', // 'tap' | 'paint'
+  autoMissile: undefined, // undefined = on for easy difficulty only
+  climaxToggle: false, // false = hold to sustain Climax, true = press on / press off
   mouseFlight: false,
   tilt: false,
   lang: 'en',
