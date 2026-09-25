@@ -20,6 +20,22 @@ import {
 
 const TAU = Math.PI * 2;
 
+/**
+ * Soot albedo of explosion smoke. Not near-black: 0.07 read as holes in the
+ * image (and blacked out the screen when the camera flew through a kill).
+ */
+export const SMOKE_SHADE = 0.13;
+/** Size multiplier applied to kind 'big' explosions (a bomber kill at size 6 -> ~10). */
+export const BIG_SCALE = 1.6;
+
+/**
+ * Smoke puffs grow sub-linearly with the explosion size: big blasts get more
+ * spread-out billows instead of a few screen-filling blobs.
+ */
+function smokeScale(s) {
+  return s <= 1 ? s : Math.pow(s, 0.8);
+}
+
 export function makeParticle() {
   return resetParticle({});
 }
@@ -104,8 +120,8 @@ function flash(sink, P, x, y, z, vx, vy, vz, s, delay, inten = 40) {
   P.t0 += delay;
   P.life = 0.7 + 0.25 * Math.sqrt(s);
   P.s0 = 16 * s; P.s1 = 26 * s; P.p0 = 2.5;
-  P.life = 0.45 + 0.15 * Math.sqrt(s);
-  P.r = 1; P.g = 0.36; P.b = 0.08; P.i = 0.45;
+  P.life = 0.55 + 0.15 * Math.sqrt(s);
+  P.r = 1; P.g = 0.4; P.b = 0.1; P.i = 0.7;
   sink.add(P);
 }
 
@@ -134,6 +150,26 @@ function fireball(sink, P, x, y, z, vx, vy, vz, s, n, delay, inherit = 0.85, hea
     P.i = 0.95;
     sink.smoke(P);
   }
+  // additive glowing heart: reads as a bright fireball through its own smoke (and feeds bloom)
+  const ng = n > 6 ? 4 : 2;
+  for (let i = 0; i < ng; i++) {
+    randUnit(sink, U);
+    const rr = sink.rand() * 1.4 * s;
+    begin(sink, P, x + U.x * rr, y + U.y * rr, z + U.z * rr, K_FIRE);
+    randUnit(sink, U);
+    P.vx = vx * inherit + U.x * 6 * s; P.vy = vy * inherit + U.y * 6 * s + 2 * s; P.vz = vz * inherit + U.z * 6 * s;
+    P.drag = 3.5;
+    P.ay = 3;
+    P.t0 += delay + sink.rand() * 0.05;
+    P.life = (0.45 + 0.3 * sink.rand()) * ls;
+    P.s0 = (4 + 1.5 * sink.rand()) * s; P.s1 = (9 + 3 * sink.rand()) * s;
+    P.spin = (sink.rand() - 0.5) * 1.5;
+    P.p0 = heat * (0.9 + 0.25 * sink.rand());
+    P.p1 = 1;
+    P.p2 = 1.8;
+    P.i = 0.8;
+    sink.add(P);
+  }
   // hot core
   const nc = n > 6 ? 3 : 1;
   for (let i = 0; i < nc; i++) {
@@ -154,8 +190,9 @@ function fireball(sink, P, x, y, z, vx, vy, vz, s, n, delay, inherit = 0.85, hea
   }
 }
 
-function smokeBall(sink, P, x, y, z, vx, vy, vz, s, n, delay, lifeMul = 1, shade = 0.07, glow = 1.2) {
+function smokeBall(sink, P, x, y, z, vx, vy, vz, s, n, delay, lifeMul = 1, shade = SMOKE_SHADE, glow = 1.2) {
   const ls = Math.pow(s, 0.3) * lifeMul;
+  const sz = smokeScale(s);
   for (let i = 0; i < n; i++) {
     randUnit(sink, U);
     const rr = Math.cbrt(sink.rand()) * 2.4 * s;
@@ -169,8 +206,8 @@ function smokeBall(sink, P, x, y, z, vx, vy, vz, s, n, delay, lifeMul = 1, shade
     P.ay = 1.2;
     P.t0 += delay + 0.06 + 0.2 * sink.rand();
     P.life = (4 + 3 * sink.rand()) * ls;
-    P.s0 = (5 + 2 * sink.rand()) * s;
-    P.s1 = (17 + 10 * sink.rand()) * s;
+    P.s0 = (5 + 2 * sink.rand()) * sz;
+    P.s1 = (17 + 10 * sink.rand()) * sz;
     P.spin = (sink.rand() - 0.5) * 0.35;
     const a = shade * (0.8 + 0.5 * sink.rand());
     P.r = a * 1.02; P.g = a * 0.97; P.b = a * 0.93;
@@ -190,7 +227,7 @@ function smokeBall(sink, P, x, y, z, vx, vy, vz, s, n, delay, lifeMul = 1, shade
     P.drag = 1.1; P.ay = 2.5;
     P.t0 += delay + 0.25 + 0.35 * sink.rand();
     P.life = (4.5 + 3 * sink.rand()) * ls;
-    P.s0 = 4 * s; P.s1 = (14 + 8 * sink.rand()) * s;
+    P.s0 = 4 * sz; P.s1 = (14 + 8 * sink.rand()) * sz;
     P.spin = (sink.rand() - 0.5) * 0.3;
     const a = shade * (0.9 + 0.5 * sink.rand());
     P.r = a; P.g = a * 0.97; P.b = a * 0.94;
@@ -297,7 +334,7 @@ export function recipeDebris(sink, P, x, y, z, vx, vy, vz, count, s = 1, shade =
       P.life = 1.0 + 1.0 * sink.rand();
       P.s0 = (1.8 + 0.8 * sink.rand()) * (0.7 + 0.3 * ss);
       P.s1 = (5 + 3 * sink.rand()) * (0.7 + 0.3 * ss);
-      const g = shade > 0.2 ? 0.07 + 0.05 * sink.rand() : shade * 0.8;
+      const g = shade > 0.2 ? 0.11 + 0.05 * sink.rand() : shade * 0.8;
       P.r = g * 1.02; P.g = g; P.b = g * 0.95;
       P.i = 0.6 * (1 - (j / nT) * 0.5);
       P.p0 = j < 2 && shade > 0.2 ? 0.7 : 0;
@@ -323,7 +360,7 @@ function airExplosion(sink, P, x, y, z, vx, vy, vz, s, opt) {
   if (opt.flash !== false) flash(sink, P, x, y, z, vx, vy, vz, s, d, opt.flashI || 30);
   // smoke first: within the premultiplied layer later slots draw on top, so the fire stays in front
   if (opt.smoke !== false) smokeBall(sink, P, x, y, z, vx, vy, vz, s, countOf(sink, 12 * cm, 4), d, opt.smokeLife || 1);
-  fireball(sink, P, x, y, z, vx, vy, vz, s, countOf(sink, 18 * cm, 5), d, 0.85, opt.heat || 1, opt.fireLife || 1);
+  fireball(sink, P, x, y, z, vx, vy, vz, s, countOf(sink, 18 * cm, 5), d, 0.85, opt.heat || 1.3, opt.fireLife || 1);
   sparks(sink, P, x, y, z, vx, vy, vz, s, countOf(sink, 26 * cm, 6), d);
   embers(sink, P, x, y, z, vx, vy, vz, s, countOf(sink, 8 * cm, 2), d);
   if (opt.debris !== false) recipeDebris(sink, P, x, y, z, vx, vy, vz, countOf(sink, 6 * cm * Math.sqrt(s), 2), s, 0.3, d);
@@ -331,14 +368,24 @@ function airExplosion(sink, P, x, y, z, vx, vy, vz, s, opt) {
 }
 
 /**
- * Explosion recipe. kind: 'air' | 'big' | 'ground' | 'water' | 'missile'.
- * size 1 = fighter kill (fireball ~12-25 m); 'big' scales up to ~60 m.
+ * Explosion recipe. kind: 'air' | 'big' | 'ground' | 'water' | 'missile' | 'lite'.
+ * size 1 = fireball ~25-40 m across (the stage uses ~2.6 for fighter kills);
+ * 'big' multiplies the size by BIG_SCALE and adds delayed secondary bursts.
+ * 'lite' is the cheap version used when many kills land at once (Climax
+ * salvos): flash, a small fireball, sparks and a few smoke puffs (~25 particles).
  */
 export function recipeExplosion(sink, P, x, y, z, vx, vy, vz, size = 1, kind = 'air') {
   const s = size;
   switch (kind) {
+    case 'lite': {
+      flash(sink, P, x, y, z, vx, vy, vz, s * 0.8, 0, 34);
+      smokeBall(sink, P, x, y, z, vx, vy, vz, s * 0.8, countOf(sink, 4, 2), 0, 0.7);
+      fireball(sink, P, x, y, z, vx, vy, vz, s * 0.85, countOf(sink, 7, 3), 0, 0.85, 1.1, 0.9);
+      sparks(sink, P, x, y, z, vx, vy, vz, s, countOf(sink, 10, 3), 0);
+      break;
+    }
     case 'big': {
-      const S2 = s * 2.4;
+      const S2 = s * BIG_SCALE;
       airExplosion(sink, P, x, y, z, vx, vy, vz, S2, { countMul: 1.5, ring: true, smokeLife: 1.4, flashI: 50, fireLife: 1.3 });
       // secondary delayed bursts around the wreck
       for (let i = 0; i < 3; i++) {
@@ -402,12 +449,13 @@ export function recipeExplosion(sink, P, x, y, z, vx, vy, vz, size = 1, kind = '
         P.t0 += 0.1 + 0.3 * sink.rand();
         P.life = 6 + 3 * sink.rand();
         P.s0 = 5 * s; P.s1 = (20 + 8 * sink.rand()) * s;
-        P.r = P.g = P.b = 0.06; P.i = 0.85;
+        P.r = P.g = P.b = SMOKE_SHADE * 0.9; P.i = 0.85;
         P.p0 = 1; P.p2 = 1.8; P.p3 = 0.06;
         sink.smoke(P);
       }
       fireball(sink, P, x, y + 5 * s, z, 0, 0, 0, s, countOf(sink, 12, 4), 0, 0, 1, 1);
       recipeDebris(sink, P, x, y + 2 * s, z, 0, 0, 0, countOf(sink, 5, 2), s, 0.12);
+      if (s >= 2) ring(sink, P, x, y + 3 * s, z, 22 * s, 0.4 + 0.04 * s, 0.8);
       break;
     }
     case 'water': {
@@ -415,10 +463,11 @@ export function recipeExplosion(sink, P, x, y, z, vx, vy, vz, size = 1, kind = '
       sparks(sink, P, x, y + 2 * s, z, 0, 0, 0, s * 0.7, countOf(sink, 10, 3), 0);
       recipeSplash(sink, P, x, y, z, s * 1.2);
       fireball(sink, P, x, y + 4 * s, z, vx * 0.2, 0, vz * 0.2, s * 0.6, countOf(sink, 6, 2), 0, 0, 1, 0.7);
+      if (s >= 2) ring(sink, P, x, y + 3 * s, z, 22 * s, 0.4 + 0.04 * s, 0.8);
       break;
     }
     default:
-      airExplosion(sink, P, x, y, z, vx, vy, vz, s, { ring: s >= 1.5 });
+      airExplosion(sink, P, x, y, z, vx, vy, vz, s, { ring: s >= 2, flashI: 40 });
   }
 }
 
@@ -482,7 +531,10 @@ export function recipeSplash(sink, P, x, y, z, s = 1) {
   }
 }
 
-/** Vulcan impact: sparks bouncing back along -dir + small flash + puff. */
+/**
+ * Vulcan impact: sparks bouncing back along -dir + flash + glow + puff. Sized
+ * for readability at combat range (a hit on a fighter 400 m out must pop).
+ */
 export function recipeHitSparks(sink, P, x, y, z, dx, dy, dz, count = 12) {
   const n = Math.max(2, Math.round(count * Math.max(0.6, sink.q)));
   const dl = Math.hypot(dx, dy, dz) || 1;
@@ -492,30 +544,30 @@ export function recipeHitSparks(sink, P, x, y, z, dx, dy, dz, count = 12) {
     randUnit(sink, U);
     U.x = U.x * 0.9 - dx * 0.6; U.y = U.y * 0.9 - dy * 0.6 + 0.15; U.z = U.z * 0.9 - dz * 0.6;
     norm(U);
-    const sp = 40 + 80 * sink.rand();
+    const sp = 50 + 100 * sink.rand();
     P.vx = U.x * sp; P.vy = U.y * sp; P.vz = U.z * sp;
     P.drag = 2.0; P.ay = -9.8;
-    P.life = 0.15 + 0.3 * sink.rand();
-    P.s0 = P.s1 = 0.07 + 0.05 * sink.rand();
-    P.r = 1; P.g = 0.62; P.b = 0.25; P.i = 16;
-    P.p1 = 0.035;
+    P.life = 0.18 + 0.32 * sink.rand();
+    P.s0 = P.s1 = 0.12 + 0.08 * sink.rand();
+    P.r = 1; P.g = 0.68; P.b = 0.3; P.i = 24;
+    P.p1 = 0.04;
     sink.add(P);
   }
   begin(sink, P, x, y, z, K_FLASH);
-  P.life = 0.07;
-  P.s0 = 2.2; P.s1 = 3.2;
-  P.r = 1; P.g = 0.85; P.b = 0.6; P.i = 22;
+  P.life = 0.08;
+  P.s0 = 3.5; P.s1 = 5.2;
+  P.r = 1; P.g = 0.88; P.b = 0.65; P.i = 30;
   sink.add(P);
   begin(sink, P, x, y, z, K_GLOW);
-  P.life = 0.16;
-  P.s0 = 3; P.s1 = 4;
-  P.r = 1; P.g = 0.5; P.b = 0.18; P.i = 3.5; P.p0 = 1.5;
+  P.life = 0.2;
+  P.s0 = 5; P.s1 = 6.5;
+  P.r = 1; P.g = 0.52; P.b = 0.2; P.i = 5; P.p0 = 1.5;
   sink.add(P);
   begin(sink, P, x, y, z, S_SMOKE);
   P.vx = -dx * 4; P.vy = -dy * 4 + 1; P.vz = -dz * 4; P.drag = 1.5; P.ay = 0.5;
   P.life = 0.6 + 0.3 * sink.rand();
-  P.s0 = 0.8; P.s1 = 3.5;
-  P.r = P.g = P.b = 0.3; P.i = 0.45;
+  P.s0 = 1.0; P.s1 = 4.5;
+  P.r = P.g = P.b = 0.32; P.i = 0.45;
   P.p2 = 2; P.p3 = 0.1;
   sink.smoke(P);
 }
@@ -525,17 +577,17 @@ export function recipeMuzzle(sink, P, x, y, z, dx, dy, dz, vx = 0, vy = 0, vz = 
   const dl = Math.hypot(dx, dy, dz) || 1;
   begin(sink, P, x, y, z, K_MUZZLE);
   P.vx = vx; P.vy = vy; P.vz = vz;
-  P.life = 0.04 + 0.015 * sink.rand();
-  P.s0 = P.s1 = 0.5 + 0.15 * sink.rand();
+  P.life = 0.045 + 0.015 * sink.rand();
+  P.s0 = P.s1 = 0.7 + 0.2 * sink.rand();
   P.r = dx / dl; P.g = dy / dl; P.b = dz / dl; // direction (colour is fixed in shader)
-  P.i = 1;
-  P.p1 = 2.6 + 1.4 * sink.rand(); // flame length (m)
+  P.i = 1.3;
+  P.p1 = 3.5 + 2.0 * sink.rand(); // flame length (m)
   sink.add(P);
   begin(sink, P, x, y, z, K_GLOW);
   P.vx = vx; P.vy = vy; P.vz = vz;
-  P.life = 0.05;
-  P.s0 = 1.4; P.s1 = 2.0;
-  P.r = 1; P.g = 0.6; P.b = 0.25; P.i = 3; P.p0 = 1; P.p3 = 1;
+  P.life = 0.06;
+  P.s0 = 2.2; P.s1 = 3.0;
+  P.r = 1; P.g = 0.6; P.b = 0.25; P.i = 4; P.p0 = 1; P.p3 = 1;
   sink.add(P);
 }
 
@@ -640,7 +692,7 @@ export function recipeEmitterPuff(sink, P, x, y, z, vx, vy, vz, intensity, fire,
   P.life = 2.4 + 1.2 * sink.rand();
   P.s0 = 2 + 2 * it; P.s1 = (8 + 8 * it) * (0.8 + 0.4 * sink.rand());
   P.spin = (sink.rand() - 0.5) * 0.6;
-  const a = fire ? 0.06 : 0.14;
+  const a = fire ? SMOKE_SHADE * 0.9 : 0.16;
   P.r = a * 1.03; P.g = a; P.b = a * 0.95; P.i = 0.55 + 0.3 * it;
   P.p0 = fire ? 0.8 : 0;
   P.p2 = 1.8; P.p3 = 0.06;
@@ -655,6 +707,54 @@ export function recipeEmitterPuff(sink, P, x, y, z, vx, vy, vz, intensity, fire,
     P.spin = (sink.rand() - 0.5) * 3;
     P.p0 = 1.0; P.p1 = 0.9; P.p2 = 1.6;
     sink.add(P);
+  }
+}
+
+/**
+ * Black smoke plume left in the air by a kill: puffs pre-scheduled along the
+ * drifting (decelerating, slowly sinking) path over `dur` seconds, dense and
+ * fire-lit at first, thinning out. Stateless like the debris trails: no
+ * emitter slot and no per-frame CPU.
+ */
+export function recipeSmokePlume(sink, P, x, y, z, vx, vy, vz, s = 1, dur = 2, fire = true) {
+  const n = countOf(sink, 12, 5);
+  const k = 1.3, ay = -2.5, inh = 0.55;
+  const ivx = vx * inh, ivy = vy * inh, ivz = vz * inh;
+  const sz = smokeScale(s);
+  const nf = fire ? Math.max(1, Math.round(n * 0.35)) : 0;
+  for (let j = 0; j < n; j++) {
+    const f = j / n;
+    const tj = 0.05 + dur * Math.pow(f, 1.35);
+    const it = 1 - f;
+    motionAt(M, x, y, z, ivx, ivy, ivz, k, ay, tj);
+    velocityAt(V, ivx, ivy, ivz, k, ay, tj);
+    begin(sink, P, M.x + (sink.rand() - 0.5) * 2 * sz, M.y + (sink.rand() - 0.5) * 2 * sz, M.z + (sink.rand() - 0.5) * 2 * sz, S_SMOKE);
+    P.vx = V.x * 0.15 + (sink.rand() - 0.5) * 4 * sz;
+    P.vy = V.y * 0.15 + (sink.rand() - 0.5) * 3 * sz + 1.5;
+    P.vz = V.z * 0.15 + (sink.rand() - 0.5) * 4 * sz;
+    P.drag = 1.2; P.ay = 1.2;
+    P.t0 = sink.time + tj;
+    P.life = (2.4 + 1.6 * sink.rand()) * (0.8 + 0.4 * it);
+    P.s0 = (2.5 + 2 * it) * sz;
+    P.s1 = (9 + 9 * it) * sz * (0.8 + 0.4 * sink.rand());
+    P.spin = (sink.rand() - 0.5) * 0.5;
+    const a = SMOKE_SHADE * (0.8 + 0.4 * sink.rand());
+    P.r = a * 1.03; P.g = a; P.b = a * 0.95;
+    P.i = 0.5 + 0.4 * it;
+    P.p0 = j < nf ? 0.9 * it : 0;
+    P.p2 = 1.8; P.p3 = 0.08;
+    sink.smoke(P);
+    if (j < nf) {
+      begin(sink, P, M.x, M.y, M.z, K_FIRE);
+      P.vx = V.x * 0.5; P.vy = V.y * 0.5 + 2; P.vz = V.z * 0.5;
+      P.drag = 2.2; P.ay = 3;
+      P.t0 = sink.time + tj;
+      P.life = 0.25 + 0.2 * sink.rand();
+      P.s0 = (1.6 + 1.2 * it) * sz; P.s1 = (3.5 + 3 * it) * sz;
+      P.spin = (sink.rand() - 0.5) * 3;
+      P.p0 = 1.0; P.p1 = 0.9; P.p2 = 1.6;
+      sink.add(P);
+    }
   }
 }
 

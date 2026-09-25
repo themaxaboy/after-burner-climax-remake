@@ -20,10 +20,10 @@ import { worldFogUniforms } from './glsl.js';
 import { motionAt } from './ballistic.js';
 import {
   FxRng, makeParticle, recipeDebris, recipeEmitterPuff, recipeExplosion, recipeFlares, recipeHeadGlow,
-  recipeHitSparks, recipeMuzzle, recipeShockRing, recipeSmokePuff, recipeSplash, resetParticle
+  recipeHitSparks, recipeMuzzle, recipeShockRing, recipeSmokePlume, recipeSmokePuff, recipeSplash, resetParticle
 } from './recipes.js';
 
-export { FX_QUALITY, fxQuality, TRAIL_DEFAULTS } from './config.js';
+export { FX_QUALITY, fxQuality, TRAIL_DEFAULTS, MISSILE_TRAILS } from './config.js';
 
 const MAX_EMITTERS = 32;
 const _m = { x: 0, y: 0, z: 0 };
@@ -198,7 +198,7 @@ export class FX {
 
   // ------------------------------------------------------------ one-shots
 
-  /** opts: { size = 1, vel = null, kind = 'air'|'big'|'ground'|'water'|'missile', seed } */
+  /** opts: { size = 1, vel = null, kind = 'air'|'big'|'ground'|'water'|'missile'|'lite', seed } */
   explosion(pos, opts) {
     let size = 1, vel = null, kind = 'air', seed;
     if (opts) {
@@ -221,9 +221,20 @@ export class FX {
     recipeSmokePuff(s, this.P, pos.x, pos.y, pos.z, vel ? vel.x : 0, vel ? vel.y : 0, vel ? vel.z : 0, size, life);
   }
 
+  /** Burning fragments with smoke trails. count is scaled by the quality budget. */
   debris(pos, vel, count = 10) {
     const s = this._begin();
-    recipeDebris(s, this.P, pos.x, pos.y, pos.z, vel ? vel.x : 0, vel ? vel.y : 0, vel ? vel.z : 0, count, 1, 0.3);
+    const n = Math.max(2, Math.round(count * s.q));
+    recipeDebris(s, this.P, pos.x, pos.y, pos.z, vel ? vel.x : 0, vel ? vel.y : 0, vel ? vel.z : 0, n, 1, 0.3);
+  }
+
+  /**
+   * Black smoke plume trailing from a kill for `dur` seconds (stateless: puffs
+   * are pre-scheduled along the drifting path, so no emitter slot is used).
+   */
+  smokePlume(pos, vel, size = 1, dur = 2, fire = true) {
+    const s = this._begin();
+    recipeSmokePlume(s, this.P, pos.x, pos.y, pos.z, vel ? vel.x : 0, vel ? vel.y : 0, vel ? vel.z : 0, size, dur, fire);
   }
 
   waterSplash(pos, size = 1) {

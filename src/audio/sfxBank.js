@@ -517,6 +517,199 @@ export const SFX_DEFS = {
       K.chain(cr, K.filter('bandpass', 2400, 0.5), K.gain(0.45), bus);
     }
   },
+  /*
+   * Layered kill booms (chosen by distance in src/states/stage/fxHooks.js):
+   *   boomNear  < ~700 m: sharp crack + ~45 Hz sub thump + blast body + debris rattle
+   *   boomFar   farther: low-passed, soft onset, rolling rumble
+   *   boomHuge  big kills (bombers, bosses): stacked blasts + long sub drop + rumble
+   */
+  boomNear: {
+    dur: 2.8,
+    bus: 'world',
+    gain: 1.0,
+    channels: 1,
+    variance: 0.07,
+    maxInstances: 4,
+    ref: 160,
+    render(K) {
+      const bus = K.verb(0.28);
+      // crack: the supersonic front of the blast
+      K.burst(bus, 0, 'white', 'highpass', 2200, 0.7, 1, 0.0004, 0.006);
+      K.chain(K.noise('white', 0, 0.06), K.filter('bandpass', 4200, 1.2), K.shaper(4), K.pg(0, 0.5, 0.0005, 0.01), bus);
+      // sub thump: fast drop into ~45 Hz, driven a little so small speakers hear it
+      const sub = K.osc('sine', 72, 0, 2.2);
+      K.sweep(sub.frequency, 0, 72, 0.16, 45);
+      sub.frequency.exponentialRampToValueAtTime(38, 1.4);
+      const sg = K.gain(0);
+      sg.gain.setValueAtTime(0, 0);
+      sg.gain.linearRampToValueAtTime(1, 0.006);
+      sg.gain.setTargetAtTime(0.55, 0.006, 0.08);
+      sg.gain.setTargetAtTime(0, 0.2, 0.32);
+      K.chain(sub, K.shaper(1.6), sg, bus);
+      // blast body: brown/pink noise under a closing low-pass
+      const body = K.filter('lowpass', 3600, 0.6);
+      K.sweep(body.frequency, 0, 3600, 1.1, 170);
+      K.noise('brown', 0, 2.8).connect(body);
+      K.chain(K.noise('pink', 0, 2.8), K.gain(0.45), body);
+      const bg = K.gain(0);
+      bg.gain.setValueAtTime(0, 0);
+      bg.gain.linearRampToValueAtTime(0.95, 0.004);
+      bg.gain.setTargetAtTime(0.4, 0.004, 0.09);
+      bg.gain.setTargetAtTime(0, 0.3, 0.55);
+      K.chain(body, K.shaper(2.4), bg, bus);
+      // debris rattle: sparse crackle + a few metallic pings
+      const cr = K.src(K.crackle(2.4, { rate: 380, tau: 0.6, start: 0.05 }), 0);
+      K.chain(cr, K.filter('bandpass', 2800, 0.6), K.gain(0.5), bus);
+      for (let i = 0; i < 4; i++) {
+        const t = 0.08 + K.rand(0, 0.5);
+        const o = K.osc('triangle', K.rand(1700, 4200), t, t + 0.25);
+        K.chain(o, K.pg(t, 0.06, 0.001, 0.03), bus);
+      }
+    }
+  },
+  boomFar: {
+    dur: 3.2,
+    bus: 'world',
+    gain: 0.85,
+    channels: 1,
+    variance: 0.08,
+    maxInstances: 4,
+    ref: 160,
+    render(K) {
+      const bus = K.verb(0.45);
+      const lp = K.filter('lowpass', 900, 0.6);
+      lp.connect(bus);
+      // soft (air-absorbed) front
+      K.burst(lp, 0, 'pink', 'lowpass', 1400, 0.7, 0.7, 0.012, 0.05);
+      // low thump
+      const sub = K.osc('sine', 58, 0, 2.6);
+      K.sweep(sub.frequency, 0, 58, 0.3, 36);
+      K.chain(sub, K.pg(0, 0.9, 0.02, 0.35), lp);
+      // rolling rumble
+      const body = K.filter('lowpass', 520, 0.7);
+      K.sweep(body.frequency, 0, 520, 2.4, 90);
+      K.noise('brown', 0, 3.2).connect(body);
+      const bg = K.gain(0);
+      bg.gain.setValueAtTime(0, 0);
+      bg.gain.linearRampToValueAtTime(0.9, 0.03);
+      bg.gain.setTargetAtTime(0.35, 0.05, 0.25);
+      bg.gain.setTargetAtTime(0, 0.6, 0.7);
+      K.chain(body, K.shaper(1.5), bg, lp);
+      const cr = K.src(K.crackle(2.6, { rate: 160, tau: 0.9, start: 0.1 }), 0);
+      K.chain(cr, K.filter('bandpass', 1100, 0.7), K.gain(0.25), lp);
+    }
+  },
+  boomHuge: {
+    dur: 5.0,
+    bus: 'world',
+    gain: 1.0,
+    channels: 2,
+    variance: 0.04,
+    maxInstances: 2,
+    ref: 300,
+    render(K) {
+      const bus = K.verb(0.45);
+      K.burst(bus, 0, 'white', 'highpass', 1600, 0.7, 1, 0.0005, 0.012);
+      // stacked blasts (primary + secondary detonations)
+      for (const [t, peak, f0] of [[0, 1, 3000], [0.09, 0.75, 2400], [0.32, 0.6, 1800], [0.7, 0.4, 1400]]) {
+        const body = K.filter('lowpass', f0, 0.55);
+        K.sweep(body.frequency, t, f0, t + 1.8, 100);
+        K.noise('brown', t, 5).connect(body);
+        K.chain(K.noise('pink', t, 5), K.gain(0.5), body);
+        const g = K.gain(0);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(peak, t + 0.006);
+        g.gain.setTargetAtTime(peak * 0.45, t + 0.006, 0.14);
+        g.gain.setTargetAtTime(0, t + 0.4, 0.9);
+        K.chain(body, K.shaper(2.2), g, bus);
+      }
+      // long sub drop
+      const sub = K.osc('sine', 66, 0, 5);
+      K.sweep(sub.frequency, 0, 66, 2.5, 22);
+      const sg = K.gain(0);
+      sg.gain.setValueAtTime(0, 0);
+      sg.gain.linearRampToValueAtTime(1, 0.008);
+      sg.gain.setTargetAtTime(0, 0.3, 1.0);
+      K.chain(sub, K.shaper(1.4), sg, bus);
+      // rumble tail
+      const rum = K.filter('lowpass', 220, 0.8);
+      K.noise('brown', 0.1, 5).connect(rum);
+      const rg = K.gain(0);
+      rg.gain.setValueAtTime(0, 0.1);
+      rg.gain.linearRampToValueAtTime(0.6, 0.5);
+      rg.gain.setTargetAtTime(0, 0.9, 1.3);
+      K.chain(rum, rg, bus);
+      const cr = K.src(K.crackle(4.6, { rate: 420, tau: 1.8, start: 0.12 }, true), 0);
+      K.chain(cr, K.filter('bandpass', 2200, 0.5), K.gain(0.45), bus);
+    }
+  },
+  whoosh: {
+    // near miss / missile fly-by (positional; doppler comes from the velocity)
+    dur: 1.3,
+    bus: 'world',
+    gain: 0.8,
+    channels: 1,
+    variance: 0.1,
+    maxInstances: 3,
+    minInterval: 0.08,
+    ref: 60,
+    render(K) {
+      const mix = K.gain(1);
+      mix.connect(K.out);
+      const env = K.gain(0);
+      env.gain.setValueAtTime(0, 0);
+      env.gain.linearRampToValueAtTime(0.35, 0.3);
+      env.gain.linearRampToValueAtTime(1, 0.5);
+      env.gain.setTargetAtTime(0, 0.56, 0.18);
+      const bp = K.filter('bandpass', 500, 1.1);
+      K.sweep(bp.frequency, 0, 500, 0.5, 2600);
+      bp.frequency.exponentialRampToValueAtTime(420, 1.2);
+      K.chain(K.noise('pink', 0, 1.3), bp, env, mix);
+      // jet roar body riding the whoosh
+      const roar = K.filter('lowpass', 900, 0.7);
+      K.sweep(roar.frequency, 0, 900, 0.5, 1600);
+      roar.frequency.exponentialRampToValueAtTime(300, 1.2);
+      const rg = K.gain(0);
+      rg.gain.setValueAtTime(0, 0);
+      rg.gain.linearRampToValueAtTime(0.7, 0.48);
+      rg.gain.setTargetAtTime(0, 0.55, 0.22);
+      K.chain(K.noise('brown', 0, 1.3), roar, K.shaper(1.5), rg, mix);
+      // thin hiss on top
+      const hg = K.gain(0);
+      hg.gain.setValueAtTime(0, 0);
+      hg.gain.linearRampToValueAtTime(0.25, 0.48);
+      hg.gain.setTargetAtTime(0, 0.52, 0.08);
+      K.chain(K.noise('white', 0, 1.3), K.filter('highpass', 5000, 0.7), hg, mix);
+    }
+  },
+  evade: {
+    // missiles defeated by a roll: stereo swish across the head + airy zip
+    dur: 1.1,
+    bus: 'world',
+    gain: 0.55,
+    channels: 2,
+    maxInstances: 2,
+    minInterval: 0.2,
+    render(K) {
+      const pan = K.pan(0.8);
+      if (pan.pan) {
+        pan.pan.setValueAtTime(0.8, 0);
+        pan.pan.linearRampToValueAtTime(-0.8, 0.7);
+      }
+      pan.connect(K.out);
+      const bp = K.filter('bandpass', 800, 1.4);
+      K.sweep(bp.frequency, 0, 800, 0.35, 3800);
+      bp.frequency.exponentialRampToValueAtTime(700, 1.0);
+      const g = K.gain(0);
+      g.gain.setValueAtTime(0, 0);
+      g.gain.linearRampToValueAtTime(1, 0.32);
+      g.gain.setTargetAtTime(0, 0.36, 0.14);
+      K.chain(K.noise('pink', 0, 1.1), bp, g, pan);
+      const zip = K.osc('sawtooth', 1800, 0.25, 0.7);
+      K.sweep(zip.frequency, 0.25, 1800, 0.6, 500);
+      K.chain(zip, K.filter('bandpass', 1500, 3), K.pg(0.25, 0.12, 0.02, 0.1), pan);
+    }
+  },
   hit: {
     dur: 0.35,
     bus: 'world',

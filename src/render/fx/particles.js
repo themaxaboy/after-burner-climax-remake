@@ -64,8 +64,15 @@ void main() {
   vec3 toCam = normalize(cameraPosition - p);
   float pxPerM = projectionMatrix[1][1] * 0.5 * uViewport.y / depth;
   float energy = 1.0;
-  // fade particles the camera flies into (and never let them fill the screen)
-  float nearFade = smoothstep(0.35, 1.4, depth / max(size, 1e-3));
+  // fade particles the camera flies into (and never let them fill the screen).
+  // Smoke starts fading while it is still well short of the screen-size cap, so
+  // flying through a fresh kill never blacks the view out.
+  float nr = depth / max(size, 1e-3);
+#ifdef FX_ADDITIVE
+  float nearFade = smoothstep(0.35, 1.4, nr);
+#else
+  float nearFade = smoothstep(0.9, 2.8, nr);
+#endif
   float rpx = size * pxPerM;
 #ifdef FX_ADDITIVE
   if (rpx < uMinPx) {
@@ -195,8 +202,9 @@ ${FX_FIRE_GLSL}
 
 void main() {
   int k = int(vInfo.z + 0.5);
-  float age = vInfo.x;
-  float tsec = vInfo.y;
+  // varyings can extrapolate slightly outside [0,1] under MSAA: keep pow() bases >= 0
+  float age = clamp(vInfo.x, 0.0, 1.0);
+  float tsec = max(vInfo.y, 0.0);
   float seed = vInfo.w;
   float r2 = dot(vUv, vUv);
   vec3 col = vec3(0.0);
@@ -231,7 +239,9 @@ void main() {
   } else if (k == K_RING) {
     float r = sqrt(r2);
     float w = 0.09 + 0.16 * age;
-    float ringv = exp(-pow((r - 0.8) / w, 2.0)) * (0.8 + 0.2 * sin(atan(vUv.y, vUv.x) * 7.0 + seed * 20.0)) + 0.08 * smoothstep(0.85, 0.2, r);
+    float q = (r - 0.8) / w; // signed: square it (pow() of a negative base is NaN)
+    float ang = r > 1e-4 ? atan(vUv.y, vUv.x) : 0.0;
+    float ringv = exp(-q * q) * (0.8 + 0.2 * sin(ang * 7.0 + seed * 20.0)) + 0.08 * (1.0 - smoothstep(0.2, 0.85, r));
     float env = (1.0 - age) * (1.0 - age);
     col = vCol.rgb * ringv * env * (1.0 - smoothstep(0.92, 1.0, r));
   } else if (k == K_EMBER) {
@@ -248,7 +258,8 @@ void main() {
     col = (vec3(1.0, 0.42, 0.1) * petal * lobes * 2.6 + vec3(1.0, 0.75, 0.4) * core * 7.0) * env * (1.0 - smoothstep(0.7, 1.0, along));
   }
   col *= vCol.w * (1.0 - vFog.w);
-  gl_FragColor = vec4(col, 0.0);
+  // additive HDR: never subtract light, never emit NaN/Inf into the bloom chain
+  gl_FragColor = vec4(clamp(col, 0.0, 6.0e4), 0.0);
 }`;
 
 const SMOKE_FS = /* glsl */ `
@@ -270,8 +281,8 @@ ${FX_FIRE_GLSL}
 
 void main() {
   int k = int(vInfo.z + 0.5);
-  float age = vInfo.x;
-  float tsec = vInfo.y;
+  float age = clamp(vInfo.x, 0.0, 1.0);
+  float tsec = max(vInfo.y, 0.0);
   vec4 s = texture2D(uAtlas, vUvA);
   float dens = s.r;
   vec3 n = vec3(s.g * 2.0 - 1.0, s.b * 2.0 - 1.0, 0.0);
@@ -290,7 +301,7 @@ void main() {
     float turb = f.g * 0.65 + f.r * 0.35;
     float th = age * age * 0.75 * vPrm.y;
     float m = smoothstep(th, th + 0.22, dens * (0.45 + 0.8 * s.a) + turb * 0.25);
-    float h0 = pow(1.0 - age, 2.4) * vPrm.x;
+    float h0 = pow(1.0 - age, 1.6) * vPrm.x; // stays hot for most of its life (arcade fireball)
     float billow = n.z * n.z;
     float heat = clamp(h0 * (0.02 + 0.9 * billow + 0.8 * turb) + dens * 0.12 - 0.13, 0.0, 1.0);
     alpha = clamp(dens * 2.4 - 0.1, 0.0, 1.0) * m * vCol.w * smoothstep(0.0, 0.03, age) * (1.0 - smoothstep(0.6, 1.0, age));
@@ -314,19 +325,22 @@ void main() {
     float diff = clamp(ndl * 0.55 + 0.45, 0.0, 1.0);
     diff *= diff;
     float thin = 1.0 - dens;
-    lit = albedo * (sun * diff + amb) + sun * vLight.w * thin * thin * thin * (0.2 + albedo) * 0.8;
+    lit = albedo * (sun * diff + amb) + sun * vLight.w * thin * thin * thin * (0.08 + albedo) * 0.7; // silver lining (dark soot scatters little)
     if (k == S_SPRAY || k == S_MIST) {
       // bright water: wrap lighting + a bit of sky
       lit = albedo * (sun * (0.45 + 0.55 * clamp(ndl * 0.5 + 0.5, 0.0, 1.0)) + amb * 1.3) + sun * (0.25 + vLight.w * 2.5) * (0.3 + thin) * albedo;
     }
     if (vPrm.x > 0.0) {
       // smoke lit from inside by the dying fireball (deep orange, fades fast)
-      float g = vPrm.x * exp(-tsec * 2.6);
+      float g = vPrm.x * exp(-tsec * 3.4);
       emis = vec3(1.3, 0.28, 0.04) * g * dens * dens * m;
     }
   }
+  // premultiplied: alpha > 1 would make the (1 - alpha) destination factor negative
+  // (dark streaks on the HalfFloat target), so clamp it and keep colour finite
+  alpha = clamp(alpha, 0.0, 1.0);
   vec3 c = mix(lit, vFog.rgb, vFog.w) * alpha + emis * (1.0 - vFog.w) * alpha;
-  gl_FragColor = vec4(c, alpha);
+  gl_FragColor = vec4(clamp(c, 0.0, 6.0e4), alpha);
 }`;
 
 function defineMap() {
