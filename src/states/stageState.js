@@ -68,6 +68,7 @@ export class StageState {
     g.setLoading?.(0.3, 'ASSEMBLING AIRCRAFT');
     const scene = g.world.scene;
     this.fx = fxMod?.FX ? new fxMod.FX({ scene, renderer: g.renderer, maxParticles: g.preset.particles, quality: g.preset.name }) : FX_STUB;
+    this.fx.setLighting?.(g.world.sun.intensity, 0.55);
     this.jet = new PlayerJet({ models, fx: this.fx, jetId: session.jet, scheme: session.scheme, csm: g.world.csm });
     g.world.dynamic.add(this.jet.group);
     this.enemyRenderer = new EnemyRenderer(scene, models, { csm: g.world.csm });
@@ -319,8 +320,11 @@ export class StageState {
   }
 
   _gunHooks() {
+    let n = 0;
     return {
-      onFire: () => {},
+      onFire: (pos, dir) => {
+        if ((n++ & 3) === 0) this.fx.muzzleFlash?.(pos, dir, this.player.velocity);
+      },
       onBulletHit: (e, pos) => {
         this.fx.hitSparks(pos, e.vel, 8);
       }

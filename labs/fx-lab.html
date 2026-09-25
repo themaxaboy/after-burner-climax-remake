@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FX Lab</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #05070c; overflow: hidden; font: 12px/1.35 system-ui, sans-serif; color: #dfe6ee; }
+      canvas#gl { display: block; width: 100vw; height: 100vh; }
+      #panel { position: fixed; top: 8px; left: 8px; width: 250px; max-height: calc(100vh - 16px); overflow: auto;
+        background: rgba(8, 12, 18, 0.72); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 8px; }
+      #panel.hidden { display: none; }
+      #panel h1 { font-size: 12px; margin: 0 0 6px; letter-spacing: 0.08em; color: #ffb45a; }
+      #panel .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px; }
+      #panel button { background: #1b2430; color: #e8eef5; border: 1px solid #334155; border-radius: 4px; padding: 4px 6px; cursor: pointer; font: inherit; }
+      #panel button:hover { background: #26344a; }
+      #panel button.on { background: #7a4a12; border-color: #ffb45a; }
+      #panel label { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 3px 0; }
+      #panel input[type='range'] { width: 130px; }
+      #perf { position: fixed; right: 8px; top: 8px; background: rgba(8, 12, 18, 0.72); padding: 6px 8px; border-radius: 6px;
+        font: 11px/1.4 ui-monospace, monospace; white-space: pre; }
+      body.shot #panel, body.shot #perf { display: none; }
+    </style>
+  </head>
+  <body>
+    <canvas id="gl"></canvas>
+    <div id="panel">
+      <h1>FX LAB</h1>
+      <div class="grid" id="buttons"></div>
+      <label>throttle <input id="throttle" type="range" min="0" max="1" step="0.01" value="0.8" /></label>
+      <label>afterburner <input id="ab" type="range" min="0" max="1" step="0.01" value="1" /></label>
+      <label>vapor <input id="vapor" type="range" min="0" max="1" step="0.01" value="0" /></label>
+      <label>distance <input id="dist" type="range" min="100" max="3000" step="10" value="300" /></label>
+      <div class="grid" id="toggles"></div>
+      <div style="opacity: 0.7">?demo=explosions|surface|combat|trails|afterburner|side|all&amp;t=sec&amp;env=gold|noon|game&amp;q=low..ultra&amp;slow=1</div>
+    </div>
+    <div id="perf"></div>
+    <script type="module" src="./fx-lab.js"></script>
+  </body>
+</html>
