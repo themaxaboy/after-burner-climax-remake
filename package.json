@@ -11,8 +11,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e:smoke": "node tests/e2e/smoke.mjs",
-    "e2e:shots": "node tests/e2e/screenshots.mjs",
-    "textures": "node scripts/fetch-textures.mjs"
+    "e2e:shots": "node tests/e2e/shoot.mjs",
+    "textures": "node scripts/fetch-textures.mjs",
+    "e2e:routes": "node tests/e2e/routes.mjs",
+    "e2e:flicker": "node tests/e2e/flicker.mjs",
+    "e2e:vivid": "node tests/e2e/vivid.mjs",
+    "voices": "python3 scripts/voices/generate.py"
   },
   "engines": {
     "node": ">=20"

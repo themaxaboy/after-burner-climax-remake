@@ -298,6 +298,11 @@ any stage (applied in `world.configure` by LOOK).
 - `env.bloom`: `{ threshold, intensity }`.
 - Sun elevation and azimuth: day stages use `elev` 22–40° with `azim` placing the sun ahead of the player.
 
+Additional env fields implemented by LOOK: `sky.{hue, skyHue, horizonHue, knee, sunGlow, iblSaturation}`,
+`sunTint`, `bloom.smoothing`, `flareTint`, `hemi`, `shadowIntensity`, `clouds: null` (no cloud banks).
+APIs: `post.applyLook(env, renderer)`, `post.resetHistory({sun})`, `world.resolveEnv(env)` (applies `?look=`),
+`world.env` (the resolved env of the current stage/screen).
+
 ## 8. HUD snapshot (`hudBridge` → `hud.draw(dt, s, scale)`)
 
 `makeHudState()` in `src/states/stage/hudBridge.js` lists every field. The main ones:
