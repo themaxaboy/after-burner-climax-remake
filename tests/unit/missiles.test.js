@@ -35,9 +35,10 @@ function chaseCamera(cam, p) {
   cam.matrixWorldInverse.copy(cam.matrixWorld).invert();
 }
 
-function makePlayer() {
+function makePlayer(lat) {
   const p = new Player();
   p.reset({ s: 2000, baseSpeed: 230, box: { x: 240, y: 100 } });
+  if (lat) p.lateralSpeed = lat;
   p.id = -1;
   p.active = true;
   p.computePose(rail);
@@ -61,8 +62,8 @@ function launchFrom(ms, p, L, opts = {}) {
  * Fly one enemy missile at the player. `onStep(t, p, m)` may steer the player.
  * Returns {reason, tEnd, arcIn, arcN, hit}.
  */
-function fly(L, seed, { onStep, opts, cam } = {}) {
-  const p = makePlayer();
+function fly(L, seed, { onStep, opts, cam, lat } = {}) {
+  const p = makePlayer(lat);
   let reason = null, tEnd = 0;
   const ms = new MissileSystem({ rng: new Rng(seed), hooks: { onEnd: (m, r) => (reason = r) } });
   const m = launchFrom(ms, p, L, opts);
@@ -88,16 +89,13 @@ describe('enemy missiles: cinematic homing', () => {
   it('arcs are visible: >= 60% of arc samples inside a chase-camera frustum', () => {
     const cam = new PerspectiveCamera(62, 16 / 9, 1.2, 32000);
     let inside = 0, total = 0;
-    const per = {};
     for (const L of LAUNCHES) {
       for (let k = 0; k < 6; k++) {
         const r = fly(L, 100 + k, { cam });
         inside += r.arcIn;
         total += r.arcN;
-        per[L.name] = (per[L.name] || 0) + r.arcIn / Math.max(r.arcN, 1) / 6;
       }
     }
-    console.log('arc visibility', (inside / total).toFixed(2), per);
     expect(total).toBeGreaterThan(1000);
     expect(inside / total).toBeGreaterThanOrEqual(0.6);
   });
@@ -151,19 +149,21 @@ describe('enemy missiles: cinematic homing', () => {
     expect(hits / n).toBeGreaterThanOrEqual(0.6);
   });
 
-  it('a hard late jink at FAST throttle beats a normal missile but not always a strong one', () => {
-    const jink = (tImpact) => (t, p) => (t >= tImpact - 1.1 ? { moveX: 1, moveY: 0.4, throttleAxis: 1 } : NO_INPUT);
-    let normal = 0, n = 0;
+  it('a hard late jink (150 m/s lateral, FAST) dodges; an unhurried one does not', () => {
+    const jink = (tImpact, lead, stick) => (t) => (t >= tImpact - lead ? { moveX: stick, moveY: 0.3 * stick, throttleAxis: stick === 1 ? 1 : 0 } : NO_INPUT);
+    let hard = 0, soft = 0, n = 0;
     for (const L of LAUNCHES) {
-      const ref = fly(L, 500);
-      if (!ref.hit) continue;
-      n++;
-      const r = fly(L, 500, { onStep: jink(ref.tEnd) });
-      if (!r.hit) normal++;
+      for (let k = 0; k < 3; k++) {
+        const ref = fly(L, 500 + k, { lat: 150 });
+        if (!ref.hit) continue;
+        n++;
+        if (!fly(L, 500 + k, { lat: 150, onStep: jink(ref.tEnd, 1.1, 1) }).hit) hard++;
+        if (!fly(L, 500 + k, { lat: 150, onStep: jink(ref.tEnd, 1.1, 0.15) }).hit) soft++;
+      }
     }
-    // with the current player lateral speed the jink is modest; it must at least sometimes work
-    expect(n).toBeGreaterThan(3);
-    expect(normal).toBeGreaterThanOrEqual(0);
+    expect(n).toBeGreaterThan(10);
+    expect(hard / n).toBeGreaterThanOrEqual(0.6);
+    expect(soft / n).toBeLessThanOrEqual(0.3);
   });
 
   it('missed / lost missiles overshoot and self-destruct', () => {

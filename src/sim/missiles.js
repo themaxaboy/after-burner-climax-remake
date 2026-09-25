@@ -531,8 +531,10 @@ export class MissileSystem {
       bz[2] = ds2;
       bz[3] = dsE;
       bz[4] = qx0;
-      bz[5] = qx0 * 0.3 + side * rng.range(1.1, 1.7);
-      bz[6] = qxE - side * rng.range(0.04, 0.1);
+      // usually swing out to the far side so the missile crosses the whole screen
+      const sw = Math.abs(qx0) > 0.1 && rng.next() < 0.6 ? -Math.sign(qx0) : side;
+      bz[5] = qx0 * 0.3 + sw * rng.range(1.1, 1.7);
+      bz[6] = qxE - sw * rng.range(0.04, 0.1);
       bz[7] = qxE;
       bz[8] = qy0;
       bz[9] = Math.max(qy0 * 0.3, 0) + rng.range(0.45, 0.95);
