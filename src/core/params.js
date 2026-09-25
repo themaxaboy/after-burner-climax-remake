@@ -10,6 +10,7 @@
 //   ?stage=<id>    stage id also accepted (e.g. ?stage=canyon)
 //   ?route=a,b,c   pre-chosen route (stage ids) for forks / autopilot / e2e
 //   ?lumaprobe=N   record N frames of mean screen luminance (flicker detector)
+//   ?look=<name>   override the stage's visual look with LOOKS[name] (look dev)
 function parse(search) {
   const q = new URLSearchParams(search);
   const num = (k, d) => (q.has(k) && q.get(k) !== '' && !Number.isNaN(+q.get(k)) ? +q.get(k) : d);
@@ -19,6 +20,7 @@ function parse(search) {
     stage: q.has('stage') && q.get('stage') !== '' && Number.isNaN(+q.get('stage')) ? q.get('stage') : num('stage', 0),
     route: str('route', '') ? str('route', '').split(',').map((x) => x.trim()).filter(Boolean) : [],
     lumaprobe: num('lumaprobe', 0),
+    look: str('look', null),
     seed: num('seed', 0),
     fixed: bool('fixed'),
     frames: num('frames', 0),

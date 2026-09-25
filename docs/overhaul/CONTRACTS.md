@@ -46,11 +46,11 @@ Reference material (read-only), in the session scratchpad:
 | Stream | Owns (create/modify) |
 |---|---|
 | INT | `src/states/stageState.js`, `src/game.js`, `src/main.js`, `src/core/params.js`, `src/core/events.js`, `src/ui/i18n.js`, `tests/e2e/smoke.mjs`, `package.json`, `README.md`, `docs/overhaul/*` |
-| LOOK | `src/render/composer.js`, `src/render/effects/*`, `src/render/renderer.js`, `src/world/{sky,atmosphere,ocean,clouds,cloudDeck,world}.js`, `src/render/{enemyRenderer,missileRenderer}.js`, `src/states/stage/postBridge.js`, `src/core/quality.js`, `src/core/loop.js`, `src/core/lumaProbe.js` (new), `tests/e2e/{flicker,vivid}.mjs` (new), `tests/unit/look.test.js` (new) |
+| LOOK | `src/world/looks.js`, `src/game.js` (only resize/dynres/renderWorld code), `src/render/composer.js`, `src/render/effects/*`, `src/render/renderer.js`, `src/world/{sky,atmosphere,ocean,clouds,cloudDeck,world}.js`, `src/render/{enemyRenderer,missileRenderer}.js`, `src/states/stage/postBridge.js`, `src/core/quality.js`, `src/core/loop.js`, `src/core/lumaProbe.js` (new), `tests/e2e/{flicker,vivid}.mjs` (new), `tests/unit/look.test.js` (new) |
 | FLIGHT | `src/sim/{player,lockon,weapons,climax,scoring,reticle}.js`, `src/render/cameraRig.js`, `src/render/playerJet.js`, `src/input/*`, `src/models/aircraftBuilder.js` (only `PLAYER_JETS` metadata), `src/states/stage/combat.js`, `src/ui/screens/options.js`, `tests/unit/{flight,lock,climax}.test.js` (new) |
 | ENEMY | `src/sim/{enemies,enemyTypes,director,waves,missiles,enemyGuns}.js`, `src/states/stage/enemyOps.js`, `tests/unit/{waves,missiles}.test.js` (new) |
 | FX | `src/render/fx/*`, `src/render/fxStub.js`, `src/audio/sfxBank.js`, `src/states/stage/fxHooks.js`, `tests/unit/fx.test.js` |
-| WORLD | `src/world/terrain/*`, `src/stages/common/terrainRun.js` (new), `public/textures/*`, `scripts/fetch-textures.mjs`, `tests/unit/terrain.test.js` |
+| WORLD | `src/world/terrain/*`, `src/stages/common/terrainRun.js` (baseline stub exists), `public/textures/*`, `scripts/fetch-textures.mjs`, `tests/unit/terrain.test.js` |
 | STAGES | `src/stages/**` (except `common/terrainRun.js`), `src/states/{flow,panelState,titleState,hangarState,showcase}.js`, `src/ui/strings/stages_{en,th}.js`, `tests/unit/routes.test.js` (new), `tests/e2e/routes.mjs` (new) |
 | HUD | `src/ui/hud.js`, `src/ui/hud/*` (new), `src/ui/routeMap.js` (new), `src/ui/ui.css`, `src/ui/menu.js`, `src/ui/strings/{en,th}.js`, `public/fonts/*` (new), `index.html`, `src/states/stage/hudBridge.js` |
 | RADIO | `src/audio/radio.js`, `src/audio/audio.js` (radio/voice section + a `playVoice` API), `src/audio/voice/*` (new), `scripts/voices/*` (new), `public/audio/voice/*` (new), `tests/unit/radio.test.js` (new) |
@@ -281,6 +281,13 @@ terrain: {
 - Terrain stages have `rail.noRoll: true`.
 
 ## 7. Look (LOOK) — `def.env` additions
+
+**Visual presets live in `src/world/looks.js` (`LOOKS`, owned by LOOK).** Stage defs
+(STAGES) compose them and must not hand-tune colour/light values:
+`env: { ...LOOKS.canyonRed, clouds: { ...LOOKS.canyonRed.clouds, count: 0.5 } }`.
+Look names: `oceanDay, emerald, canyonRed, sunset, glacier, dunes, clouds, fortress,
+strike, aurora, title, hangar`. `?look=<name>` (params.look) lets LOOK preview a look on
+any stage (applied in `world.configure` by LOOK).
 
 - `env.grade` preset names: `arcadeOcean`, `arcadeEmerald`, `arcadeCanyon`, `arcadeSunset`, `arcadeGlacier`, `arcadeDunes`, `arcadeClouds`, `arcadeFortress`, `arcadeAurora`, `arcadeStrike`. The old names remain.
 - `env.ocean` preset names: `arcadeBlue`, `sunsetGold`, `glacierRiver`, `auroraNight` (plus the old `goldSwell`, `twilight`).
