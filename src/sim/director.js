@@ -1,6 +1,9 @@
 // Stage director: walks the authored timeline (keyed by rail distance so
 // flying FAST really does shorten reaction time), spawns formations, fires
-// cues/radio/messages and runs Emergency Orders.
+// cues/radio/messages and runs Emergency Orders. Alongside the timeline it
+// runs the wave generator (src/sim/waves.js) from `def.waves` (or the
+// built-in DEFAULT_WAVES when `api.forceWaves()` is true, `?waves=1`).
+import { WaveGen, DEFAULT_WAVES } from './waves.js';
 
 // Formation offsets [x, y, trail]: `trail` = distance behind the leader along
 // its direction of travel.
@@ -21,15 +24,18 @@ export const FORMATIONS = {
   swarm8: [[0, 0, 0], [-30, 12, 40], [30, -8, 30], [-55, -10, 90], [55, 10, 80], [-15, 20, 140], [20, -18, 150], [0, 5, 200]]
 };
 
-const DEFAULTS = {
-  headOn: { dist: 3000, dir: 1 },
+export const DEFAULTS = {
+  headOn: { dist: 1500, dir: 1 },
+  rammer: { dist: 1500, dir: 1 },
   overtake: { dist: -380, dir: -1, y: 12 },
-  crossing: { dist: 1300, dir: 1 },
-  formation: { dist: 2300, dir: -1 },
-  chaser: { dist: -650, dir: -1 },
-  strafe: { dist: 2800, dir: 1, y: 170 },
+  overtakeClose: { dist: -250, dir: -1 },
+  crossing: { dist: 1100, dir: 1 },
+  swarmPass: { dist: 1000, dir: 1 },
+  formation: { dist: 1600, dir: -1 },
+  chaser: { dist: -450, dir: -1 },
+  strafe: { dist: 2200, dir: 1, y: 170 },
   bomber: { dist: -700, dir: -1, y: 50 },
-  hover: { dist: 2600, dir: -1 },
+  hover: { dist: 2200, dir: -1 },
   ace: { dist: -450, dir: -1 },
   static: { dist: 3500, dir: 1 }
 };
@@ -37,7 +43,8 @@ const DEFAULTS = {
 export class Director {
   /**
    * @param {object} def stage definition
-   * @param {object} api {spawn(type, opts), cue(name, ev), radio(key, ev), message(key, ev), eoEvent(kind, eo), end(ev), rank()}
+   * @param {object} api {spawn(type, opts), cue(name, ev), radio(key, ev), message(key, ev), eoEvent(kind, eo), end(ev), rank(),
+   *   player(), quality(), aliveCount(), forceWaves(), worldPoint(s, x, y, ground), railHeading(s)}
    */
   constructor(def, api) {
     this.def = def;
@@ -52,6 +59,9 @@ export class Director {
     this.eoResults = [];
     this.flags = {};
     this.ended = false;
+    const wcfg = def.waves || (api.forceWaves?.() ? DEFAULT_WAVES : null);
+    /** @type {WaveGen|null} */
+    this.waves = wcfg ? new WaveGen(wcfg) : null;
   }
 
   /** Skip all distance events before s (fast-forward / checkpoints). */
@@ -73,7 +83,22 @@ export class Director {
     for (const ev of this.timeEvents) {
       if (!ev._done && this.time >= ev.at.t) this._run(ev, player, rank);
     }
+    if (this.waves && !this.ended) this.waves.update(dt, player, this);
     if (this.eo && this.eo.status === 'active') this._updateEO(dt);
+  }
+
+  /** Timeline `{waves: 'on' | 'off' | {rate, mix, maxAlive, on, ...}}`. */
+  _wavesEvent(w) {
+    if (w === 'off' || w === false) {
+      if (this.waves) this.waves.on = false;
+      return;
+    }
+    if (!this.waves) this.waves = new WaveGen(this.def.waves || DEFAULT_WAVES);
+    if (w === 'on' || w === true) this.waves.on = true;
+    else if (typeof w === 'object') {
+      this.waves.configure(w);
+      if (w.on != null) this.waves.on = !!w.on;
+    }
   }
 
   /** Notify the director of gameplay events (kills, escapes...). */
@@ -104,6 +129,7 @@ export class Director {
     if (ev.maxRank != null && rank > ev.maxRank) return;
     if (ev.flag && !this.flags[ev.flag]) return;
     if (ev.spawn) this.spawnGroup(ev.spawn, player);
+    if (ev.waves != null) this._wavesEvent(ev.waves);
     if (ev.cue) this.api.cue(ev.cue, ev);
     if (ev.radio) this.api.radio(ev.radio, ev);
     if (ev.message) this.api.message(ev.message, ev);

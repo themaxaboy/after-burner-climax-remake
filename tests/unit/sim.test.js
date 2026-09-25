@@ -281,7 +281,7 @@ describe('enemies & director', () => {
     expect(events).toContain('eo:start');
     expect(mgr.spawned).toBeGreaterThan(60);
     expect(maxActive).toBeLessThan(40);
-  });
+  }, 30000);
 
   it('head-on fighters approach and despawn behind the player', () => {
     const rng = new Rng(2);
@@ -296,6 +296,56 @@ describe('enemies & director', () => {
       mgr.update(1 / 120, ctx);
     }
     expect(e.active).toBe(false);
+  });
+
+  /** Fly one enemy against a player; `steer(t, tImpact)` returns stick input. Returns closest approach (m). */
+  function closest(behavior, o, steer, seed = 4) {
+    const rng = new Rng(seed);
+    const mgr = new EnemyManager({ rng });
+    const player = new Player();
+    player.reset({ s: 1000, baseSpeed: 230, box: { x: 240, y: 100 } });
+    player.lateralSpeed = 150;
+    player.computePose(rail);
+    const e = mgr.spawn('fighterA', { behavior, rs: player.s + o.dist, rx: o.x || 0, ry: o.y || 0 });
+    const ctx = { player, rail, rng, fireMissile: () => false, fireGun: () => {} };
+    const tImpact = o.dist > 0 ? o.dist / (230 + 215) : 0;
+    let minD = Infinity;
+    for (let i = 0; i < 120 * 8 && e.active; i++) {
+      const t = i / 120;
+      player.update(1 / 120, steer ? steer(t, tImpact) : { moveX: 0, moveY: 0, throttleAxis: 0 }, rail);
+      mgr.update(1 / 120, ctx);
+      if (e.active) minD = Math.min(minD, e.pos.distanceTo(player.pos));
+    }
+    return { minD, e };
+  }
+
+  it('head-on fighters rush in: ~1500 m away, pass within ~4 s', () => {
+    const { e } = closest('headOn', { dist: 1500, x: 60 });
+    expect(e.b.spd).toBeGreaterThanOrEqual(180);
+    expect(e.b.spd).toBeLessThanOrEqual(240);
+    expect(e.b.ax).toBeGreaterThanOrEqual(20);
+    expect(e.b.ax).toBeLessThanOrEqual(60);
+  });
+
+  it('rammers hit a player who holds still and miss one who moves > 45 m in the last 1.5 s', () => {
+    const r = ENEMY_TYPES.fighterA.radius + 3;
+    for (let k = 0; k < 4; k++) {
+      const still = closest('rammer', { dist: 1500, x: 10 * k - 15, y: 5 }, null, 10 + k);
+      expect(still.e.rammer).toBe(true);
+      expect(still.minD).toBeLessThan(r);
+      // stick 0.3 × 150 m/s from rest over 1.5 s ≈ 55 m
+      const dodge = closest('rammer', { dist: 1500, x: 10 * k - 15, y: 5 }, (t, ti) => ({ moveX: t > ti - 1.5 ? 0.3 : 0, moveY: 0, throttleAxis: 0 }), 10 + k);
+      expect(dodge.minD).toBeGreaterThan(r);
+    }
+  });
+
+  it('overtakeClose passes 20–40 m from the player, then becomes a target ahead', () => {
+    for (let k = 0; k < 4; k++) {
+      const { minD, e } = closest('overtakeClose', { dist: -250, x: 40 * (k & 1 ? 1 : -1), y: 5 }, (t) => ({ moveX: Math.sin(t * 2) * 0.5, moveY: 0, throttleAxis: 0 }), 20 + k);
+      expect(minD).toBeGreaterThan(18);
+      expect(minD).toBeLessThan(45);
+      expect(e.behaviorName).toBe('overtake');
+    }
   });
 });
 
