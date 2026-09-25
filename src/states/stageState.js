@@ -253,6 +253,8 @@ export class StageState {
     this.fxHooks.warmup?.();
     this.fx.vaporCone?.(this.jet.group, 1); // lazily shown mesh: make it visible so the warm-up frame builds its programs
     this.fx.vapor?.update?.(1);
+    const vaporMesh = this.fx.vapor?.mesh;
+    if (vaporMesh) vaporMesh.frustumCulled = false; // the rig may not frame the jet yet
     g.rig.update(this.player, this.rail, 1, 1 / 60);
     g.world.update(0, g.rig.camera);
     try {
@@ -265,6 +267,7 @@ export class StageState {
     if (this.fx.vapor) {
       this.fx.vapor.value = 0;
       this.fx.vapor.update(0);
+      if (vaporMesh) vaporMesh.frustumCulled = true;
     }
     this.enemyRenderer.warmup(false);
     this.missileRenderer.warmup(false);
