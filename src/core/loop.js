@@ -53,6 +53,9 @@ export class Loop {
         const worldDt = STEP * clock.timeScale;
         clock.advanceWorld(worldDt);
         this.update(STEP, worldDt);
+      } else {
+        // paused: menus still need input, but no time passes
+        this.update(STEP, 0);
       }
       this.acc -= STEP;
       steps++;

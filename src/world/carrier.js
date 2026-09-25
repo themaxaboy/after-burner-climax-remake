@@ -332,6 +332,27 @@ export class Carrier {
     this._steamT = 0;
   }
 
+  /** Free GPU resources (shared model geometries/materials are cached elsewhere and kept). */
+  dispose() {
+    this.group.removeFromParent();
+    const seen = new Set();
+    this.group.traverse((o) => {
+      if (!o.isMesh || o.userData.shared) return;
+      if (o.isInstancedMesh && o.material?.userData?.carrierPatched) return; // parked jets share model materials
+      if (!seen.has(o.geometry)) {
+        seen.add(o.geometry);
+        o.geometry.dispose();
+      }
+      const m = o.material;
+      if (m && !seen.has(m)) {
+        seen.add(m);
+        m.map?.dispose();
+        m.dispose();
+      }
+      o.dispose?.();
+    });
+  }
+
   _bootTop(mat) {
     // dark red anti-fouling below the waterline, black boot-top band
     return mat;

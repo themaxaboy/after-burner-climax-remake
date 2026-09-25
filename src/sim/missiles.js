@@ -64,6 +64,7 @@ export class MissileSystem {
     if (!m) {
       // recycle the oldest
       m = this.list.shift();
+      this._dropIncoming(m);
       this.hooks.onEnd?.(m, 'recycle');
     }
     m.active = true;
@@ -228,10 +229,15 @@ export class MissileSystem {
     this._end(m, 'hit');
   }
 
+  _dropIncoming(m) {
+    if (m.owner === 'player' && m.target && m.target.id === m.targetId && m.target.incoming > 0) m.target.incoming--;
+    m.target = null;
+  }
+
   _end(m, reason) {
     if (!m.active) return;
     m.active = false;
-    if (m.owner === 'player' && m.target && m.target.incoming > 0) m.target.incoming--;
+    this._dropIncoming(m);
     this.hooks.onEnd?.(m, reason);
     const i = this.list.indexOf(m);
     if (i >= 0) this.list.splice(i, 1);
@@ -253,7 +259,11 @@ export class MissileSystem {
         best = m;
       }
     }
-    return best ? { m: best, tgo: bestT } : null;
+    if (!best) return null;
+    const r = (this._threat ||= { m: null, tgo: 0 });
+    r.m = best;
+    r.tgo = bestT;
+    return r;
   }
 
   count(owner) {
@@ -265,6 +275,7 @@ export class MissileSystem {
   reset() {
     for (const m of this.list) {
       m.active = false;
+      this._dropIncoming(m);
       this.hooks.onEnd?.(m, 'reset');
     }
     this.list.length = 0;

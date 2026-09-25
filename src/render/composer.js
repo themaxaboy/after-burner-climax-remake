@@ -39,6 +39,15 @@ export class PostFX {
   }
 
   build(preset) {
+    // carry the current look (grade, bloom, screen effects) over a rebuild
+    const carry = this.gforce
+      ? {
+          grade: this.grade._last,
+          threshold: this.bloom.luminanceMaterial.threshold,
+          intensity: this.bloom.intensity,
+          gforce: [...this.gforce.uniforms].map(([k, u]) => [k, u.value && u.value.clone ? u.value.clone() : u.value])
+        }
+      : null;
     this.dispose();
     this.preset = preset;
     const { renderer, scene, camera } = this;
@@ -117,6 +126,15 @@ export class PostFX {
       composer.addPass(this.passC);
     } else this.passC = null;
     this.passes = [this.renderPass, this.passA, this.passB, this.passC].filter(Boolean);
+    if (carry) {
+      if (carry.grade) this.grade.setGrade(carry.grade);
+      this.bloom.luminanceMaterial.threshold = carry.threshold;
+      this.bloom.intensity = carry.intensity;
+      for (const [k, v] of carry.gforce) {
+        const u = this.gforce.uniforms.get(k);
+        if (u) u.value = v;
+      }
+    }
     return composer;
   }
 

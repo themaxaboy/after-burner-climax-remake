@@ -100,6 +100,11 @@ export class EnemyManager {
     e._railS = undefined;
     for (const k in e.b) delete e.b[k];
     if (e.anchor === 'world' && o.world) e.pos.set(o.world.x, o.world.y, o.world.z);
+    const par = o.params?.parent;
+    if (par && o.params.local) {
+      const l = o.params.local;
+      e.pos.set(l[0], l[1], l[2]).applyQuaternion(par.quat).add(par.pos);
+    }
     e.prevPos.copy(e.pos);
     e.vel.set(0, 0, 0);
     this.list.push(e);
@@ -194,12 +199,20 @@ export class EnemyManager {
         e.vel.lerp(_v, 0.35);
       }
       this._orient(e, dt, _up);
+      if (e.t <= dt * 1.01) {
+        // first step for this (pooled) slot: no interpolation from the previous occupant
+        e.prevPos.copy(e.pos);
+        e.prevQuat.copy(e.quat);
+      }
       const lo = e.def.lockOffset;
       if (lo) e.lockPos.set(e.pos.x + lo[0], e.pos.y + lo[1], e.pos.z + lo[2]);
       else e.lockPos.copy(e.pos);
       // escape / despawn when far behind the player or far ahead
-      const rel = this.relS(e, ctx);
-      if (rel < -700 || rel > 9000) this.despawn(e, e.def.big || e.tag != null);
+      // (attached sub-parts are removed with their parent; grace period after spawning)
+      if (e.behaviorName !== 'attached' && e.t > 1.5) {
+        const rel = this.relS(e, ctx);
+        if (rel < -900 || rel > 9000) this.despawn(e, e.def.big || e.tag != null);
+      }
     }
   }
 
@@ -379,7 +392,10 @@ export const BEHAVIORS = {
     e.rs += p.speed * 0.45 * dt;
     e.rx += b.dir * b.v * dt;
     e.ry += Math.sin(e.t * 2) * 6 * dt;
-    if (Math.abs(e.rx) > 900) mgr.despawn(e, false);
+    if (Math.abs(e.rx) > 900) {
+      mgr.despawn(e, false);
+      return;
+    }
     tryFire(e, dt, ctx, mgr, 500, 1600);
   },
 
@@ -457,6 +473,7 @@ export const BEHAVIORS = {
       b.escT = e.escapeTimer || 40;
     }
     const rel = e.rs - p.s;
+    if (b.phase < 2) b.escT -= dt;
     if (b.phase === 0) {
       e.rs += (p.speed + 120) * dt;
       e.ry = dampTo(e.ry, e.params.y ?? 45, 0.5, dt);
@@ -465,7 +482,6 @@ export const BEHAVIORS = {
       const want = 700 + Math.sin(e.t * 0.3) * 120;
       e.rs += (p.speed + (want - rel) * 0.5) * dt;
       weave(e, dt, 30, 10, 0.35);
-      b.escT -= dt;
       if (b.escT <= 0) { b.phase = 2; b.vs = p.speed; }
       tryFire(e, dt, ctx, mgr, -100, 2000);
     } else {

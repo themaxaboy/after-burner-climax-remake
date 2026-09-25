@@ -59,6 +59,7 @@ export class GradeEffect extends Effect {
   }
 
   setGrade(g) {
+    this._last = g;
     const p = typeof g === 'string' ? GRADES[g] || GRADES.neutral : g;
     const u = this.uniforms;
     u.get('uLift').value.fromArray(p.lift);

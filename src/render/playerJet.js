@@ -115,6 +115,12 @@ export class PlayerJet {
     if (fx?.vaporCone) fx.vaporCone(g, this.vapor);
   }
 
+  dispose() {
+    this.afterburner?.dispose?.();
+    for (let i = 0; i < 2; i++) if (this.vortex[i]) this.vortex[i].stop();
+    this.group.removeFromParent();
+  }
+
   setVisible(v) {
     this.group.visible = v;
     if (!v) for (let i = 0; i < 2; i++) if (this.vortex[i]) { this.vortex[i].stop(); this.vortex[i] = null; }

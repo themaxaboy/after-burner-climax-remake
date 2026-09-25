@@ -248,6 +248,7 @@ export class Stage1Logic {
   dispose() {
     const g = this.game;
     g.world.scene.remove(this.carrier.group);
+    this.carrier.dispose();
     if (this.tanker) g.world.dynamic.remove(this.tanker.root);
     for (let i = 0; i < 3; i++) g.world.ocean?.setWake(i, 0, 0, 0, 0);
     g.post.gforce.set('uLetterbox', 0);

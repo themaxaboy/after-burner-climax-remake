@@ -116,7 +116,7 @@ export class HangarState {
 
   _rebuild() {
     const g = this.game;
-    g.world.dynamic.remove(this.jet.group);
+    this.jet.dispose();
     this.jet = new PlayerJet({ models: this.models, fx: this.fx, jetId: JETS[this.jetIndex].id, scheme: SCHEMES[this.schemeIndex], csm: g.world.csm });
     g.world.dynamic.add(this.jet.group);
     this._refreshUI();
@@ -184,8 +184,8 @@ export class HangarState {
     const g = this.game;
     removeEventListener('pointerup', this._onUp);
     this.root?.remove();
-    g.world.dynamic.remove(this.jet.group);
-    g.world.scene.remove(this.carrier.group);
+    this.jet.dispose();
+    this.carrier.dispose();
     this.fx.dispose?.();
     g.hud.visible = true;
     g.post.cameraFX.motionEnabled = !!g.preset.motionBlur;

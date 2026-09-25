@@ -6,6 +6,10 @@ import { PlayerJet } from '../render/playerJet.js';
 const _m = new Matrix4();
 const _q = new Quaternion();
 const _ax = new Vector3();
+const _upv = new Vector3();
+const _back = new Vector3();
+const _Y = new Vector3(0, 1, 0);
+const _Z = new Vector3(0, 0, 1);
 
 /**
  * Minimal "pilot" object that PlayerJet can render without the flight sim:
@@ -35,11 +39,11 @@ export class ShowcasePilot {
     this.prevQuat.copy(this.quat);
     this.pos.copy(pos);
     this.forward.copy(fwd).normalize();
-    const right = _ax.crossVectors(this.forward, new Vector3(0, 1, 0)).normalize();
-    const up = new Vector3().crossVectors(right, this.forward);
-    _m.makeBasis(right, up, this.forward.clone().negate());
+    const right = _ax.crossVectors(this.forward, _Y).normalize();
+    const up = _upv.crossVectors(right, this.forward);
+    _m.makeBasis(right, up, _back.copy(this.forward).negate());
     this.quat.setFromRotationMatrix(_m);
-    _q.setFromAxisAngle(new Vector3(0, 0, 1), -bank);
+    _q.setFromAxisAngle(_Z, -bank);
     this.quat.multiply(_q);
     this.bank = bank;
   }

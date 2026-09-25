@@ -28,6 +28,7 @@ export function projectPoint(camera, p, out) {
 export class LockOn {
   constructor() {
     this.locks = []; // enemies
+    this.lockIds = []; // enemy ids at lock time (pool slots get reused)
     this.max = 8;
     this.reticle = { x: 0, y: -0.05 }; // NDC
     this.reticleWorld = new Vector3();
@@ -43,9 +44,17 @@ export class LockOn {
   }
 
   reset() {
-    for (const e of this.locks) e.locks = 0;
+    for (let i = 0; i < this.locks.length; i++) if (this.locks[i].id === this.lockIds[i]) this.locks[i].locks = 0;
     this.locks.length = 0;
+    this.lockIds.length = 0;
     this.assistTarget = null;
+  }
+
+  /** Current valid locks as {e, id} pairs (for Climax salvos). */
+  snapshot(out = []) {
+    out.length = 0;
+    for (let i = 0; i < this.locks.length; i++) out.push({ e: this.locks[i], id: this.lockIds[i] });
+    return out;
   }
 
   lockRadius() {
@@ -99,6 +108,7 @@ export class LockOn {
           e.locks++;
           e.lockT = 0;
           this.locks.push(e);
+          this.lockIds.push(e.id);
           this.newLocks++;
           if (e.def.big) e.dwell = need - 0.25; // re-lock big targets after a pause
         }
@@ -114,19 +124,25 @@ export class LockOn {
     // drop invalid locks
     for (let i = this.locks.length - 1; i >= 0; i--) {
       const e = this.locks[i];
-      if (!e.active || e.dead || e.dying || !e.lockable || (e.dist > this.maxRange * 1.2) || (!e.onScreen && (e.lockT = (e.lockT || 0) + dt) > 1.2)) {
-        e.locks = Math.max(0, e.locks - 1);
+      const same = e.id === this.lockIds[i];
+      if (!same || !e.active || e.dead || e.dying || !e.lockable || (e.dist > this.maxRange * 1.2) || (!e.onScreen && (e.lockT = (e.lockT || 0) + dt) > 1.2)) {
+        if (same) e.locks = Math.max(0, e.locks - 1);
         this.locks.splice(i, 1);
+        this.lockIds.splice(i, 1);
       }
     }
   }
 
   /** Next lock to fire at (FIFO); removes it from the list. */
   consume() {
-    if (!this.locks.length) return null;
-    const e = this.locks.shift();
-    e.locks = Math.max(0, e.locks - 1);
-    return e;
+    while (this.locks.length) {
+      const e = this.locks.shift();
+      const id = this.lockIds.shift();
+      if (e.id !== id) continue; // slot was recycled
+      e.locks = Math.max(0, e.locks - 1);
+      if (e.active && !e.dead) return e;
+    }
+    return null;
   }
 
   isLocked(e) {

@@ -8,7 +8,10 @@ const cache = new Map();
 function tex(path, srgb, aniso) {
   const key = path;
   if (cache.has(key)) return cache.get(key);
-  const t = loader.load(path);
+  let done;
+  const ready = new Promise((r) => (done = r));
+  const t = loader.load(path, () => done(), undefined, () => done());
+  t.userData.ready = ready;
   t.wrapS = t.wrapT = RepeatWrapping;
   t.anisotropy = aniso;
   if (srgb) t.colorSpace = SRGBColorSpace;
@@ -153,6 +156,7 @@ export function createTerrainMaterial({ res = '1k', anisotropy = 8, palette = 'c
       );
   });
   mat.userData.terrainUniforms = uniforms;
+  mat.userData.ready = Promise.all([rockD, rockN, rock2D, sandD, sandN].map((t) => t.userData.ready));
   return mat;
 }
 

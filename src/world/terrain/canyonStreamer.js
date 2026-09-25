@@ -164,7 +164,10 @@ export class CanyonTerrain {
     slot.ready = true;
     slot.mesh.visible = true;
     // hide the far version of the same chunk once the near one is in
-    if (slot.lod === 0) for (const o of this.slots) if (o.lod === 1 && o.k === slot.k) o.mesh.visible = false;
+    if (slot.lod === 0) {
+      for (const o of this.slots) if (o.lod === 1 && o.k === slot.k) o.mesh.visible = false;
+    } else if (this._find(0, slot.k, true)) slot.mesh.visible = false;
+    this._dirty = true; // re-evaluate lingering far chunks
   }
 
   /** Synchronously build everything needed at s (loading screen). */
@@ -175,43 +178,70 @@ export class CanyonTerrain {
     this.worker = w;
   }
 
+  _find(lod, k, readyOnly = false) {
+    for (let i = 0; i < this.slots.length; i++) {
+      const sl = this.slots[i];
+      if (sl.lod === lod && sl.k === k && (!readyOnly || sl.ready)) return sl;
+    }
+    return null;
+  }
+
+  _free(sl) {
+    sl.k = -1;
+    sl.ready = false;
+    sl.pending = false;
+    sl.gen = ++this.gen;
+    sl.mesh.visible = false;
+  }
+
+  /**
+   * Keep near chunks around the player and far chunks beyond. Cheap when
+   * nothing changed (called every sim step): work only happens when the
+   * player crosses a chunk border or requests are still outstanding.
+   */
   update(playerS, budget = 2) {
     const kp = Math.floor(playerS / this.chunkLen);
-    const nearSet = [];
-    for (let k = kp - 1; k < kp - 1 + this.nearCount; k++) nearSet.push(k);
-    const farSet = [];
-    for (let k = kp - 1 + this.nearCount; k < kp - 1 + this.nearCount + this.farCount; k++) farSet.push(k);
+    if (kp === this._kp && !this._dirty) return;
+    this._kp = kp;
+    const nearLo = kp - 1, nearHi = kp + this.nearCount - 2;
+    const farLo = nearHi + 1, farHi = farLo + this.farCount - 1;
+    const maxK = Math.floor((this.rail.length + 400) / this.chunkLen);
+    // release chunks that are no longer wanted (far chunks linger until their near replacement is ready)
+    for (let i = 0; i < this.slots.length; i++) {
+      const sl = this.slots[i];
+      if (sl.k < 0) continue;
+      let want;
+      if (sl.lod === 0) want = sl.k >= nearLo && sl.k <= nearHi;
+      else want = (sl.k >= farLo && sl.k <= farHi) || (sl.k >= nearLo && sl.k <= nearHi && !this._find(0, sl.k, true));
+      if (!want) this._free(sl);
+    }
     let issued = 0;
-    const assign = (lod, set) => {
-      const slots = this.slots.filter((s) => s.lod === lod);
-      // free slots whose chunk is no longer wanted
-      for (const sl of slots) {
-        if (sl.k >= 0 && !set.includes(sl.k)) {
-          sl.k = -1;
-          sl.ready = false;
-          sl.pending = false;
-          sl.gen = ++this.gen;
-          sl.mesh.visible = false;
+    let missing = false;
+    for (let lod = 0; lod < 2; lod++) {
+      const lo = lod === 0 ? nearLo : farLo, hi = lod === 0 ? nearHi : farHi;
+      for (let k = Math.max(0, lo); k <= Math.min(hi, maxK); k++) {
+        if (this._find(lod, k)) continue;
+        if (issued >= budget || (this.worker && this.inFlight >= this.maxInFlight)) {
+          missing = true;
+          continue;
         }
-      }
-      for (const k of set) {
-        if (k < 0 || k * this.chunkLen > this.rail.length + 400) continue;
-        if (slots.some((s) => s.k === k)) continue;
-        if (issued >= budget || (this.worker && this.inFlight >= this.maxInFlight)) return;
-        const free = slots.find((s) => s.k === -1);
-        if (!free) return;
+        let free = null;
+        for (let i = 0; i < this.slots.length; i++) {
+          const sl = this.slots[i];
+          if (sl.lod === lod && sl.k === -1) {
+            free = sl;
+            break;
+          }
+        }
+        if (!free) {
+          missing = true;
+          continue;
+        }
         this._request(free, k);
         issued++;
       }
-    };
-    assign(0, nearSet);
-    assign(1, farSet);
-    // show far chunks unless their near version is ready
-    for (const sl of this.slots) {
-      if (sl.lod !== 1 || !sl.ready) continue;
-      const nearReady = this.slots.some((o) => o.lod === 0 && o.k === sl.k && o.ready);
-      sl.mesh.visible = !nearReady;
     }
+    this._dirty = missing || this.inFlight > 0;
   }
 
   dispose() {

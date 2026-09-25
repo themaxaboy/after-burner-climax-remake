@@ -4,6 +4,12 @@
 const DEAD = 0.14;
 const BTN = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, BACK: 8, START: 9, LS: 10, RS: 11, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 
+const BUTTON_MAP = [
+  [BTN.A, 'missile'], [BTN.B, 'climax'], [BTN.X, 'climax'], [BTN.Y, 'flare'],
+  [BTN.LB, 'rollL'], [BTN.RB, 'rollR'], [BTN.RT, 'fast'], [BTN.LT, 'slow'],
+  [BTN.START, 'pause'], [BTN.UP, 'up'], [BTN.DOWN, 'down'], [BTN.LEFT, 'left'], [BTN.RIGHT, 'right']
+];
+
 function dz(v) {
   const a = Math.abs(v);
   if (a < DEAD) return 0;
@@ -45,11 +51,7 @@ export class GamepadSource {
     const b = pad.buttons;
     const down = (i) => !!(b[i] && (b[i].pressed || b[i].value > 0.5));
     let any = Math.abs(lx) > 0 || Math.abs(ly) > 0;
-    const map = [
-      [BTN.A, 'missile'], [BTN.B, 'climax'], [BTN.X, 'climax'], [BTN.Y, 'flare'],
-      [BTN.LB, 'rollL'], [BTN.RB, 'rollR'], [BTN.RT, 'fast'], [BTN.LT, 'slow'],
-      [BTN.START, 'pause'], [BTN.UP, 'up'], [BTN.DOWN, 'down'], [BTN.LEFT, 'left'], [BTN.RIGHT, 'right']
-    ];
+    const map = BUTTON_MAP;
     for (let i = 0; i < map.length; i++) {
       const [bi, action] = map[i];
       const d = down(bi) ? 1 : 0;

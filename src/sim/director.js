@@ -26,7 +26,7 @@ const DEFAULTS = {
   overtake: { dist: -380, dir: -1, y: 12 },
   crossing: { dist: 1300, dir: 1 },
   formation: { dist: 2300, dir: -1 },
-  chaser: { dist: -800, dir: -1 },
+  chaser: { dist: -650, dir: -1 },
   strafe: { dist: 2800, dir: 1, y: 170 },
   bomber: { dist: -700, dir: -1, y: 50 },
   hover: { dist: 2600, dir: -1 },
@@ -174,7 +174,8 @@ export class Director {
   _updateEO(dt) {
     const eo = this.eo;
     eo.t += dt;
-    if (eo.kind === 'destroy' && eo.timeLimit && eo.t > eo.timeLimit + 8) this._eoDone(false);
+    // targets report 'escaped' when they leave; this is only a safety net
+    if (eo.kind === 'destroy' && eo.timeLimit && eo.t > eo.timeLimit + 45) this._eoDone(false);
   }
 
   /** For avoid-type orders: explicit success/failure checks from the stage. */

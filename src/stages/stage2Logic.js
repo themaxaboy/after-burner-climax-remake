@@ -39,13 +39,8 @@ export class Stage2Logic {
     // collision / placement callbacks used by the simulation
     st.ctx.groundHeight = (x, z, obj) => this.terrain.heightAtWorld(x, z, obj, st.player.s);
     this.groundAt = (s, l) => this.terrain.heightAt(s, l);
-    // wait for the textures before compiling shaders
-    await Promise.all(
-      Object.values(this.material.userData.terrainUniforms)
-        .map((u) => u.value)
-        .filter((t) => t && t.isTexture)
-        .map((t) => new Promise((res) => (t.image ? res() : (t.onUpdate = res, setTimeout(res, 4000)))))
-    );
+    // wait for the textures to download before compiling shaders
+    await Promise.race([this.material.userData.ready, new Promise((r) => setTimeout(r, 15000))]);
     // locate the bottom of the dive on the real (arc-length) rail and retime the strike cues
     let best = TARGET_S, bestY = Infinity;
     for (let s = TARGET_S - 600; s < TARGET_S + 900; s += 10) {
@@ -196,7 +191,7 @@ export class Stage2Logic {
       if (this.target && !this.target.dead && this.target.active) st.director.failEO();
       else st._radio('r.s2.hit');
       // SAM volley from the basin
-      for (let i = 0; i < 4; i++) setTimeout(() => this._samVolley(), 400 + i * 550);
+      for (let i = 0; i < 4; i++) st.schedule(0.4 + i * 0.55, () => this._samVolley());
     }
   }
 

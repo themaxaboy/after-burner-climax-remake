@@ -91,6 +91,15 @@ export class MissileRenderer {
     }
   }
 
+  dispose() {
+    this.mesh.geometry.dispose();
+    this.mesh.material.dispose();
+    this.mesh.dispose();
+    this.glow.geometry.dispose();
+    this.glowMat.dispose();
+    this.glow.dispose();
+  }
+
   warmup(on) {
     this.mesh.count = on ? 1 : 0;
     this.glow.count = on ? 1 : 0;

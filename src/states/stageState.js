@@ -49,6 +49,24 @@ export class StageState {
     this.time = 0;
     this.finished = false;
     this.paused = false;
+    this.timers = []; // sim-time timers: {t, fn} — die with the state, respect pause
+  }
+
+  /** Run fn after `delay` world seconds (paused/slowed with the game). */
+  schedule(delay, fn) {
+    this.timers.push({ t: delay, fn });
+  }
+
+  _runTimers(wdt) {
+    const list = this.timers;
+    for (let i = list.length - 1; i >= 0; i--) {
+      const tm = list[i];
+      tm.t -= wdt;
+      if (tm.t <= 0) {
+        list.splice(i, 1);
+        tm.fn();
+      }
+    }
   }
 
   // ------------------------------------------------------------------ setup
@@ -56,6 +74,7 @@ export class StageState {
     const g = this.game;
     const def = this.def;
     const session = g.session;
+    this.session = session;
     g.setLoading?.(0.05, 'BUILDING WORLD');
     this.rail = new Rail(def.rail);
     g.world.configure(def.env);
@@ -238,9 +257,11 @@ export class StageState {
       this.clouds.dispose();
     }
     g.world.scene.remove(this.missileRenderer.mesh, this.missileRenderer.glow);
+    this.missileRenderer.dispose?.();
+    this.jet.dispose?.();
     this.fx.dispose?.();
     this.stageLogic?.dispose?.();
-    g.session.climaxGauge = this.climax.gauge;
+    if (g.session === this.session) g.session.climaxGauge = this.climax.gauge;
     // leave global systems clean for the next state
     g.touch.setVisible(false);
     const h = this.hud;
@@ -248,7 +269,7 @@ export class StageState {
     h.popups.length = 0;
     h.radioLines.length = 0;
     h.eo = null;
-    clearTimeout(this._eoClear);
+    this.timers.length = 0;
     g.audio?.stopLoop?.('vulcan');
     g.audio?.stopLoop?.('missileAlert');
     g.audio?.setTimeScale?.(1);
@@ -411,8 +432,7 @@ export class StageState {
       this.hud.message(t('ui.eoFail'), { dur: 2.5, color: '#ff5a4a' });
     }
     this.hud.eo = eo;
-    clearTimeout(this._eoClear);
-    if (kind !== 'start') this._eoClear = setTimeout(() => (this.hud.eo = null), 4000);
+    this._eoClearT = kind !== 'start' ? 4 : 0;
   }
 
   // ------------------------------------------------------------ combat acts
@@ -467,14 +487,14 @@ export class StageState {
     g.audio?.setTimeScale?.(1);
     g.dynres.locked = false;
     // one missile per lock, rippled
-    this.salvo = this.lockon.locks.slice();
+    this.salvo = this.lockon.snapshot(this.salvo);
     this.lockon.reset();
     this.salvoT = 0;
   }
 
   _playerHit(amount, kind, pos) {
     const p = this.player;
-    if (!p.alive || this.dead || this.game.params.god) return;
+    if (!p.alive || this.dead || this.finished || this.game.params.god) return;
     const applied = p.damage(amount);
     if (!applied) return;
     this.scoring.hurt();
@@ -545,6 +565,8 @@ export class StageState {
     }
 
     const logic = this.stageLogic;
+    this._runTimers(wdt);
+    if (this._eoClearT > 0 && (this._eoClearT -= dt) <= 0) this.hud.eo = null;
     logic?.preUpdate?.(dt, wdt);
     const controls = !this.dead && !this.finished && !(logic?.lockControls);
 
@@ -612,7 +634,7 @@ export class StageState {
       this.salvoT -= dt;
       while (this.salvoT <= 0 && this.salvo.length) {
         const tgt = this.salvo.shift();
-        if (tgt.active && !tgt.dead) this._firePlayerMissile(tgt, true);
+        if (tgt.e.id === tgt.id && tgt.e.active && !tgt.e.dead) this._firePlayerMissile(tgt.e, true);
         this.salvoT += 0.035;
       }
     }
@@ -628,8 +650,7 @@ export class StageState {
     this.vulcan.assistCone = ([2, 4, 7][this.lockon.assist] ?? 7) * (Math.PI / 180);
     this.vulcan.update(wdt, p, _v, this.lockon.assistTarget, trigger, this.enemies);
     if (trigger && this.time - this.lastGunSfx > 0.05) {
-      if (!this._gunLoop) g.audio?.startLoop?.('vulcan');
-      this._gunLoop = true;
+      if (!this._gunLoop) this._gunLoop = !!g.audio?.startLoop?.('vulcan');
       this.lastGunSfx = this.time;
     } else if (!trigger && this._gunLoop) {
       g.audio?.stopLoop?.('vulcan');
@@ -795,10 +816,16 @@ export class StageState {
       this._tracerPos = new Float32Array((v.max + eg.max) * 3);
       this._tracerVel = new Float32Array((v.max + eg.max) * 3);
     }
-    this._tracerPos.set(v.packedPos.subarray(0, v.count * 3), 0);
-    this._tracerVel.set(v.packedVel.subarray(0, v.count * 3), 0);
-    this._tracerPos.set(eg.packedPos.subarray(0, eg.count * 3), v.count * 3);
-    this._tracerVel.set(eg.packedVel.subarray(0, eg.count * 3), v.count * 3);
+    const TP = this._tracerPos, TV = this._tracerVel;
+    const nv = v.count * 3, ne = eg.count * 3;
+    for (let i = 0; i < nv; i++) {
+      TP[i] = v.packedPos[i];
+      TV[i] = v.packedVel[i];
+    }
+    for (let i = 0; i < ne; i++) {
+      TP[nv + i] = eg.packedPos[i];
+      TV[nv + i] = eg.packedVel[i];
+    }
     this.fx.tracers?.setData(this._tracerPos, this._tracerVel, n);
   }
 
@@ -887,10 +914,7 @@ export class StageState {
       s.threat.sy = _s.y;
       s.threat.behind = !onScr;
       this.warnT += realDt;
-      if (!this._warnLoop) {
-        g.audio?.startLoop?.('missileAlert');
-        this._warnLoop = true;
-      }
+      if (!this._warnLoop) this._warnLoop = !!g.audio?.startLoop?.('missileAlert');
     } else {
       s.threat = null;
       if (this._warnLoop) {

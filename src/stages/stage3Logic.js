@@ -97,16 +97,20 @@ export class Stage3Logic {
       const boss = st.enemies.spawn('bomberB52', { behavior: 'bossBomber', rs: st.player.s - 700, rx: 0, ry: 40, tag: 'boss', invuln: true, params: { y: 55 } });
       this.boss = boss;
       if (!boss) return;
+      this.bossId = boss.id;
       boss.lockable = false; // lock the engines first
-      this.pods = this.podLocal.map((local, i) =>
-        st.enemies.spawn('bossPod', { behavior: 'attached', tag: `pod${i}`, params: { parent: boss, local } })
-      );
+      this.podsLeft = 0;
+      this.pods = this.podLocal.map((local, i) => {
+        const pod = st.enemies.spawn('bossPod', { behavior: 'attached', tag: `pod${i}`, params: { parent: boss, local } });
+        if (pod) this.podsLeft++;
+        return pod;
+      });
       st.director._eoStart({ id: 's3_boss', title: 'DESTROY THE STRATEGIC BOMBER', kind: 'destroy', tags: ['boss'], count: 1, bonus: 200000 }, st.player);
       st.hud.message('WARNING', { sub: 'HEAVY BOMBER APPROACHING — TARGET THE ENGINES', dur: 3, color: '#ff5a4a', style: 'center' });
       g.audio?.play('eoAlert');
       g.audio?.music?.setIntensity?.(1);
     } else if (name === 'bossEscape') {
-      if (this.boss && this.boss.active && !this.boss.dead) {
+      if (this._bossAlive()) {
         this.boss.behavior = () => {};
         this.escaping = true;
         st.hud.message('THE BOMBER IS ESCAPING', { dur: 2.5, color: '#ff5a4a' });
@@ -116,32 +120,43 @@ export class Stage3Logic {
     }
   }
 
+  _bossAlive() {
+    const b = this.boss;
+    return !!b && b.id === this.bossId && b.active && !b.dead;
+  }
+
   /** Called by the stage when an enemy dies. */
   onKill(e) {
     const st = this.stage;
     const g = this.game;
-    if (e.tag && e.tag.startsWith('pod')) {
+    if (e.tag && e.tag.startsWith('pod') && e.params?.parent?.id === this.bossId) {
       st.fx.explosion(e.pos, { size: 1.6, kind: 'air', vel: e.vel });
       const smoke = st.fx.createSmokeEmitter({ fire: true });
       this.podSmoke.push({ smoke, local: e.params.local });
-      const alive = this.pods.filter((p) => p && p.active && !p.dead).length;
-      if (alive === 0 && this.boss) {
+      const alive = --this.podsLeft;
+      if (alive <= 0 && this._bossAlive()) {
         this.boss.invuln = false;
         this.boss.lockable = true;
         st.hud.message('ENGINES DOWN', { sub: 'FINISH IT!', dur: 2.2, color: '#ffd27a', style: 'center' });
       } else st.hud.message(`ENGINE HIT`, { sub: `${alive} REMAINING`, dur: 1.4, color: '#ffd27a' });
     }
-    if (e === this.boss) {
+    if (e.id === this.bossId && e.tag === 'boss') {
+      // end Climax first so its time scale doesn't fight the kill-cam
+      if (st.climax.active) {
+        st.climax.end();
+        st._endClimax();
+      }
       // slow-motion kill-cam
       g.clock.pulse(0.14, 1.8, 0.1, 0.5);
       this.killCam = { t: 0, pos: e.pos.clone(), vel: e.vel.clone() };
       this.cameraOverride = true;
       g.post.gforce.set('uLetterbox', 1);
+      const at = e.pos.clone();
       for (let i = 0; i < 6; i++) {
-        setTimeout(() => {
-          _v.copy(this.killCam?.pos || e.pos).add(_v2.set((Math.random() - 0.5) * 50, (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 30));
+        st.schedule(0.03 + i * 0.05, () => {
+          _v.copy(this.killCam?.pos || at).add(_v2.set(st.rng.range(-25, 25), st.rng.range(-6, 6), st.rng.range(-15, 15)));
           st.fx.explosion(_v, { size: 2.4, kind: 'big' });
-        }, 120 + i * 180);
+        });
       }
       st._radio('r.s3.win');
     }
@@ -154,7 +169,7 @@ export class Stage3Logic {
     this.lockControls = true;
     this.hud.hideCombat = true;
     for (const e of st.enemies.list.slice()) if (e !== this.boss) st.enemies.despawn(e);
-    if (this.boss && this.boss.active && !this.boss.dead) st.enemies.despawn(this.boss, true);
+    if (this._bossAlive()) st.enemies.despawn(this.boss, true);
     g.post.gforce.set('uLetterbox', 0.8);
     g.audio?.music?.play('anthem', { fadeIn: 3 });
     st.hud.message('RETURN TO BASE', { sub: 'BRING IT HOME', dur: 3.5, color: '#ffd27a' });
@@ -193,7 +208,7 @@ export class Stage3Logic {
         if (this.trapV <= 0 && !this._landed) {
           this._landed = true;
           st.hud.message('WELCOME HOME', { sub: 'MISSION ACCOMPLISHED', dur: 4, color: '#7dffb0', style: 'center' });
-          setTimeout(() => st._finish(), 2600);
+          st.schedule(2.6, () => st._finish());
         }
       }
     }
@@ -203,13 +218,13 @@ export class Stage3Logic {
     const st = this.stage;
     const g = this.game;
     // escaping boss climbs away
-    if (this.escaping && this.boss && this.boss.active && !this.boss.dead) {
+    if (this.escaping && this._bossAlive()) {
       this.boss.rs += 120 * dt;
       this.boss.ry += 40 * dt;
       if (this.boss.rs - st.player.s > 3000) st.enemies.despawn(this.boss, true);
     }
     // burning engines trail smoke
-    if (this.boss && this.boss.active) {
+    if (this._bossAlive()) {
       for (const ps of this.podSmoke) {
         _v.set(ps.local[0], ps.local[1], ps.local[2]).applyQuaternion(this.boss.quat).add(this.boss.pos);
         ps.smoke.update(_v, this.boss.vel, 1);
@@ -269,6 +284,7 @@ export class Stage3Logic {
     g.world.scene.remove(this.deck.mesh);
     this.deck.dispose();
     g.world.scene.remove(this.carrier.group);
+    this.carrier.dispose();
     for (const ps of this.podSmoke) ps.smoke.stop();
     for (let i = 0; i < 3; i++) g.world.ocean?.setWake(i, 0, 0, 0, 0);
     g.post.gforce.set('uLetterbox', 0);

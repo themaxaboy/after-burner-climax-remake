@@ -147,7 +147,7 @@ export default {
     { at: 31900, cue: 'pullup' },
     { at: 32050, radio: 'r.s2.sams' },
     { at: 34800, spawn: { type: 'fighterA', formation: 'V3', behavior: 'headOn', y: 20 } },
-    { at: 36200, end: true }
+    { at: 35700, end: true }
   ],
   next: ['s3'],
   createLogic: (stage) => new Stage2Logic(stage)
