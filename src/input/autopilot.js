@@ -8,7 +8,7 @@ import { clamp } from '../core/math.js';
  *   missile, or cruises back toward the middle of the (wide) box,
  * - taps MISSILE at pending locks, holds CLIMAX ~3 s when the gauge is full
  *   and there is a crowd, then releases (salvo),
- * - rolls (or jinks on noRoll stages) and pops flares against incoming
+ * - rolls (or jinks on noRoll stages) against incoming
  *   missiles, and keeps clear of the floor.
  */
 export class Autopilot {
@@ -99,13 +99,13 @@ export class Autopilot {
       this.climaxT = dt;
     }
 
-    // evade missiles: roll (jink on noRoll stages) + flares
+    // evade missiles: roll (jink on noRoll stages) inside the missile's evade window
+    // (no flares, so the missiles' cinematic arcs stay visible in demo/bench runs)
     this.rollCd -= dt;
     const th = st.enemyOps?.threat ?? st.hudState?.threat;
-    if (th && th.tgo < 1.6 && this.rollCd <= 0) {
+    if (th && th.tgo < 0.75 && this.rollCd <= 0) {
       const dir = p.x > box.x * 0.5 ? -1 : p.x < -box.x * 0.5 ? 1 : Math.sin(this.t) > 0 ? -1 : 1;
       input.press(dir < 0 ? 'rollL' : 'rollR');
-      input.press('flare');
       this.rollCd = 1.2;
     }
     input.throttleAxis = th ? 1 : visible > 4 ? -1 : 0;

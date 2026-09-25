@@ -8,6 +8,7 @@ import { EnemyGuns } from '../sim/enemyGuns.js';
 import { LockOn } from '../sim/lockon.js';
 import { Climax } from '../sim/climax.js';
 import { Director } from '../sim/director.js';
+import { waveTypes, DEFAULT_WAVES } from '../sim/waves.js';
 import { ENEMY_TYPES } from '../sim/enemyTypes.js';
 import { rngStream } from '../core/rng.js';
 import { Events } from '../core/events.js';
@@ -239,11 +240,8 @@ export class StageState {
       if (ev.eo) collect(ev.eo.spawn);
     }
     for (const ty of def.preloadTypes || []) add(ty);
-    const w = def.waves;
-    if (w) {
-      for (const ty of Object.values(w.types || {})) add(ty);
-      for (const ty of w.preloadTypes || []) add(ty);
-    }
+    for (const ty of waveTypes(def.waves)) add(ty);
+    if (!def.waves && this.game.params.waves) for (const ty of waveTypes(DEFAULT_WAVES)) add(ty);
     return [...used.values()];
   }
 
