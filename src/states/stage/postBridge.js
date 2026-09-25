@@ -9,22 +9,24 @@ const _s = new Vector3();
  * Per-frame post-processing parameters for a stage (G effects, damage flash,
  * Climax look, missile warning, whiteout, radial blur, CA, heat haze).
  * See docs/overhaul/CONTRACTS.md.
+ *
+ * Flicker rules: every screen-wide term is eased (no 0↔1 steps), greyout only
+ * comes from the scripted `player.gOverride` (0..1), and "reduced flashing"
+ * scales the damage flash and the warning pulse down.
  */
 export class PostBridge {
   constructor(stage) {
     this.stage = stage;
     this.game = stage.game;
     this.climaxFx = 0;
+    this.warn = 0;
+    this.grey = 0;
   }
 
-  /** Stage enter: apply the stage look (exposure, grade, bloom). */
+  /** Stage enter: apply the stage look (exposure, grade, bloom), honouring `?look=`. */
   applyLook(env) {
     const g = this.game;
-    g.renderer.toneMappingExposure = env.toneExposure ?? 0.6;
-    g.post.grade.setGrade(env.grade || 'neutral');
-    const bl = env.bloom || {};
-    g.post.bloom.luminanceMaterial.threshold = bl.threshold ?? 1.0;
-    g.post.bloom.intensity = bl.intensity ?? 0.9;
+    g.post.applyLook(g.world.resolveEnv(env), g.renderer);
   }
 
   update(realDt) {
@@ -33,13 +35,20 @@ export class PostBridge {
     const p = st.player;
     const post = g.post;
     const gf = post.gforce;
+    const reduced = !!g.settings.reducedFlashing;
     const climaxK = st.climax.active ? 1 : 0;
     this.climaxFx = dampTo(this.climaxFx, climaxK, 6, realDt);
-    const grey = clamp((p.gLoad - 6.5) / 3, 0, 0.85);
-    gf.set('uGrey', dampTo(gf.uniforms.get('uGrey').value, grey, 3, realDt));
-    gf.set('uDamage', g.settings.reducedFlashing ? st.hitFlash * 0.4 : st.hitFlash);
+    // greyout / tunnel vision: scripted only (gLoad is a display value)
+    const grey = clamp(p.gOverride || 0, 0, 1) * 0.85;
+    this.grey = dampTo(this.grey, grey, 3, realDt);
+    gf.set('uGrey', this.grey);
+    gf.set('uDamage', st.hitFlash * (reduced ? 0.35 : 0.8));
     gf.set('uClimax', this.climaxFx);
-    gf.set('uWarn', st.enemyOps.threat ? 0.6 : 0);
+    // missile warning eases in fast and out slowly; the pulse is shallow
+    const warn = st.enemyOps.threat ? (reduced ? 0.3 : 0.6) : 0;
+    this.warn = dampTo(this.warn, warn, warn > this.warn ? 8 : 3, realDt);
+    gf.set('uWarn', this.warn);
+    gf.set('uPulse', reduced ? 0.15 : 0.6);
     gf.set('uWhite', st.whiteout);
     const cf = post.cameraFX.uniforms;
     const fast = p.throttle > 0 ? clamp((p.speed - p.baseSpeed) / (p.baseSpeed * 0.4), 0, 1) : 0;
@@ -66,6 +75,6 @@ export class PostBridge {
     const cf = g.post.cameraFX.uniforms;
     cf.get('uRadial').value = 0;
     cf.get('uHazeStrength').value = 0;
-    g.post.cameraFX.resetHistory();
+    g.post.resetHistory({ sun: true });
   }
 }

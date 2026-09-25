@@ -2,6 +2,12 @@
 // cheap multiple-scattering term. The same model exists in GLSL (for the sky
 // cubemap) and in JS (for sun/fog colours), so fog blends seamlessly into the
 // horizon.
+//
+// On top of it an "arcade" stylisation (also in GLSL + JS, applied to the
+// cubemap bake so IBL inherits it, and to the fog / cloud ambient colours):
+// a soft knee tames the blown-out horizon, the hazy horizon takes the zenith's
+// hue (light cyan-white instead of greenish grey), saturation goes up and the
+// upper sky is brightened. See SKY_STYLE_DEFAULTS and `env.sky`.
 import { Color, Vector3 } from 'three';
 
 export const ATMOS_DEFAULTS = {
@@ -14,6 +20,96 @@ export const ATMOS_DEFAULTS = {
   multiScatter: 0.35,
   exposure: 1.0
 };
+
+/**
+ * `env.sky` defaults.
+ *   zenithBoost    brightness gain toward the zenith (negative = deeper upper sky)
+ *   saturation     chroma gain around luma (1 = physical)
+ *   horizonBright  brightness gain of the thin horizon band (can be negative)
+ *   hue            optional sky hue as RGB (e.g. royal blue [0.08, 0.3, 1]); default:
+ *                  the physical zenith hue
+ *   skyHue         0..1: how much the upper sky takes that hue (keeps its brightness)
+ *   horizonHue     0..1: how much the hazy horizon takes a pale version of it
+ *                  (light cyan-white instead of greenish grey)
+ *   knee           soft-knee luminance compression (blown horizons, sunsets)
+ *   sunDisc        sun disc angular radius in degrees (the real sun is 0.27)
+ *   sunGlow        strength of the hot glow around the disc
+ *   iblSaturation  optional: saturation of the IBL bake (default: 40% of the dome's boost)
+ * The area right around the sun keeps its physical colour (glow, sunsets).
+ */
+export const SKY_STYLE_DEFAULTS = {
+  zenithBoost: -0.3,
+  saturation: 1.35,
+  horizonBright: 0.1,
+  hue: null,
+  skyHue: 0.85,
+  horizonHue: 0.7,
+  knee: 0.25,
+  sunDisc: 1.6,
+  sunGlow: 1
+};
+
+export const SKY_STYLE_GLSL = /* glsl */ `
+uniform vec4 uSkyA;   // x zenithBoost, y saturation, z horizonBright, w knee
+uniform vec4 uSkyB;   // rgb sky hue (colour / luma), w horizon hue lock
+uniform float uSkyLock; // upper-sky hue lock
+vec3 stylizeSky(vec3 col, vec3 rd, vec3 sunDir) {
+  float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
+  float lk = l / (1.0 + uSkyA.w * l);
+  col *= lk / max(l, 1e-6);
+  l = lk;
+  float hz = exp(-abs(rd.y) * 7.0);
+  float up = smoothstep(0.02, 0.35, rd.y);
+  float nearSun = pow(max(dot(rd, sunDir), 0.0), 40.0);
+  vec3 target = l * mix(vec3(1.0), uSkyB.rgb, 0.3 + 0.7 * up);
+  col = mix(col, target, max(hz * uSkyB.w, up * uSkyLock) * (1.0 - nearSun));
+  col = max(mix(vec3(l), col, uSkyA.y), 0.0);
+  col *= (1.0 + uSkyA.x * smoothstep(0.0, 0.7, max(rd.y, 0.0))) * (1.0 + uSkyA.z * exp(-abs(rd.y) * 12.0));
+  return col;
+}
+`;
+
+const smooth01 = (a, b, x) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+/**
+ * Sky hue (colour / luma) for the hue locks: from `style.hue` (RGB) when set,
+ * otherwise from the physical zenith radiance `zenith` (a Color).
+ */
+export function skyZenithHue(zenith, out = [1, 1, 1], hue = null) {
+  const r = hue ? hue[0] : zenith.r, g = hue ? hue[1] : zenith.g, b = hue ? hue[2] : zenith.b;
+  const l = Math.max(0.2126 * r + 0.7152 * g + 0.0722 * b, 1e-6);
+  out[0] = r / l;
+  out[1] = g / l;
+  out[2] = b / l;
+  return out;
+}
+
+/** JS port of stylizeSky() (in place on a linear Color). */
+export function stylizeSkyJS(col, rd, sunDir, style, zenithHue) {
+  const s = { ...SKY_STYLE_DEFAULTS, ...style };
+  let l = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
+  const lk = l / (1 + s.knee * l);
+  const k0 = lk / Math.max(l, 1e-6);
+  let r = col.r * k0, g = col.g * k0, b = col.b * k0;
+  l = lk;
+  const hz = Math.exp(-Math.abs(rd.y) * 7);
+  const up = smooth01(0.02, 0.35, rd.y);
+  const mu = Math.max(rd.x * sunDir.x + rd.y * sunDir.y + rd.z * sunDir.z, 0);
+  const lock = Math.max(hz * s.horizonHue, up * s.skyHue) * (1 - Math.pow(mu, 40));
+  const zh = zenithHue || [1, 1, 1];
+  const f0 = 0.3 + 0.7 * up;
+  r += (l * (1 + (zh[0] - 1) * f0) - r) * lock;
+  g += (l * (1 + (zh[1] - 1) * f0) - g) * lock;
+  b += (l * (1 + (zh[2] - 1) * f0) - b) * lock;
+  r = Math.max(0, l + (r - l) * s.saturation);
+  g = Math.max(0, l + (g - l) * s.saturation);
+  b = Math.max(0, l + (b - l) * s.saturation);
+  const f = (1 + s.zenithBoost * smooth01(0, 0.7, Math.max(rd.y, 0))) * (1 + s.horizonBright * Math.exp(-Math.abs(rd.y) * 12));
+  return col.setRGB(r * f, g * f, b * f);
+}
 
 export const ATMOSPHERE_GLSL = /* glsl */ `
 #define PI 3.141592653589793

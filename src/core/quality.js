@@ -76,6 +76,13 @@ export function detectPreset(gl) {
 /**
  * Adaptive render scale. Feed it frame times; it nudges the scale inside the
  * preset's [scaleMin, scaleMax] to hold the target frame rate.
+ *
+ * Anti-flicker rules: at least `minInterval` seconds between two changes, wide
+ * hysteresis (down when the median frame is > 1.2x the budget for 2 s, up only
+ * after 8 s of comfortable frames), nothing while `locked` (Climax, cinematics),
+ * and an up-step that is quickly undone doubles the wait before the next
+ * up-step (no oscillation). `onChange` must only *request* a resize: the game
+ * applies it before drawing the next frame.
  */
 export class DynamicResolution {
   constructor(preset, targetFps = 60) {
@@ -89,7 +96,12 @@ export class DynamicResolution {
     this.i = 0;
     this.over = 0;
     this.under = 0;
-    this.cooldown = 0;
+    this.minInterval = 4; // s between two changes
+    this.downHold = 2; // s over budget before stepping down
+    this.upHold = 8; // s comfortable before stepping up (doubles on oscillation)
+    this.sinceChange = 0;
+    this.lastDir = 0;
+    this.changes = 0;
     this.locked = false; // e.g. during Climax
     this.enabled = true;
     this.onChange = null;
@@ -100,6 +112,7 @@ export class DynamicResolution {
     this.min = p.scaleMin;
     this.max = p.scaleMax;
     this.scale = p.scaleMax;
+    this.over = this.under = 0;
   }
 
   setTargetFps(fps) {
@@ -117,32 +130,49 @@ export class DynamicResolution {
     return s[n >> 1];
   }
 
-  push(frameMs, dtSec) {
+  /**
+   * @param {number} frameMs frame interval (ms)
+   * @param {number} dtSec frame interval (s)
+   * @param {number} [workMs] CPU work of the frame (ms), when known
+   */
+  push(frameMs, dtSec, workMs = 0) {
     this.samples[this.i] = frameMs;
     this.i = (this.i + 1) % this.samples.length;
     this.n++;
-    if (!this.enabled || this.locked) return;
-    this.cooldown -= dtSec;
-    if (this.n < 30 || this.cooldown > 0) return;
+    this.sinceChange += dtSec;
+    if (!this.enabled || this.locked) {
+      this.over = this.under = 0;
+      return;
+    }
+    if (this.n < 30) return;
     if ((this._frame++ & 7) === 0) this._median = this.median();
     const m = this._median;
-    if (m > this.targetMs * 1.1) {
+    const T = this.targetMs;
+    if (m > T * 1.2) {
       this.over += dtSec;
       this.under = 0;
-    } else if (m < this.targetMs * 0.8) {
+    } else if (m < T * 1.05 && workMs < T * 0.7) {
+      // holding vsync with CPU headroom
       this.under += dtSec;
       this.over = 0;
     } else {
-      this.over = this.under = 0;
+      this.over = Math.max(0, this.over - dtSec);
+      this.under = 0;
     }
+    if (this.sinceChange < this.minInterval) return;
     let next = this.scale;
-    if (this.over > 1.2) next = Math.max(this.min, this.scale - 0.06);
-    else if (this.under > 4) next = Math.min(this.max, this.scale + 0.05);
+    if (this.over > this.downHold) next = Math.max(this.min, this.scale - 0.08);
+    else if (this.under > this.upHold) next = Math.min(this.max, this.scale + 0.05);
     if (next !== this.scale) {
-      if (next === this.min && this.over > 1.2) this.suggestDowngrade = true;
+      const dir = next < this.scale ? -1 : 1;
+      if (next === this.min && dir < 0) this.suggestDowngrade = true;
+      // an up-step undone within 10 s: wait twice as long before the next one
+      if (dir < 0 && this.lastDir > 0 && this.sinceChange < 10) this.upHold = Math.min(this.upHold * 2, 64);
+      this.lastDir = dir;
       this.scale = next;
       this.over = this.under = 0;
-      this.cooldown = 1.5;
+      this.sinceChange = 0;
+      this.changes++;
       if (this.onChange) this.onChange(this.scale);
     }
   }

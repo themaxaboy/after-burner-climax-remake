@@ -23,6 +23,7 @@ import { Menu, overlay } from './ui/menu.js';
 import { createOptionsMenu } from './ui/screens/options.js';
 import { t } from './ui/i18n.js';
 import { Bench } from './core/bench.js';
+import { LumaProbe } from './core/lumaProbe.js';
 
 /**
  * Top-level orchestrator: owns renderer, post chain, world, input, loop and
@@ -80,6 +81,8 @@ export class Game {
 
     this.dynres = new DynamicResolution(this.preset, this.settings.fpsCap || 60);
     this.dynres.enabled = !params.fixed && !params.frames;
+    // never resize between drawing and presenting a frame (that shows a cleared,
+    // black canvas): scale changes are applied at the start of the next render
     this.dynres.onChange = () => this.resize();
     this.perf = new PerfOverlay(this.uiRoot);
     if (params.debug) this.perf.toggle(true);
@@ -98,23 +101,23 @@ export class Game {
       turbo: params.turbo
     });
     this._lastFrameStart = performance.now();
-    this.loop.onFrameEnd = (realDt, now) => {
-      const ms = performance.now() - this._lastFrameStart;
+    this.loop.onFrameEnd = (realDt, now, workMs) => {
       const frameMs = realDt * 1000;
       this.perf.push(frameMs);
-      this.dynres.push(frameMs, realDt);
+      this.dynres.push(frameMs, realDt, workMs);
       this._lastFrameStart = performance.now();
-      void ms;
       if (params.frames && this.activeFrames === params.frames) this.markReady();
       this.bench?.frame(realDt);
+      this.lumaProbe?.endFrame();
     };
+    if (params.lumaprobe > 0) this.lumaProbe = new LumaProbe(this, params.lumaprobe);
 
     this.applyFpsCap();
     addEventListener('resize', () => this.resize());
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.state?.onHidden?.();
     });
-    this.resize();
+    this._applyResize();
 
     window.__game = this;
   }
@@ -259,6 +262,8 @@ export class Game {
 
   render(alpha, realDt) {
     this.frameCount++;
+    // pending size / render-scale change: apply before anything is drawn
+    if (this._resizePending) this._applyResize();
     if (this.nextState && !this._swapping) {
       this._swapping = true;
       this._swapState().finally(() => (this._swapping = false));
@@ -290,6 +295,7 @@ export class Game {
     const cam = this.rig.camera;
     this.post.update(cam, WorldUniforms.uSunDir.value, realDt, { flareIntensity: this.world.env?.flare ?? 1 });
     this.post.render(realDt);
+    this.lumaProbe?.sample();
   }
 
   _audioListener() {
@@ -306,19 +312,33 @@ export class Game {
     if (p) a.setEngine({ throttle: (p.throttle + 1) / 2, afterburner: p.afterburner, speed: p.speed, gLoad: p.gLoad });
   }
 
+  /**
+   * Request a resize (window size, render scale or quality change). Applied at
+   * the start of the next render so the canvas is never cleared after a frame
+   * was drawn (a resized canvas presents black until it is drawn again).
+   */
   resize() {
+    this._resizePending = true;
+  }
+
+  _applyResize() {
+    this._resizePending = false;
+    this._resizedFrame = this.frameCount;
     const w = innerWidth, h = innerHeight;
     const dpr = Math.min(devicePixelRatio || 1, this.preset.maxDpr);
     const scale = this.dynres ? this.dynres.scale : 1;
     this.renderer.setPixelRatio(dpr * scale);
     this.post?.setSize(w, h);
+    this.post?.resetHistory();
     this.renderer.domElement.style.width = w + 'px';
     this.renderer.domElement.style.height = h + 'px';
     this.rig.setAspect(w / h);
     const hud = this.hudCanvas;
     const hdpr = Math.min(devicePixelRatio || 1, 2);
-    hud.width = Math.round(w * hdpr);
-    hud.height = Math.round(h * hdpr);
+    // assigning width/height clears a canvas even when the value is unchanged
+    const hw = Math.round(w * hdpr), hh = Math.round(h * hdpr);
+    if (hud.width !== hw) hud.width = hw;
+    if (hud.height !== hh) hud.height = hh;
     hud.style.width = w + 'px';
     hud.style.height = h + 'px';
     this.hudScale = hdpr;
