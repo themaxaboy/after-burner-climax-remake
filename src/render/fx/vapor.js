@@ -30,7 +30,8 @@ varying vec3 vN;
 varying vec3 vWP;
 ${WORLD_FOG_PARS}
 void main() {
-  float u = vUv.y; // 0 = shock front, 1 = aft end
+  // uv can extrapolate past [0,1] under MSAA: pow() of a negative base is NaN
+  float u = clamp(vUv.y, 0.0, 1.0); // 0 = shock front, 1 = aft end
   float front = smoothstep(0.0, 0.1, u) * (1.0 + 0.6 * exp(-u * 12.0));
   float back = pow(1.0 - u, 2.2);
   float t = uFxTime;
@@ -38,13 +39,16 @@ void main() {
   float s2 = texture2D(uNoise, vec2(vUv.x * 9.0 + 0.3, u * 0.7 - t * 2.3)).g;
   float streak = smoothstep(0.3, 0.85, s1 * 0.65 + s2 * 0.55);
   vec3 V = normalize(cameraPosition - vWP);
-  float fres = 1.0 - abs(dot(normalize(vN), V));
+  float nl = length(vN);
+  vec3 N = nl > 1e-6 ? vN / nl : vec3(0.0, 0.0, 1.0);
+  // |dot| of unit vectors can round to slightly above 1 -> fres < 0 -> pow() NaN
+  float fres = max(1.0 - abs(dot(N, V)), 0.0);
   fres = 0.2 + 0.8 * pow(fres, 1.6);
   float a = clamp(uStrength * front * back * (0.25 + 0.75 * streak) * fres * 1.1, 0.0, 0.7);
-  float ndl = dot(normalize(vN), uSunDir) * 0.5 + 0.5;
+  float ndl = dot(N, uSunDir) * 0.5 + 0.5;
   vec3 lit = vec3(0.92, 0.95, 1.0) * (uSunColor * uFxSun * (0.4 + 0.6 * ndl) + uFogColor * uFxAmbient * 1.2);
   lit = applyWorldFog(lit, vWP);
-  gl_FragColor = vec4(lit * a, a);
+  gl_FragColor = vec4(clamp(lit * a, 0.0, 6.0e4), a);
 }`;
 
 function bellGeometry(radial = 36, rings = 14) {

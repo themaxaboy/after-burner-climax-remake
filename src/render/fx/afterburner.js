@@ -54,6 +54,10 @@ varying float vFogT;
 ${FX_NOISE_GLSL}
 ${FX_FIRE_GLSL}
 
+// Gaussian-ish falloff of a SIGNED distance: square it instead of pow(x, 2.0),
+// which is NaN for x < 0 on most GPUs (NaN pixels blow up into black blocks in bloom).
+float g2(float x) { return exp(-x * x); }
+
 // returns (fire energy, blue energy) per unit length (nozzle radii)
 vec2 abEmit(float z, float r, float ang, float seed) {
   float T = uThrottle, AB = uAB;
@@ -69,19 +73,21 @@ vec2 abEmit(float z, float r, float ang, float seed) {
   // dry thrust: short translucent blue core
   float Ld = max(uLenDry, 0.2);
   float dryR = 0.72 - 0.3 * clamp(z / Ld, 0.0, 1.0);
-  float dry = exp(-pow(r / dryR, 2.0)) * exp(-z / (Ld * 0.45)) * (1.0 + turb * 0.8) * T * (1.0 - 0.85 * AB);
+  float dry = g2(r / dryR) * exp(-z / (Ld * 0.45)) * (1.0 + turb * 0.8) * T * (1.0 - 0.85 * AB);
   eb += dry * 0.8;
   ef += dry * 0.1;
   if (AB > 0.002) {
     float L = max(uLenAB, 0.5);
     float zt = z / L;
     float fade = 1.0 - smoothstep(0.35, 1.0, zt + turb * 0.3);
-    float env = 0.8 + 0.04 * z + turb * 0.12 * zt;
+    // far down the proxy zt grows large and negative turbulence could flip env's sign
+    float env = max(0.8 + 0.04 * z + turb * 0.12 * zt, 0.05);
     float body = exp(-pow(r / env, 2.2)) * fade * (0.35 + 1.3 * (turb + 0.5));
     // inner hot cone
     float coneLen = 0.34 * L;
     float coneR = 0.62 * (1.0 - z / coneLen);
-    float cone = coneR > 0.02 ? exp(-pow(r / coneR, 4.0)) : 0.0;
+    float rc = r / max(coneR, 0.02);
+    float cone = coneR > 0.02 ? exp(-rc * rc * rc * rc) : 0.0;
     // Mach diamonds: knots on the axis + conical shock shells between them
     const float LAM = 1.55;
     float u = (z - 1.0) / LAM + 0.5;
@@ -89,11 +95,11 @@ vec2 abEmit(float z, float r, float ang, float seed) {
     float kIdx = floor(u);
     float dk = abs(f) * 2.0;
     float kFade = exp(-max(kIdx, 0.0) * 0.38) * step(0.0, kIdx) * fade;
-    float knot = exp(-pow(f * LAM / 0.2, 2.0)) * exp(-r * r * 5.0);
-    float shell = exp(-pow((r - 0.7 * dk) / 0.1, 2.0));
+    float knot = g2(f * LAM / 0.2) * exp(-r * r * 5.0);
+    float shell = g2((r - 0.7 * dk) / 0.1);
     // blue sheath hugging the exit
     float sheathR = 0.95 + 0.06 * z;
-    float sheath = exp(-pow((r - sheathR) / 0.14, 2.0)) * exp(-z / 1.3);
+    float sheath = g2((r - sheathR) / 0.14) * exp(-z / 1.3);
     ef += AB * (body * 0.4 + cone * 3.0 + (knot * 5.5 + shell * 0.8) * kFade * (0.8 + 0.4 * turb));
     eb += AB * sheath * 0.7;
   }
@@ -141,7 +147,7 @@ void main() {
     float z = dot(p, axis);
     vec3 pr = p - z * axis;
     float r = length(pr);
-    float ang = atan(dot(pr, v), dot(pr, u));
+    float ang = r > 1e-5 ? atan(dot(pr, v), dot(pr, u)) : 0.0; // atan(0, 0) is undefined
     acc += abEmit(z, r, ang, vAxis.w);
   }
   acc *= dt;
@@ -155,10 +161,11 @@ void main() {
   // hue floor at orange (thin plume stays orange but dim), dense = yellow-white
   float h = mix(0.44, 1.0, 1.0 - exp(-acc.x * 0.42));
   vec3 col = fxFireRamp(h) * uTint * clamp(acc.x / 0.9, 0.0, 1.0);
-  col += vec3(0.08, 0.28, 1.0) * acc.y;
+  col += vec3(0.08, 0.28, 1.0) * max(acc.y, 0.0);
+  col = max(col, 0.0);
   float m = max(col.r, max(col.g, col.b));
   col *= 1.0 / (1.0 + m / 40.0);
-  gl_FragColor = vec4(col * vFogT, 0.0);
+  gl_FragColor = vec4(clamp(col * vFogT, 0.0, 6.0e4), 0.0);
 }`;
 
 const _inv = new Matrix4();

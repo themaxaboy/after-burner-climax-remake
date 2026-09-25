@@ -247,8 +247,10 @@ void main() {
   float amul = 1.0;
   float wpx = w * pxPerM;
   if (wpx < 1.5) { amul = wpx / 1.5; w = 1.5 / pxPerM; }
-  amul *= smoothstep(0.15, 0.8, depth / max(w, 0.1));
+  // fade ribbons the camera flies through (thick missile smoke must not white/black out the view)
+  amul *= smoothstep(0.5, 1.8, depth / max(w, 0.1));
   // looking down the trail axis: the flat ribbon under-represents the tube
+  // (may push the opacity above 1: the fragment shader clamps the final alpha)
   amul *= 1.0 + (1.0 - clamp(sl * 2.5, 0.0, 1.0)) * 0.6;
   vW = max(w, 0.05);
   w *= alive;
@@ -278,10 +280,10 @@ varying float vW;
 
 void main() {
   float s = clamp(vT.x, -1.0, 1.0);
-  float ac = 1.0 - s * s;
+  float ac = max(1.0 - s * s, 0.0);
   int kind = int(vT.w + 0.5);
-  float a = vT.z;
-  float ageSec = vL.w;
+  float a = clamp(vT.z, 0.0, 1.0);
+  float ageSec = max(vL.w, 0.0);
   // billows scale with the local width and stay anchored to the air (distance along the trail)
   vec2 nuv = vec2(vT.y / (vW * 2.2 + 0.5), s * 0.32);
   float n1 = texture2D(uNoise, nuv + vec2(0.0, ageSec * 0.03)).r;
@@ -313,8 +315,11 @@ void main() {
     alpha = vC.a * pow(ac, 1.5) * fout * (0.65 + 0.35 * n);
     lit = vC.rgb * (sun * 0.55 + amb * 1.1);
   }
+  // premultiplied over a HalfFloat target: alpha > 1 turns the (1 - alpha) destination
+  // factor negative (black streaks against a bright sky), so clamp it
+  alpha = clamp(alpha, 0.0, 1.0);
   vec3 c = mix(lit, vFog.rgb, vFog.w) * alpha + emis * (1.0 - vFog.w);
-  gl_FragColor = vec4(c, alpha);
+  gl_FragColor = vec4(clamp(c, 0.0, 6.0e4), alpha);
 }`;
 
 /** GPU side: one mesh drawing every trail. */

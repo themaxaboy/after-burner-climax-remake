@@ -96,7 +96,7 @@ vec4 debrisCell(vec2 p01) {
   float r1 = 0.35 + 0.5 * fxHash12(vec2(i1, seed * 7.0));
   float rr = mix(r0, r1, f) * (0.9 + 0.1 * sin(sec * 9.0));
   float d = length(p);
-  float alpha = smoothstep(rr, rr - 0.06, d);
+  float alpha = 1.0 - smoothstep(rr - 0.06, rr, d); // (smoothstep with edge0 > edge1 is undefined)
   vec2 fn = fxHash22(vec2(i0, seed * 3.0)) - 0.5;
   float bevel = smoothstep(rr - 0.15, rr, d);
   vec3 n = normalize(vec3(fn * 1.2 + normalize(p + 1e-4) * bevel * 0.8, 1.0));
@@ -113,7 +113,7 @@ vec4 sprayCell(vec2 p) {
     float fi = float(i);
     vec2 c = (fxHash22(vec2(fi, 7.7)) - 0.5) * 1.35;
     float rad = 0.025 + 0.06 * fxHash12(vec2(fi, 1.3));
-    drops = max(drops, smoothstep(rad, rad * 0.25, length(p - c)) * (1.0 - smoothstep(0.55, 0.9, length(c))));
+    drops = max(drops, (1.0 - smoothstep(rad * 0.25, rad, length(p - c))) * (1.0 - smoothstep(0.55, 0.9, length(c))));
   }
   float dens = clamp(cloud + drops * 0.8, 0.0, 1.0) * (1.0 - smoothstep(0.8, 0.98, r));
   vec2 g = p * 0.6;

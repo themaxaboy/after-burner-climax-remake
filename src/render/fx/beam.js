@@ -29,9 +29,10 @@ varying vec3 vWN;
 varying vec2 vUv;
 ${WORLD_FOG_PARS}
 void main() {
-  float z = vUv.y; // 0 apex .. 1 end
+  float z = clamp(vUv.y, 0.0, 1.0); // 0 apex .. 1 end
   vec3 V = normalize(cameraPosition - vWP);
-  float facing = abs(dot(normalize(vWN), V));
+  float nl = length(vWN);
+  float facing = min(abs(dot(nl > 1e-6 ? vWN / nl : V, V)), 1.0);
   float soft = pow(facing, 1.6);
   float atten = 1.0 / (1.0 + z * z * 7.0) * (1.0 - smoothstep(0.7, 1.0, z));
   float dust = texture2D(uNoise, vec2(vUv.x * 4.0 + uFxTime * 0.01, z * 3.0 - uFxTime * 0.04)).r;
@@ -39,7 +40,7 @@ void main() {
   vec3 rd;
   float fa = worldFogAmount(cameraPosition, vWP, rd);
   vec3 c = uColor * uIntensity * (soft * atten * (0.55 + 0.9 * dust) + hot * soft);
-  gl_FragColor = vec4(c * (1.0 - fa), 0.0);
+  gl_FragColor = vec4(clamp(c * (1.0 - fa), 0.0, 6.0e4), 0.0);
 }`;
 
 function coneGeometry(radial = 40, rings = 16) {
