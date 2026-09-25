@@ -132,6 +132,10 @@ export class Game {
       climaxGauge: 0.35,
       eoCleared: {},
       stageIndex: 0,
+      // route progress (stage ids): route = visited/chosen nodes, node = current stage id, stageNo = 1-based count
+      route: [],
+      node: null,
+      stageNo: 1,
       results: [],
       stats: { missilesFired: 0, climaxUsed: 0 }
     };

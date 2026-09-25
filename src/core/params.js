@@ -7,13 +7,18 @@
 //   ?jet=f14d|fa18e|f15e  ?scheme=standard|camo|special|lowvis  ?turbo=N sim speed
 //   ?mute=1  ?lang=en|th  ?shot=name (camera preset)  ?god=1 invulnerable
 //   ?warp=SECONDS  run the full simulation (no rendering) before the first frame
+//   ?stage=<id>    stage id also accepted (e.g. ?stage=canyon)
+//   ?route=a,b,c   pre-chosen route (stage ids) for forks / autopilot / e2e
+//   ?lumaprobe=N   record N frames of mean screen luminance (flicker detector)
 function parse(search) {
   const q = new URLSearchParams(search);
   const num = (k, d) => (q.has(k) && q.get(k) !== '' && !Number.isNaN(+q.get(k)) ? +q.get(k) : d);
   const bool = (k) => q.has(k) && q.get(k) !== '0' && q.get(k) !== 'false';
   const str = (k, d) => (q.has(k) && q.get(k) !== '' ? q.get(k) : d);
   return {
-    stage: num('stage', 0),
+    stage: q.has('stage') && q.get('stage') !== '' && Number.isNaN(+q.get('stage')) ? q.get('stage') : num('stage', 0),
+    route: str('route', '') ? str('route', '').split(',').map((x) => x.trim()).filter(Boolean) : [],
+    lumaprobe: num('lumaprobe', 0),
     seed: num('seed', 0),
     fixed: bool('fixed'),
     frames: num('frames', 0),

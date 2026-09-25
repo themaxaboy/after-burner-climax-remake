@@ -36,6 +36,17 @@ export class Flow {
     g.setState(new StageState(g, STAGES[i]));
   }
 
+  /** Direct entry (URL ?stage=): start that stage with a fresh session. */
+  toStageDirect(def) {
+    const g = this.game;
+    const i = STAGES.indexOf(def);
+    g.session.stageIndex = Math.max(0, i);
+    g.session.stageNo = def.index || i + 1;
+    g.session.node = def.id;
+    g.session.route = [def.id];
+    g.setState(new StageState(g, def));
+  }
+
   restartStage() {
     this.toStage(this.game.session.stageIndex);
   }

@@ -1,8 +1,7 @@
 import './ui/ui.css';
 import { Game } from './game.js';
 import { params } from './core/params.js';
-import { StageState } from './states/stageState.js';
-import { STAGES } from './stages/campaign.js';
+import { getStageDef } from './stages/campaign.js';
 import { Flow } from './states/flow.js';
 
 async function boot() {
@@ -20,10 +19,10 @@ async function boot() {
   game.flow = new Flow(game);
   if (params.bench && !params.stage) params.stage = 1;
   if (params.bench) params.god = true;
-  if (params.stage >= 1 && params.stage <= STAGES.length) {
+  const direct = getStageDef(params.stage);
+  if (direct) {
     // direct stage entry (testing / benchmarks)
-    game.session.stageIndex = params.stage - 1;
-    game.setState(new StageState(game, STAGES[params.stage - 1]));
+    game.flow.toStageDirect(direct);
   } else {
     game.flow.toTitle();
   }
