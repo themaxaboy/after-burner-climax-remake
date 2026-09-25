@@ -32,9 +32,9 @@ const _UP = new Vector3(0, 1, 0);
 
 // Damage values (percent of armor). "arcade" mirrors the original's brutality.
 export const DAMAGE = {
-  normal: { missile: 34, gun: 3, collision: 45, terrain: 25 },
+  normal: { missile: 30, gun: 3, collision: 35, terrain: 25 },
   arcade: { missile: 70, gun: 4, collision: 100, terrain: 40 },
-  easy: { missile: 22, gun: 2, collision: 30, terrain: 15 }
+  easy: { missile: 18, gun: 2, collision: 22, terrain: 15 }
 };
 
 /**
@@ -379,6 +379,7 @@ export class StageState {
       player: () => this.player,
       quality: () => g.preset.name,
       aliveCount: () => this.enemies.list.length,
+      forceWaves: () => !!g.params.waves,
       worldPoint: (s, x, y, ground) => {
         this.rail.frameAt(s, _frame);
         _v.crossVectors(_frame.T, _UP).normalize(); // horizontal right

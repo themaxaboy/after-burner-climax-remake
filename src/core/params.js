@@ -11,6 +11,7 @@
 //   ?route=a,b,c   pre-chosen route (stage ids) for forks / autopilot / e2e
 //   ?lumaprobe=N   record N frames of mean screen luminance (flicker detector)
 //   ?look=<name>   override the stage's visual look with LOOKS[name] (look dev)
+//   ?waves=1       run the default wave generator on stages without def.waves (enemy dev)
 function parse(search) {
   const q = new URLSearchParams(search);
   const num = (k, d) => (q.has(k) && q.get(k) !== '' && !Number.isNaN(+q.get(k)) ? +q.get(k) : d);
@@ -21,6 +22,7 @@ function parse(search) {
     route: str('route', '') ? str('route', '').split(',').map((x) => x.trim()).filter(Boolean) : [],
     lumaprobe: num('lumaprobe', 0),
     look: str('look', null),
+    waves: bool('waves'),
     seed: num('seed', 0),
     fixed: bool('fixed'),
     frames: num('frames', 0),
