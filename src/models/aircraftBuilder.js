@@ -31,10 +31,11 @@ export const DESIGNS = { f14d, fa18e, f15e, fighterA, stealthB, bomberXB, bomber
 export const AIRCRAFT_IDS = ['f14d', 'fa18e', 'f15e', 'fighterA', 'stealthB', 'bomberXB', 'bomberB52', 'kc10', 'heloCH47'];
 export const VEHICLE_IDS = ['missile', 'destroyer', 'samLauncher'];
 export const ALL_MODEL_IDS = [...AIRCRAFT_IDS, ...VEHICLE_IDS];
+// lockCap: simultaneous missile locks outside Climax (LockOn.max)
 export const PLAYER_JETS = [
-  { id: 'f14d', name: 'F-14D SUPER TOMCAT' },
-  { id: 'fa18e', name: 'F/A-18E SUPER HORNET' },
-  { id: 'f15e', name: 'F-15E STRIKE EAGLE' }
+  { id: 'f14d', name: 'F-14D SUPER TOMCAT', lockCap: 6 },
+  { id: 'fa18e', name: 'F/A-18E SUPER HORNET', lockCap: 6 },
+  { id: 'f15e', name: 'F-15E STRIKE EAGLE', lockCap: 8 }
 ];
 export const SCHEMES = ['standard', 'camo', 'special', 'lowvis'];
 export const ENEMY_SCHEME = 'enemy';

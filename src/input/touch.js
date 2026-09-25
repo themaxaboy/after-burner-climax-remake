@@ -1,8 +1,9 @@
 // Android-port style touch controls:
 //   * floating virtual stick anywhere on the left 60% of the screen
-//   * right side: MISSILE (big), CLIMAX, FLARE buttons
+//   * right side: MISSILE (big; hold = ripple at new locks), CLIMAX (press
+//     toggles on touch), FLARE buttons; pointerdown/up drive the hold states
 //   * right edge: 3-detent throttle slider (SLOW / NORMAL / FAST)
-//   * quick horizontal flick of the stick = barrel roll
+//   * quick horizontal flick of the stick = barrel roll (jink on noRoll stages)
 //   * optional tilt steering (DeviceOrientation) with calibration
 const STICK_RADIUS = 64;
 

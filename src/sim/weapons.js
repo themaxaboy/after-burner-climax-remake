@@ -50,8 +50,10 @@ export class Vulcan {
    * @param {object|null} assistTarget enemy to magnetise toward
    * @param {boolean} trigger
    * @param {EnemyManager} enemies
+   * @param {Array|null} extra optional extra targets ({pos, radius, active}, e.g. enemy missiles)
+   * @param {Function|null} onExtraHit called with the extra target a bullet hit
    */
-  update(dt, player, aimDir, assistTarget, trigger, enemies) {
+  update(dt, player, aimDir, assistTarget, trigger, enemies, extra = null, onExtraHit = null) {
     this.firing = trigger;
     this.aimTarget = null;
     if (trigger) {
@@ -88,6 +90,21 @@ export class Vulcan {
           this.hooks.onBulletHit?.(e, _b);
           hit = true;
           break;
+        }
+      }
+      if (!hit && extra) {
+        for (let k = 0; k < extra.length; k++) {
+          const m = extra[k];
+          if (!m.active) continue;
+          const r = m.radius || 4;
+          const dx = m.pos.x - _b.x, dy = m.pos.y - _b.y, dz = m.pos.z - _b.z;
+          const reach = r + this.speed * dt * 1.5 + 30;
+          if (dx * dx + dy * dy + dz * dz > reach * reach) continue;
+          if (segSphere(_a, _b, m.pos, r)) {
+            onExtraHit?.(m, _b);
+            hit = true;
+            break;
+          }
         }
       }
       if (hit || L[i] <= 0 || P[o + 1] < -2) A[i] = 0;
@@ -163,30 +180,56 @@ export function segSphere(a, b, c, r) {
   return t >= 0 && t <= 1;
 }
 
-/** Missile stock with regeneration (arcade: 50 missiles, ~2/s refill). */
+/**
+ * Ready-missile rack: `ready` missiles (the HUD icon row, max `max`) reload
+ * one at a time at `regen` per second from an infinite reserve; `reload` is
+ * the 0..1 progress of the next one. `infinite` (Climax) skips the rack.
+ */
 export class MissileStock {
-  constructor(max = 50, regen = 2) {
-    this.max = max;
-    this.regen = regen;
-    this.count = max;
-    this.acc = 0;
+  constructor(max = 8, regen = 3) {
+    this.configure(max, regen);
     this.infinite = false;
   }
+
+  /** Resize the rack and refill it. */
+  configure(max, regen) {
+    this.max = max;
+    this.regen = regen;
+    this.ready = max;
+    this.acc = 0;
+  }
+
+  /** 0..1 progress of the missile being reloaded (0 when the rack is full). */
+  get reload() {
+    return this.ready >= this.max ? 0 : this.acc;
+  }
+
+  /** Legacy alias of `ready`. */
+  get count() {
+    return this.ready;
+  }
+
+  set count(v) {
+    this.ready = v;
+  }
+
   update(dt) {
-    if (this.count >= this.max) {
+    if (this.ready >= this.max) {
       this.acc = 0;
       return;
     }
     this.acc += dt * this.regen;
-    while (this.acc >= 1 && this.count < this.max) {
-      this.count++;
+    while (this.acc >= 1 && this.ready < this.max) {
+      this.ready++;
       this.acc -= 1;
     }
+    if (this.ready >= this.max) this.acc = 0;
   }
+
   take() {
     if (this.infinite) return true;
-    if (this.count <= 0) return false;
-    this.count--;
+    if (this.ready <= 0) return false;
+    this.ready--;
     return true;
   }
 }

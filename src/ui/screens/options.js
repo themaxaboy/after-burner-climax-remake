@@ -3,6 +3,12 @@ import { saveSettings } from '../../core/save.js';
 import { setLang, t } from '../i18n.js';
 import { PRESET_ORDER, PRESETS } from '../../core/quality.js';
 
+/** t(key) with an English fallback while the key is missing from the string tables. */
+const tr = (key, fallback) => {
+  const v = t(key);
+  return v === key ? fallback : v;
+};
+
 /** Options menu: every change applies immediately and persists. */
 export function createOptionsMenu(game, onBack) {
   const s = game.settings;
@@ -44,6 +50,18 @@ export function createOptionsMenu(game, onBack) {
       hint: t('opt.assistHint')
     },
     { type: 'toggle', label: t('opt.autoFire'), get: () => s.autoFire, set: (v) => { s.autoFire = v; save(); } },
+    {
+      type: 'toggle', label: tr('opt.autoMissile', 'AUTO MISSILE'),
+      get: () => s.autoMissile ?? s.difficulty === 'easy',
+      set: (v) => { s.autoMissile = v; save(); },
+      hint: tr('opt.autoMissileHint', 'Hold MISSILE to ripple one missile at every new lock.')
+    },
+    {
+      type: 'select', label: tr('opt.climaxMode', 'CLIMAX BUTTON'),
+      options: [{ value: false, label: tr('opt.climaxHold', 'HOLD') }, { value: true, label: tr('opt.climaxToggle', 'PRESS = ON / OFF') }],
+      get: () => !!s.climaxToggle,
+      set: (v) => { s.climaxToggle = v; save(); }
+    },
     {
       type: 'select', label: t('opt.missileMode'),
       options: [{ value: 'tap', label: t('opt.tap') }, { value: 'paint', label: t('opt.paint') }],
