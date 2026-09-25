@@ -307,6 +307,8 @@ function makeRun(def) {
 function fly(def, steer, from = 150, to = 13500) {
   const t = makeRun(def);
   const { run, stage, p } = t;
+  const events = [];
+  t.events.on('caution', (e) => events.push(`${e.kind}:${e.on}`));
   p.s = from;
   const input = { moveX: 0, moveY: 0, throttleAxis: 0 };
   const lim = { minY: 0 };
@@ -322,7 +324,7 @@ function fly(def, steer, from = 150, to = 13500) {
     run.update(dt, dt);
     if (stage.hudExtra.caution) caution++;
   }
-  return { ...t, caution: caution * dt };
+  return { ...t, caution: caution * dt, cautionEvents: events };
 }
 
 describe('TerrainRun', () => {
@@ -334,15 +336,14 @@ describe('TerrainRun', () => {
   });
 
   it('flying straight on through a swinging canyon hits walls and obstacles, with CAUTION first', () => {
-    const cautions = [];
-    const t = makeRun(TERRAIN_EXAMPLES.canyon);
-    t.events.on('caution', (e) => cautions.push({ ...e }));
-    const { hits, caution } = fly(TERRAIN_EXAMPLES.canyon, false, 3000, 9500);
+    const { hits, caution, cautionEvents } = fly(TERRAIN_EXAMPLES.canyon, false, 3000, 9500);
     expect(hits.length).toBeGreaterThan(3);
     expect(hits.every((h) => h.kind === 'terrain')).toBe(true);
     expect(hits.some((h) => h.amount === 25)).toBe(true); // head-on
     expect(hits.some((h) => h.amount === 4)).toBe(true); // scrape
     expect(caution).toBeGreaterThan(1);
+    expect(cautionEvents).toContain('terrain:true');
+    expect(cautionEvents).toContain('terrain:false');
   });
 
   it('groundAt: movement floor for the player (walls are collisions), full height elsewhere', () => {

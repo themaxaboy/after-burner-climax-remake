@@ -61,6 +61,16 @@ export class TerrainRun {
     this._evt = { kind: 'terrain', on: false };
     this._predStep = 0;
     this._hintY = false;
+    /** Last contact (debug / tuning): { what: 'wall' | 'ground' | part role, s, x, crash } */
+    this.lastHit = { what: null, s: 0, x: 0, crash: false };
+  }
+
+  _noteHit(what, crash) {
+    const h = this.lastHit, p = this.stage.player;
+    h.what = what;
+    h.s = p.s;
+    h.x = p.x;
+    h.crash = crash;
   }
 
   async init() {
@@ -264,7 +274,7 @@ export class TerrainRun {
   _crash(what) {
     const st = this.stage;
     const p = st.player;
-    this.lastHit = { what, s: p.s, x: p.x, crash: true };
+    this._noteHit(what, true);
     if (this.hitCd <= 0 && !(p.invuln > 0)) {
       st.playerHit(st.difficulty?.terrain ?? 25, 'terrain', p.pos);
       p.invuln = Math.max(p.invuln, 1);
@@ -278,7 +288,7 @@ export class TerrainRun {
   _scrape(pos, what) {
     const st = this.stage;
     const p = st.player;
-    this.lastHit = { what, s: p.s, x: p.x, crash: false };
+    this._noteHit(what, false);
     if (this.scrapeCd > 0) return;
     this.scrapeCd = 0.35;
     if (!(p.invuln > 0)) st.playerHit(this._scrapeDamage(), 'terrain', p.pos);
@@ -290,7 +300,8 @@ export class TerrainRun {
   /** Nearest lateral position (toward `dir` first) where the jet is clear of terrain and obstacles. */
   _escapeX(s, y, dir) {
     const bx = this.stage.player.box.x;
-    for (const d of [dir || 1, -(dir || 1)]) {
+    for (let pass = 0; pass < 2; pass++) {
+      const d = (dir || 1) * (pass ? -1 : 1);
       for (let k = 1; k <= 40; k++) {
         const xx = this.stage.player.x + d * k * 3;
         if (Math.abs(xx) > bx) break;

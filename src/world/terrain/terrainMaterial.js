@@ -86,8 +86,8 @@ export const PALETTES = {
     strata: ['#e8a860', '#d08848', '#f2c080', '#b87040'],
     rock: '#dea060',
     rock2: '#c07c48',
-    ground: '#ffcc3e',
-    ground2: '#f59a2a',
+    ground: '#ffc430',
+    ground2: '#f08a1e',
     snow: '#ffffff',
     ice: '#ffffff',
     bank: '#e0b060'

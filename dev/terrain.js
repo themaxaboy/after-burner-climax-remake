@@ -6,6 +6,7 @@
 //   /dev/terrain.html?scene=canyon|valley|fjord|dunes&s=5200&cam=chase|high|side|far&q=medium
 //   &look=<LOOKS name>   override the look      &steer=0   keyboard steering (arrows)   &jet=0  hide the proxy jet
 //   &shot=1&warm=2       simulate `warm` seconds up to s, render, set body.dataset.ready = '1'
+//   &shot=1&fly=40       precompile, fly 40 s and report shader programs compiled mid-flight (stats)
 import { Group, Mesh, BoxGeometry, MeshStandardMaterial, Vector3, Matrix4 } from 'three';
 import { PRESETS } from '../src/core/quality.js';
 import { createRenderer } from '../src/render/renderer.js';
@@ -105,6 +106,9 @@ if (params.get('jet') !== '0') world.dynamic.add(jet);
 
 const run = new TerrainRun(stage, def);
 await run.init();
+p.x = run.safeX(p.s, p.pos.y);
+p.computePose(rail);
+p.prevPos.copy(p.pos);
 
 // ------------------------------------------------------------------ sim
 const input = { moveX: 0, moveY: 0, throttleAxis: 0 };
@@ -162,6 +166,7 @@ function hud() {
     `centre ${run.shape.centreAt(p.s).toFixed(1)}  hint ${(stage.autopilotHint.x ?? 0).toFixed(1)} / ${stage.autopilotHint.y?.toFixed(1) ?? '-'}\n` +
     `clearance ${(p.pos.y - h).toFixed(1)}  query ${run.query(p.s, p.x, p.pos.y).toFixed(1)}\n` +
     `caution ${stage.hudExtra.caution ?? '-'}  hits ${hits.length}\n${hits.slice(-4).join('\n')}\n` +
+    `trees ${run.streamer.trees?.mesh.count ?? 0}  obstacles ${run.obstacles?.list.length ?? 0}\n` +
     `calls ${renderer.info.render.calls}  tris ${(renderer.info.render.triangles / 1000).toFixed(0)}k  progs ${renderer.info.programs?.length}`;
   cautionEl.textContent = stage.hudExtra.caution || '';
 }
@@ -186,7 +191,30 @@ mk('cams', ['chase', 'high', 'side', 'far'], 'cam', camMode);
 
 window.__terrain = { run, stage, player: p, hits, rail };
 
-if (shot) {
+// like StageState._precompile: every program must exist before the flight starts
+place(1, 1 / 60);
+world.update(0, rig.camera);
+await renderer.compileAsync(world.scene, rig.camera);
+render(1 / 60);
+const progs0 = renderer.info.programs.length;
+const flySec = parseFloat(params.get('fly') || '0');
+
+if (shot && flySec > 0) {
+  // program check: fly `fly` seconds (rendering once per second) and report shader programs compiled mid-flight
+  const names0 = new Set(renderer.info.programs.map((pr) => pr.name + pr.cacheKey.length));
+  for (let i = 0; i < flySec * 120; i++) {
+    step(1 / 120);
+    if (i % 30 === 0) place(1, 0.25);
+    if (i % 120 === 119) {
+      render(1 / 60);
+      await new Promise((r) => setTimeout(r, 30)); // let worker-built chunks arrive
+    }
+  }
+  const fresh = renderer.info.programs.filter((pr) => !names0.has(pr.name + pr.cacheKey.length)).map((pr) => pr.name);
+  hud();
+  stats.textContent += `\nprograms at start ${progs0}, after ${flySec}s ${renderer.info.programs.length}${fresh.length ? ' NEW: ' + fresh.join(', ') : ''}`;
+  document.body.dataset.ready = '1';
+} else if (shot) {
   const n = Math.round(warm * 120);
   for (let i = 0; i < n; i++) {
     step(1 / 120);
