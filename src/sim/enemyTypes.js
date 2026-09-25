@@ -22,7 +22,7 @@ export const ENEMY_TYPES = {
     speed: 200, missile: 0, gun: 0.3, threat: 1.5, lockPoints: [[0, 0, 0], [-10, 0, 8], [10, 0, 8], [0, 0, -18]]
   },
   bomberB52: {
-    model: 'bomberB52', hp: 400, radius: 30, score: 100000, lockable: true, air: true, big: true,
+    model: 'bomberB52', hp: 160, radius: 30, score: 150000, lockable: true, air: true, big: true,
     speed: 200, missile: 0.5, gun: 1, threat: 3
   },
   destroyer: {
@@ -44,6 +44,10 @@ export const ENEMY_TYPES = {
   target: {
     model: 'bunker', hp: 40, radius: 20, score: 30000, lockable: true, air: false, ground: true,
     speed: 0, missile: 0, gun: 0, threat: 0, anchor: 'world'
+  },
+  bossPod: {
+    model: 'none', hp: 26, radius: 5, score: 15000, lockable: true, air: true,
+    speed: 0, missile: 0, gun: 0, threat: 1, anchor: 'world'
   },
   cruiseMissile: {
     model: 'missile', scale: 1.8, hp: 2, radius: 5, score: 2000, lockable: true, air: true,

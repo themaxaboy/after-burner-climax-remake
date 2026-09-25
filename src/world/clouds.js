@@ -284,7 +284,7 @@ export class Clouds {
     const cy = deck ? deck.y + rng.range(-deck.thickness * 0.3, deck.thickness * 0.5) : rng.range(this.minY, this.maxY);
     const cx = _f.pos.x + _f.R.x * lateral;
     const cz = _f.pos.z + _f.R.z * lateral;
-    const scale = rng.range(0.7, 1.5) * (deck ? 1.6 : 1);
+    const scale = rng.range(0.7, 1.5);
     const cl = (this.clusters[c] = { s, x: cx, y: cy, z: cz, r: 420 * scale });
     for (let k = 0; k < this.perCluster; k++) {
       const i = c * this.perCluster + k;

@@ -59,6 +59,9 @@ export class StageState {
     g.world.configure(def.env);
     g.renderer.toneMappingExposure = def.env.toneExposure ?? 0.6;
     g.post.grade.setGrade(def.env.grade || 'neutral');
+    const bl = def.env.bloom || {};
+    g.post.bloom.luminanceMaterial.threshold = bl.threshold ?? 1.0;
+    g.post.bloom.intensity = bl.intensity ?? 0.9;
 
     const [models, fxMod] = await Promise.all([loadModels(), loadFX()]);
     this.models = models;
@@ -246,6 +249,7 @@ export class StageState {
       },
       onKill: (e, src, mode) => {
         const res = this.scoring.kill(e);
+        this.stageLogic?.onKill?.(e);
         this.climax.onKill(!!e.def.big, this.player.throttle);
         this.director.notify('killed', e.tag);
         if (projectPoint(this.game.rig.camera, e.pos, _s)) {
@@ -718,9 +722,10 @@ export class StageState {
     this.stageLogic?.render?.(alpha, realDt);
     if (!this.stageLogic?.cameraOverride) g.rig.update(p, this.rail, alpha, realDt, { climax: this.climax.active });
     g.world.update(realDt, cam);
+    this.whiteout = this.stageLogic?.whiteout || 0;
     if (this.clouds) {
       this.clouds.update(realDt, cam, p.s);
-      this.whiteout = this.clouds.whiteout;
+      this.whiteout = Math.max(this.whiteout, this.clouds.whiteout);
     }
 
     // reticle: 600 m ahead of the jet, projected; eased toward the assist target

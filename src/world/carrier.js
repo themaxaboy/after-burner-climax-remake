@@ -294,9 +294,10 @@ export class Carrier {
       try {
         const geos = models.buildAircraftGeometry('fa18e', 1);
         const mats = models.createAircraftMaterials('fa18e', 'lowvis', { instanced: true });
+        // parked clear of the catapults and the angled landing area
         const spots = [];
-        for (let i = 0; i < 7; i++) spots.push([22 + (i % 2) * 2, 60 + i * 13, -2.3]);
-        for (let i = 0; i < 5; i++) spots.push([-30, 90 + i * 14, 2.4]);
+        for (let i = 0; i < 6; i++) spots.push([27, -30 - i * 15, -2.2]);
+        for (let i = 0; i < 4; i++) spots.push([30, 70 + i * 14, -2.4]);
         for (const slot of ['body', 'glass', 'metal']) {
           if (!geos[slot]) continue;
           const mat = mats[slot] || mats.body;

@@ -90,7 +90,8 @@ export class EnemyManager {
     e.countable = o.countable !== false;
     e.params = o.params || {};
     e.lockable = def.lockable;
-    e.visible = true;
+    e.visible = def.model !== 'none';
+    e.invuln = !!o.invuln;
     e.smoke = null;
     e.onScreen = false;
     e.escapeTimer = o.timeLimit || 0;
@@ -126,6 +127,11 @@ export class EnemyManager {
   /** Apply damage; returns true when this hit destroyed the enemy. */
   damage(e, amount, source = 'gun') {
     if (!e.active || e.dying || e.dead) return false;
+    if (e.invuln) {
+      e.flash = 0.4;
+      this.hooks.onDeflect?.(e, amount, source);
+      return false;
+    }
     e.hp -= amount;
     e.flash = 1;
     this.hooks.onHit?.(e, amount, source);
@@ -523,6 +529,53 @@ export const BEHAVIORS = {
       b.flares--;
       ctx.enemyFlares(e);
     }
+  },
+
+  /** Heavy bomber boss: slides in from behind, holds ahead, tail gun + missiles. */
+  bossBomber(e, dt, ctx, mgr) {
+    const p = ctx.player;
+    const b = e.b;
+    if (!b.init) {
+      b.init = 1;
+      b.phase = 0;
+      e.fireCd = 3;
+    }
+    const rel = e.rs - p.s;
+    if (b.phase === 0) {
+      e.rs += (p.speed + 140) * dt;
+      e.ry = dampTo(e.ry, e.params.y ?? 60, 0.6, dt);
+      if (rel > 420) {
+        b.phase = 1;
+        b.x0 = e.rx;
+        b.y0 = e.ry;
+      }
+    } else {
+      const want = 470 + Math.sin(e.t * 0.23) * 140;
+      e.rs += (p.speed + (want - rel) * 0.6) * dt;
+      b.x0 = dampTo(b.x0, Math.sin(e.t * 0.17) * 45, 0.5, dt);
+      b.y0 = dampTo(b.y0, (e.params.y ?? 60) + Math.sin(e.t * 0.13) * 25, 0.5, dt);
+      e.rx = b.x0 + Math.sin(e.t * 0.9) * 6;
+      e.ry = b.y0 + Math.cos(e.t * 0.7) * 4;
+      e.b.bankBias = Math.sin(e.t * 0.17) * 0.12;
+      e.fireCd -= dt * mgr.difficulty.fireRate;
+      if (e.fireCd <= 0) {
+        if (ctx.rng.next() < 0.7) ctx.fireGun(e);
+        else ctx.fireMissile(e);
+        e.fireCd = 1.4 + ctx.rng.next() * 1.4;
+      }
+    }
+  },
+
+  /** Sub-part locked to a parent enemy (boss engines, weak points). */
+  attached(e, dt, ctx, mgr) {
+    const par = e.params.parent;
+    if (!par || !par.active || par.dead) {
+      mgr.despawn(e);
+      return;
+    }
+    const l = e.params.local;
+    e.pos.set(l[0], l[1], l[2]).applyQuaternion(par.quat).add(par.pos);
+    e.vel.copy(par.vel);
   },
 
   /** World-anchored sea/ground unit; fires SAMs when the player is in range. */
