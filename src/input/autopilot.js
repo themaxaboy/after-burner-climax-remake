@@ -69,12 +69,12 @@ export class Autopilot {
     if (hx != null) {
       const ex = hx - p.x;
       const k = clamp((Math.abs(ex) - 8) / 30, 0, 1);
-      tx = tx * (1 - k) + clamp(ex / 25, -1, 1) * k;
+      tx = tx * (1 - k) + clamp(ex / 22 - p.vx / 260, -1, 1) * k;
     }
     if (hy != null) {
       const ey = hy - p.y;
       const k = clamp((Math.abs(ey) - 6) / 20, 0, 1);
-      ty = ty * (1 - k) + clamp(ey / 18, -1, 1) * k;
+      ty = ty * (1 - k) + clamp(ey / 20 - p.vy / 200, -1, 1) * k;
     }
     // floor safety
     const lim = st._lim;

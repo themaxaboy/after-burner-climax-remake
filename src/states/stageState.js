@@ -486,8 +486,11 @@ export class StageState {
     const minAlt = def.minAltitude ?? 12;
     // altitude floor in rail-up units (rail up is ~world up)
     this.rail.frameAt(p.s, _frame);
+    // floor under the jet (walls/obstacles are collisions, not an altitude floor)
+    const logic = this.stageLogic;
     let ground = 0;
-    if (this.stageLogic?.groundAt) ground = this.stageLogic.groundAt(p.s, p.x);
+    if (logic?.floorAt) ground = logic.floorAt(p.s, p.x);
+    else if (logic?.groundAt) ground = logic.groundAt(p.s, p.x);
     this._lim = this._lim || { minY: 0 };
     this._lim.minY = ground + minAlt - _frame.pos.y;
     return this._lim;
