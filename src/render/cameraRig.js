@@ -11,6 +11,8 @@ const _rt = new Vector3();
 const _m = new Matrix4();
 const _q = new Quaternion();
 
+const BOX_DEFAULT = { x: 200, y: 80 };
+
 /** Chase framing (metres / degrees). */
 export const CHASE = {
   back: 20, // behind the jet origin along the rail (≈18 m to the wings: jet spans ~37 % of the width)
@@ -25,14 +27,24 @@ export const CHASE = {
   fovBoost: 4,
   backFast: 2,
   backClimax: 2.5,
-  slideX: 5, // the jet may drift this far from the camera axis …
-  slideY: 3,
-  slideOmega: 4.2, // … and the camera catches up with this spring
+  // The jet travels across the screen with its position in the movement box
+  // (arcade style: it can reach toward the corners, so the reticle can aim at
+  // enemies near the screen edges) plus a short lead in the direction it moves.
+  slideX: 11, // jet offset from the camera axis at the box's side edge (m) ≈ 55 % of the half-width
+  slideYUp: 6, // … at the top of the box
+  slideYDown: 3.5, // … at the bottom
+  slideLeadX: 3, // transient lead at full lateral speed
+  slideLeadY: 1.5,
+  slideOmega: 4.2, // spring toward that target
   slideZeta: 0.62,
   rollGain: 0.45, // camera roll = gain · stick bank + rail-turn bank …
   rollMax: 30 * DEG, // … clamped
   rollRate: 3.6
 };
+const SLIDE_MAX_X = (CHASE.slideX + CHASE.slideLeadX) * 1.15;
+const SLIDE_MAX_UP = (CHASE.slideYUp + CHASE.slideLeadY) * 1.15;
+const SLIDE_MAX_DOWN = (CHASE.slideYDown + CHASE.slideLeadY) * 1.15;
+export const SLIDE_LIMITS = { x: SLIDE_MAX_X, up: SLIDE_MAX_UP, down: SLIDE_MAX_DOWN };
 
 /**
  * Chase camera in the After Burner Climax style: close behind the jet, which
@@ -90,11 +102,11 @@ export class CameraRig {
       s.x += s.vx * h;
       s.y += s.vy * h;
     }
-    const bx = C.slideX * 1.15, by = C.slideY * 1.15;
+    const bx = SLIDE_MAX_X, byUp = SLIDE_MAX_UP, byDown = SLIDE_MAX_DOWN;
     if (s.x > bx) { s.x = bx; if (s.vx > 0) s.vx = 0; }
     if (s.x < -bx) { s.x = -bx; if (s.vx < 0) s.vx = 0; }
-    if (s.y > by) { s.y = by; if (s.vy > 0) s.vy = 0; }
-    if (s.y < -by) { s.y = -by; if (s.vy < 0) s.vy = 0; }
+    if (s.y > byUp) { s.y = byUp; if (s.vy > 0) s.vy = 0; }
+    if (s.y < -byDown) { s.y = -byDown; if (s.vy < 0) s.vy = 0; }
   }
 
   /**
@@ -121,8 +133,14 @@ export class CameraRig {
     const vx01 = clamp((p.vx || 0) / lat, -1, 1);
     const vy01 = clamp((p.vy || 0) / vert, -1, 1);
 
-    // bounded springy slide: the jet leads the camera axis in the direction it moves
-    this._slideStep(dt, vx01 * C.slideX, vy01 * C.slideY);
+    // the jet sits off the camera axis in proportion to where it is in the box,
+    // plus a springy lead in the direction it moves
+    const box = p.box || BOX_DEFAULT;
+    const bx01 = clamp((p.x || 0) / (box.x || 200), -1, 1);
+    const by01 = clamp(((p.y || 0) - (p.boxCenterY || 0)) / (box.y || 80), -1, 1);
+    const tx = bx01 * C.slideX + vx01 * C.slideLeadX;
+    const ty = (by01 > 0 ? by01 * C.slideYUp : by01 * C.slideYDown) + vy01 * C.slideLeadY;
+    this._slideStep(dt, tx, ty);
     const s = this.slide;
     this.offX = p.x - s.x;
     this.offY = p.y - s.y;

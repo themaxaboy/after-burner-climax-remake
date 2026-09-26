@@ -3,7 +3,7 @@ import { PerspectiveCamera, Vector3 } from 'three';
 import { Player, FLIGHT } from '../../src/sim/player.js';
 import { Rail } from '../../src/sim/rail.js';
 import { Reticle, RETICLE } from '../../src/sim/reticle.js';
-import { CameraRig, CHASE } from '../../src/render/cameraRig.js';
+import { CameraRig, CHASE, SLIDE_LIMITS } from '../../src/render/cameraRig.js';
 import { SnapDetector } from '../../src/input/input.js';
 import { projectPoint } from '../../src/sim/lockon.js';
 import { buildRail } from '../../src/stages/railBuilder.js';
@@ -184,11 +184,16 @@ describe('chase camera + reticle', () => {
       expect(Math.abs(rig.roll)).toBeLessThanOrEqual(CHASE.rollMax + 1e-9);
     }
     expect(maxRoll).toBeGreaterThan(20 * (Math.PI / 180));
-    // jet slides a bounded amount off the camera axis, then the camera catches up
-    expect(Math.abs(rig.slide.x)).toBeLessThanOrEqual(CHASE.slideX * 1.15 + 1e-9);
+    // the jet travels across the screen with its box position (bounded), so the
+    // reticle can reach the screen edges; at rest the slide settles on that offset
+    expect(Math.abs(rig.slide.x)).toBeLessThanOrEqual(SLIDE_LIMITS.x + 1e-9);
+    expect(rig.slide.x).toBeGreaterThan(CHASE.slideX * 0.5);
     frame(p, rig, straight, 360, input(0, 0));
-    expect(Math.abs(rig.slide.x)).toBeLessThan(0.3);
-    expect(Math.abs(p.x - rig.offX)).toBeLessThan(0.3);
+    const want = Math.max(-1, Math.min(1, p.x / p.box.x)) * CHASE.slideX;
+    expect(Math.abs(rig.slide.x - want)).toBeLessThan(0.3);
+    expect(projectPoint(rig.camera, p.pos, s)).toBe(true);
+    expect(s.x).toBeGreaterThan(0.3); // well right of centre, still on screen
+    expect(s.x).toBeLessThan(0.85);
   });
 
   it('camera stays smooth through rail turns (no jumps)', () => {

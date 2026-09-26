@@ -10,8 +10,8 @@ import { clamp, dampTo } from '../core/math.js';
  */
 export const RETICLE = {
   lift: 0.3, // NDC-Y above the projected nose
-  leadX: 0.07, // NDC-X at full lateral speed
-  leadY: 0.04, // NDC-Y at full vertical speed
+  leadX: 0.12, // NDC-X at full lateral speed (aim reaches further toward the edges)
+  leadY: 0.08, // NDC-Y at full vertical speed
   maxPull: 0.06, // aim-assist pull (half-height units) at assist 2
   follow: 14, // screen-anchor response (1/s)
   pullRate: 7
