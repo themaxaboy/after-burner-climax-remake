@@ -37,7 +37,7 @@ const SHOTS = [
   { name: 'canyon', q: 'stage=canyon&t=16', sim: 5 },
   { name: 'glacier', q: 'stage=glacier&t=14', sim: 5 },
   { name: 'dunes', q: 'stage=dunes&t=18', sim: 6 },
-  { name: 'sunset', q: 'stage=sunset&t=20', sim: 6 },
+  { name: 'sunset', q: 'stage=sunset&t=11', sim: 5 },
   { name: 'clouds', q: 'stage=clouds&t=18', sim: 6 },
   { name: 'aurora', q: 'stage=aurora&t=16', sim: 6 },
   { name: 'climax', q: 'stage=emerald&t=20', sim: 5, climax: true },
