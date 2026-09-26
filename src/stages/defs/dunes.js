@@ -51,11 +51,11 @@ export default defineStage({
   terrain,
   waves: {
     seed: 61,
-    rate: { base: 1.5, perStar: 0.12 },
-    maxAlive: { high: 20, low: 14 },
+    rate: { base: 1.8, perStar: 0.12 },
+    maxAlive: { high: 24, medium: 20, low: 16 },
     spans: [{ from: 1200, to: RS - 400 }],
     quiet: [[5900, 7300]],
-    mix: [['chaserPair', 3], ['overtakeClose', 3], ['vHeadOn', 2], ['rammerPair', 1], ['crossSweep', 1], ['heavyPair', 1, { minS: 5000 }]],
+    mix: [['chaserPair', 2.5], ['overtakeStream', 2.5], ['overtakeClose', 2], ['vHeadOn', 2.5], ['headOnPass', 2.5], ['pincer', 1.5], ['rammerPair', 1], ['crossSweep', 1], ['heavyPair', 1, { minS: 5000 }]],
     types: { light: 'fighterA', heavy: 'stealthB' },
     preloadTypes: []
   },

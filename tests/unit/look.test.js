@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Color, PerspectiveCamera, Vector3 } from 'three';
+import { Color, PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
 import { CameraFXEffect } from '../../src/render/effects/CameraFXEffect.js';
 import { findDips, meanLuma } from '../../src/core/lumaProbe.js';
 import { GRADES, ARCADE_GRADES, hueDir } from '../../src/render/effects/GradeEffect.js';
@@ -7,7 +7,12 @@ import { atmosphereJS, stylizeSkyJS, skyZenithHue, sunDirFromAngles, SKY_STYLE_D
 import { LOOKS } from '../../src/world/looks.js';
 import { OCEAN_PRESETS } from '../../src/world/ocean.js';
 import { DynamicResolution, PRESETS } from '../../src/core/quality.js';
-import { visScaleOf } from '../../src/render/enemyRenderer.js';
+import { visScaleOf, distanceScale, drawScaleOf, glowAnchors, EnemyRenderer, ENEMY_GLOW, ENEMY_LOOK } from '../../src/render/enemyRenderer.js';
+import { EnemyTrails, ENEMY_TRAILS } from '../../src/render/enemyTrails.js';
+import { FX_STUB } from '../../src/render/fxStub.js';
+import { ENEMY_TYPES } from '../../src/sim/enemyTypes.js';
+import { resolveLivery } from '../../src/models/livery.js';
+import { DESIGNS } from '../../src/models/aircraftBuilder.js';
 
 const hsvSat = (c) => {
   const mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b);
@@ -255,5 +260,166 @@ describe('enemy readability', () => {
     expect(visScaleOf({ model: 'bomberB52' })).toBe(1.15);
     expect(visScaleOf({ model: 'destroyer' })).toBe(1);
     expect(visScaleOf({ model: 'fighterA', visScale: 1.3 })).toBe(1.3);
+  });
+
+  it('distance compensation: ×1 up to 400 m, ×1.8 from ~1.3 km; small aircraft only', () => {
+    expect(distanceScale(0)).toBe(1);
+    expect(distanceScale(400)).toBe(1);
+    expect(distanceScale(950)).toBeCloseTo(1.5);
+    expect(distanceScale(1500)).toBe(1.8);
+    expect(distanceScale(5000)).toBe(1.8);
+    const f = ENEMY_TYPES.fighterA;
+    expect(drawScaleOf(f, 200)).toBeCloseTo(1.8);
+    expect(drawScaleOf(f, 1500)).toBeCloseTo(1.8 * 1.8);
+    // on-screen width of a fighter (span 11.4 m) at 720p, fov 58: ≥ ~2× the pixels at 1.5 km
+    const px = (span, d) => (span / (2 * d * Math.tan((29 * Math.PI) / 180))) * 720;
+    expect(px(11.4 * drawScaleOf(f, 1500), 1500)).toBeGreaterThan(2 * px(11.4 * 1.8, 1500) * 0.85);
+    expect(px(11.4 * drawScaleOf(f, 1500), 1500)).toBeGreaterThan(15); // was ~9 px
+    // big aircraft (boss lock points) and ground units keep their size
+    expect(drawScaleOf(ENEMY_TYPES.bomberB52, 1500)).toBeCloseTo(1.15);
+    expect(drawScaleOf(ENEMY_TYPES.samSite, 1500)).toBe(1);
+  });
+
+  it('dark enemy paint with warm accents and a thin warm rim', () => {
+    const lum = (hex) => new Color(hex).getHSL({}).l;
+    for (const id of ['fighterA', 'stealthB', 'heloCH47', 'bomberXB', 'bomberB52']) {
+      const liv = resolveLivery(DESIGNS[id], 'enemy');
+      expect(lum(liv.top), `${id} top`).toBeLessThan(0.3);
+      expect(lum(liv.bottom), `${id} bottom`).toBeLessThan(0.4);
+      expect(liv.stripe, `${id} accent`).toBeTruthy();
+      const a = new Color(liv.stripe.a).getHSL({});
+      expect(a.h * 360, `${id} accent hue`).toBeLessThan(30); // red-orange
+      expect(a.s).toBeGreaterThan(0.8);
+    }
+    expect(ENEMY_LOOK.uEnemyRim.value).toBeCloseTo(0.3);
+    expect(ENEMY_LOOK.uEnemyRimColor.value.toArray()).toEqual([1, 0.5, 0.25]);
+  });
+
+  it('merges nozzles into ≤ 4 glow anchors', () => {
+    const n = (x, y, z, r = 0.5) => ({ position: new Vector3(x, y, z), radius: r });
+    expect(glowAnchors([n(1.2, 0, 8), n(-1.2, 0, 8)]).length).toBe(2);
+    const xb = glowAnchors([0.75, -0.75, 2.25, -2.25, 3.75, -3.75].map((x) => n(x, -1, 26)));
+    expect(xb.length).toBe(1); // one engine box: single-link chain within 2 m
+    const b52 = glowAnchors([-16.9, -15.5, -9.8, -8.4, 8.4, 9.8, 15.5, 16.9].map((x) => n(x, 0, 3)));
+    expect(b52.length).toBe(4);
+    expect(glowAnchors([]).length).toBe(0);
+  });
+});
+
+describe('enemy exhaust glow and nose lights', () => {
+  function enemy(type, pos, extra = {}) {
+    const q = new Quaternion();
+    return { id: Math.floor(Math.random() * 1e6), active: true, visible: true, def: ENEMY_TYPES[type], pos: pos.clone(), prevPos: pos.clone(), quat: q, prevQuat: q.clone(), flash: 0, dying: 0, dead: false, noseLight: 0, ...extra };
+  }
+
+  it('one additive instanced mesh, in the scene from the start (precompile), sized ≥ ~2 px radius at 1.5 km', () => {
+    const scene = new Scene();
+    const r = new EnemyRenderer(scene, null);
+    expect(scene.children).toContain(r.glow);
+    expect(r.glow.instanceColor).toBeTruthy();
+    r.warmup(true);
+    expect(r.glow.count).toBe(1);
+    r.warmup(false);
+    const cam = new PerspectiveCamera(58, 16 / 9, 1, 30000);
+    const list = [enemy('fighterA', new Vector3(0, 0, -1500)), enemy('fighterA', new Vector3(20, 0, -300), { noseLight: 1 }), enemy('samSite', new Vector3(0, 0, -800))];
+    r.update({ list }, 1, cam, 1 / 60);
+    expect(r.glowCount).toBe(3); // one exhaust each (fallback model) + one nose light; no glow on ground units
+    const arr = r.glow.instanceMatrix.array;
+    const radius0 = Math.hypot(arr[0], arr[1], arr[2]); // x scale of the first instance
+    const pxPerM = 360 / (1500 * Math.tan((29 * Math.PI) / 180));
+    expect(radius0 * pxPerM).toBeGreaterThanOrEqual(2);
+    const col = r.glow.instanceColor.array;
+    expect(col[0]).toBeGreaterThan(2); // HDR orange
+    expect(col[0]).toBeGreaterThan(col[1] * 1.8);
+    expect(col[6]).toBeGreaterThan(col[7] * 5); // red nose light
+    // nothing for dying aircraft; the nose light blinks off with e.noseLight = 0
+    list[0].dying = 1;
+    list[1].noseLight = 0;
+    r.update({ list }, 1, cam, 1 / 60);
+    expect(r.glowCount).toBe(1);
+    expect(ENEMY_GLOW.exhaust.r).toBeGreaterThan(ENEMY_GLOW.exhaust.g);
+    r.dispose();
+    expect(scene.children).not.toContain(r.glow);
+  });
+
+  it('distance compensation reaches the instance matrices', () => {
+    const scene = new Scene();
+    const r = new EnemyRenderer(scene, null);
+    const cam = new PerspectiveCamera(58, 16 / 9, 1, 30000);
+    r.update({ list: [enemy('fighterA', new Vector3(0, 0, -1500))] }, 1, cam);
+    const g = r.groups.get('fighterA');
+    const a = g.matrixAttr.array;
+    expect(Math.hypot(a[0], a[1], a[2])).toBeCloseTo(1.8 * 1.8, 3);
+    r.update({ list: [enemy('fighterA', new Vector3(0, 0, -200))] }, 1, cam);
+    expect(Math.hypot(a[0], a[1], a[2])).toBeCloseTo(1.8, 3);
+    r.dispose();
+  });
+});
+
+describe('enemy contrails', () => {
+  function fakeFx(name = 'medium', cap = 40) {
+    const trails = [];
+    return {
+      Q: { name, trails: cap },
+      trails: { active: 0 },
+      made: trails,
+      createTrail(o) {
+        const t = { o, pts: 0, alive: true, stopped: false, push() { this.pts++; }, stop() { this.stopped = true; this.alive = false; } };
+        trails.push(t);
+        this.trails.active++;
+        return t;
+      }
+    };
+  }
+  const cam = new PerspectiveCamera(58, 16 / 9, 1, 30000);
+  let id = 1;
+  const fighter = (z, x = 0) => {
+    const p = new Vector3(x, 0, z);
+    return { id: id++, active: true, visible: true, dead: false, dying: 0, def: ENEMY_TYPES.fighterA, pos: p, prevPos: p.clone(), quat: new Quaternion(), vel: new Vector3(0, 0, 300) };
+  };
+
+  it('no-op with the FX stub and on low quality', () => {
+    const list = [fighter(-500)];
+    const a = new EnemyTrails(FX_STUB);
+    expect(a.enabled).toBe(false);
+    a.update({ list }, cam);
+    expect(a.count).toBe(0);
+    const low = fakeFx('low');
+    const b = new EnemyTrails(low);
+    b.update({ list }, cam);
+    expect(low.made.length).toBe(0);
+    a.dispose();
+    b.dispose();
+  });
+
+  it('thin short contrails on the ≤ 6 nearest fast aircraft; stopped when they die or leave', () => {
+    const fx = fakeFx();
+    const tr = new EnemyTrails(fx);
+    const list = [];
+    for (let i = 0; i < 10; i++) list.push(fighter(-200 - i * 100, (i % 3) * 20));
+    const slow = fighter(-150);
+    slow.vel.set(0, 0, 50); // helicopter-slow: no trail
+    list.push(slow);
+    for (let f = 0; f < 12; f++) tr.update({ list }, cam, 1);
+    expect(tr.count).toBe(ENEMY_TRAILS.max);
+    expect(fx.made.every((t) => t.o.kind === 'contrail' && t.o.life <= 1.5 && t.o.width < 1)).toBe(true);
+    const withTrail = new Set(tr.recs.map((r) => r.e));
+    expect(withTrail.has(slow)).toBe(false);
+    expect(withTrail.has(list[0])).toBe(true); // nearest first
+    // a dead enemy's trail is stopped (returned to the pool)
+    const victim = tr.recs[0].e;
+    const handle = tr.recs[0].trail;
+    victim.dead = true;
+    tr.update({ list }, cam, 1);
+    expect(handle.stopped).toBe(true);
+    expect(tr.recs.some((r) => r.e === victim)).toBe(false);
+    // missiles need the pool: enemy trails give way
+    fx.trails.active = fx.Q.trails - 2;
+    const before = tr.count;
+    tr.update({ list }, cam, 1);
+    expect(tr.count).toBeLessThan(before);
+    tr.clear();
+    expect(tr.count).toBe(0);
+    tr.dispose();
   });
 });

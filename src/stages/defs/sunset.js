@@ -30,11 +30,11 @@ export default defineStage({
   look: 'sunset',
   waves: {
     seed: 31,
-    rate: { base: 1.4, perStar: 0.12 },
-    maxAlive: { high: 20, low: 14 },
+    rate: { base: 1.8, perStar: 0.12 },
+    maxAlive: { high: 24, medium: 20, low: 16 },
     spans: [{ from: 1200, to: REFUEL - 500 }],
     quiet: [[2400, 3400], [6300, 7300]],
-    mix: [['vHeadOn', 3], ['boatGroup', 2], ['overtakeClose', 2], ['crossSweep', 2], ['swarmPass', 1], ['heavyPair', 1], ['rammerPair', 1], ['chaserPair', 1, { minS: 5000 }]],
+    mix: [['vHeadOn', 3], ['headOnPass', 2.5], ['boatGroup', 2], ['overheadPass', 2.5], ['underPass', 1.5], ['overtakeClose', 1.5], ['pincer', 1.5], ['crossSweep', 1.5], ['swarmPass', 1], ['heavyPair', 1], ['rammerPair', 1], ['chaserPair', 1, { minS: 5000 }]],
     types: { light: 'fighterA', heavy: 'stealthB', boat: 'samBoat' },
     preloadTypes: []
   },

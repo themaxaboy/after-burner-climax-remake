@@ -27,11 +27,11 @@ export default defineStage({
   look: 'oceanDay',
   waves: {
     seed: 11,
-    rate: { base: 1.2, perStar: 0.1 },
-    maxAlive: { high: 18, low: 12 },
+    rate: { base: 1.8, perStar: 0.12 },
+    maxAlive: { high: 24, medium: 20, low: 16 },
     spans: [{ from: 1700, to: L - 700 }],
     quiet: [[7500, 8900]],
-    mix: [['vHeadOn', 4], ['lineHeadOn', 2], ['overtakeClose', 2], ['crossSweep', 2], ['swarmPass', 1, { minS: 3000 }], ['rammerPair', 1], ['boatGroup', 0.8, { minS: 9000 }]],
+    mix: [['vHeadOn', 3], ['headOnPass', 3], ['lineHeadOn', 1.5], ['overheadPass', 3], ['underPass', 2], ['overtakeClose', 1.5], ['pincer', 2], ['crossSweep', 1.5], ['swarmPass', 1, { minS: 3000 }], ['rammerPair', 1], ['boatGroup', 0.8, { minS: 9000 }]],
     types: { light: 'fighterA', heavy: 'fighterA', boat: 'samBoat' },
     preloadTypes: []
   },

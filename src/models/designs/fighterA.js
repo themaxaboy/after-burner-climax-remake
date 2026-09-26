@@ -15,7 +15,15 @@ export default {
     tailTipY: 1e9,
     camoScale: 0.2
   },
-  schemes: { enemy: 'enemySplinterBlue', desert: 'enemyDesert' },
+  schemes: {
+    // charcoal with red-orange fin tops (side band) and wing tips (top band beyond |x| 4.2 m)
+    enemy: {
+      preset: 'enemyCharcoal',
+      stripe: { a: '#ff5a1c', b: '#a3210f', y: 2.45, amp: 0, width: 0.62, z0: 2.5, z1: 9.5, period: 3, sideMin: 0.45, wingZ: 3.2, wingK: 0, wingWidth: 1.3, wingXMin: 4.2 }
+    },
+    sky: 'enemySplinterBlue',
+    desert: 'enemyDesert'
+  },
   decals: [
     { tex: 'n27', center: [0, 0.05, -6.8], size: [0.75, 0.36], axis: 'x', depth: 0.8 },
     { tex: 'emblemEnemy', center: [1.72, 1.55, 4.3], size: [0.9, 0.9], axis: [0.995, -0.105, 0], depth: 0.2, mirror: true },

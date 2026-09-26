@@ -20,19 +20,28 @@ let NEXT_ID = 1;
  *  rammer: lateral acceleration cap (m/s²) and lead (0..1) — a sideways move of > ~45 m in the last
  *          1.5 s before impact makes it miss
  *  overtakeClose: relative speed (m/s) and lateral pass distance from the player (m)
+ *  overheadPass: relative speed (m/s), vertical pass height over (under) the player's centre (m),
+ *          max lateral offset at the pass (m), rail distance ahead where it becomes a target (m),
+ *          climb rate after the pass (m/s; under-passers pull up into view)
+ *  headOnPass: closing speed on top of the player's (m/s), pass offset beside the player (m),
+ *          [start, commit] rail distances of the pass-line tracking (m), gun range (m)
+ *  pincer: gun range (m)
  *  chaser: hold distance behind the player (m), gun burst interval (s), time before overtaking (s)
  */
 export const ENEMY_TUNING = {
   headOn: { spd: [180, 240], weave: [20, 60], dodgeShare: 0.5, fire: [650, 1600] },
   rammer: { spd: [190, 240], accel: 28, gain: 3, lead: 0.5 },
   overtakeClose: { vrel: [170, 195], pass: [20, 40], handover: 380 },
+  overheadPass: { vrel: [145, 170], pass: [17, 24], lat: 8, handover: 420, climb: [14, 22], climbUnder: [28, 36] },
+  headOnPass: { spd: [200, 245], pass: [25, 40], track: [750, 110], fire: [700, 1500] },
+  pincer: { fire: [500, 1400] },
   swarmPass: { fire: [450, 1300] },
   chaser: { hold: -300, gun: [2.6, 3.8], dur: [8, 11] },
   passBehind: -320 // rail-anchored passers are removed this far behind the player
 };
 
 // behaviours whose aircraft end up behind the player for good: despawn early (off screen)
-const PASSERS = new Set(['headOn', 'rammer', 'swarmPass', 'crossing', 'strafe', 'formation', 'hover']);
+const PASSERS = new Set(['headOn', 'headOnPass', 'pincer', 'rammer', 'swarmPass', 'crossing', 'strafe', 'formation', 'hover']);
 
 export class Enemy {
   constructor() {
@@ -488,6 +497,167 @@ export const BEHAVIORS = {
       e.ry = p.y * 0.3 + b.dy;
       if (rel > T.handover) toOvertakeAhead(e, ctx);
     }
+  },
+
+  /**
+   * Comes from ~250 m behind at +145–170 m/s relative and passes right over
+   * the canopy (`params.dir` 1) or under the jet (-1): 17–24 m above/below
+   * the player's centre, within `lat` m laterally, tracking the player's
+   * offset so the clearance is guaranteed. It enters from the top (bottom) of
+   * the screen, then climbs away ahead and becomes a regular target.
+   * `params.floor` (rail-space y) keeps under-passers above the sea/ground;
+   * when the floor forbids the vertical gap the clearance is kept sideways.
+   */
+  overheadPass(e, dt, ctx, mgr) {
+    const p = ctx.player;
+    const b = e.b;
+    const T = ENEMY_TUNING.overheadPass;
+    if (!b.init) {
+      b.init = 1;
+      const pr = e.params;
+      const rng = ctx.rng;
+      b.dir = pr.dir ?? 1;
+      b.vrel = pr.vrel ?? rng.range(T.vrel[0], T.vrel[1]);
+      b.sep = e.radius + 6; // collision radius + player core + margin
+      const pass = Math.max(pr.pass ?? rng.range(T.pass[0], T.pass[1]), b.sep);
+      b.passX = clamp(pr.lat ?? rng.range(-T.lat, T.lat), -T.lat, T.lat);
+      b.passY = b.dir * pass;
+      b.floor = pr.floor ?? -Infinity;
+      b.ox = e.rx - p.x;
+      b.oy = e.ry - p.y;
+      b.rel0 = Math.min(e.rs - p.s, -60);
+      b.climb = pr.climb ?? (b.dir > 0 ? rng.range(T.climb[0], T.climb[1]) : rng.range(T.climbUnder[0], T.climbUnder[1]));
+      b.phase = 0;
+    }
+    const rel = e.rs - p.s;
+    e.rs += (p.speed + b.vrel) * dt;
+    if (b.phase === 0) {
+      const k = smoothstep(b.rel0, -45, rel);
+      let x = p.x + lerp(b.ox, b.passX, k);
+      let y = p.y + lerp(b.oy, b.passY, k);
+      if (y < b.floor) {
+        // floor in the way (low player, under pass): keep the separation sideways
+        y = b.floor;
+        const dy = y - p.y;
+        const need = b.sep * b.sep - dy * dy;
+        const dx = x - p.x;
+        if (need > 0 && dx * dx < need) x = p.x + (Math.sign(dx) || (e.id & 1 ? 1 : -1)) * Math.sqrt(need);
+      }
+      e.rx = x;
+      e.ry = y;
+      b.roll = Math.sin(e.t * 1.7 + e.id) * 0.15;
+      if (rel > 30) {
+        b.phase = 1;
+        b.refX = p.x;
+        b.refY = p.y;
+        b.dx = e.rx - p.x;
+        b.dy = e.ry - p.y;
+      }
+    } else {
+      // pulled ahead: climb away (under-passers pull up in front), then a regular target ahead.
+      // Offsets are kept from a reference that follows the player rigidly just after the pass
+      // (a hard pull-up never flies into its belly) and loosely once it is well ahead.
+      const stiff = lerp(60, 1, smoothstep(60, 260, rel));
+      b.refX = dampTo(b.refX, p.x, stiff, dt);
+      b.refY = dampTo(b.refY, p.y, stiff, dt);
+      b.dy += b.climb * dt;
+      b.dx += (Math.sign(b.passX) || 1) * 5 * dt;
+      e.rx = b.refX + b.dx;
+      e.ry = b.refY + b.dy;
+      b.roll = dampTo(b.roll, 0, 2, dt);
+      if (rel > T.handover) toOvertakeAhead(e, ctx);
+    }
+  },
+
+  /**
+   * Head-on fly-by: rushes at the player like `headOn`, then settles onto a
+   * line `passX`/`passY` beside the player (25–40 m: a near miss) and commits
+   * to it for the last ~110 m, knife-edging past instead of breaking off
+   * early. A late jink toward it can still collide.
+   */
+  headOnPass(e, dt, ctx, mgr) {
+    const p = ctx.player;
+    const b = e.b;
+    const T = ENEMY_TUNING.headOnPass;
+    if (!b.init) {
+      b.init = 1;
+      const pr = e.params;
+      const rng = ctx.rng;
+      b.spd = pr.spd ?? rng.range(T.spd[0], T.spd[1]) * (e.def.speed / 210);
+      const side = Math.sign(e.rx - p.x) || rng.sign();
+      b.passX = pr.passX ?? side * rng.range(T.pass[0], T.pass[1]);
+      b.passY = pr.passY ?? rng.range(-6, 10);
+      // never closer than the collision radius (+ margin) while tracking
+      const r = Math.hypot(b.passX, b.passY);
+      const min = e.radius + 8;
+      if (r < min) {
+        const k = min / Math.max(r, 1e-3);
+        b.passX = (b.passX || side) * k;
+        b.passY *= k;
+      }
+      b.ax = pr.ax ?? rng.range(8, 22);
+      b.ph = pr.ph ?? rng.next() * 6.2832;
+      b.x0 = e.rx;
+      b.y0 = e.ry;
+      b.vx = 0;
+      b.vy = 0;
+      b.free = false;
+    }
+    e.rs -= b.spd * dt;
+    const rel = e.rs - p.s;
+    if (!b.free) {
+      const k = smoothstep(T.track[0], T.track[0] * 0.4, rel);
+      const w = 1 - k;
+      const wx = b.x0 + (Math.sin(e.t * 0.9 + b.ph) - Math.sin(b.ph)) * b.ax * w;
+      const wy = b.y0 + (Math.cos(e.t * 0.6 + b.ph) - Math.cos(b.ph)) * b.ax * 0.35 * w;
+      const nx = lerp(wx, p.x + b.passX, k);
+      const ny = lerp(wy, p.y + b.passY, k);
+      const idt = 1 / Math.max(dt, 1e-4);
+      b.vx = (nx - e.rx) * idt;
+      b.vy = (ny - e.ry) * idt;
+      e.rx = nx;
+      e.ry = ny;
+      if (rel < T.track[1]) {
+        b.free = true;
+        b.vx = clamp(b.vx, -90, 90);
+        b.vy = clamp(b.vy, -60, 60);
+      }
+    } else {
+      e.rx += b.vx * dt;
+      e.ry += b.vy * dt;
+      b.vx *= 1 - 1.2 * dt;
+      b.vy *= 1 - 1.2 * dt;
+    }
+    // knife-edge away from the player as it zips past
+    b.roll = clamp((320 - rel) / 260, 0, 1) * (rel > -120 ? 1 : clamp((rel + 320) / 200, 0, 1)) * Math.sign(b.passX || 1) * 1.1;
+    tryFire(e, dt, ctx, mgr, T.fire[0], T.fire[1]);
+  },
+
+  /**
+   * One of two groups sweeping in from the left and right edges: closes on
+   * the player at `close` m/s while flying toward the centre at `vx` m/s, so
+   * both groups cross (X) in front of the player, then fly out the other side.
+   */
+  pincer(e, dt, ctx, mgr) {
+    const p = ctx.player;
+    const b = e.b;
+    if (!b.init) {
+      b.init = 1;
+      const pr = e.params;
+      b.side = pr.side ?? (Math.sign(e.rx - p.x) || 1); // +1: starts on the right, flies left
+      b.vx = pr.vx ?? 60;
+      b.close = pr.close ?? 190;
+      b.bankBias = b.side * 0.45;
+      b.ph = e.id * 1.3;
+    }
+    e.rs += (p.speed - b.close) * dt;
+    e.rx -= b.side * b.vx * dt;
+    e.ry += Math.sin(e.t * 1.9 + b.ph) * 5 * dt;
+    if (Math.abs(e.rx) > 1100) {
+      mgr.despawn(e, false);
+      return;
+    }
+    tryFire(e, dt, ctx, mgr, ENEMY_TUNING.pincer.fire[0], ENEMY_TUNING.pincer.fire[1]);
   },
 
   /** One of a stream crossing the view diagonally (8–12 aircraft, see waves.swarmPass). */

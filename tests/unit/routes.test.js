@@ -177,7 +177,7 @@ describe('stage definitions', () => {
   it.each(STAGES.map((s) => [s.id, s]))('%s has waves and a short authored timeline', (id, def) => {
     const w = def.waves;
     expect(w).toBeTruthy();
-    const lo = def.bonus ? 1.2 : 1.2, hi = def.bonus ? 2.5 : 1.6;
+    const lo = def.bonus ? 1.2 : 1.2, hi = def.bonus ? 2.5 : 2.0;
     expect(w.rate.base).toBeGreaterThanOrEqual(lo);
     expect(w.rate.base).toBeLessThanOrEqual(hi);
     for (const sp of w.spans) expect(sp.from).toBeLessThan(sp.to);

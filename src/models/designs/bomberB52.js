@@ -31,7 +31,17 @@ export default {
     radomeZ: -23.3,
     camoScale: 0.06
   },
-  schemes: { enemy: 'enemyDesert', gray: 'tankerGray' },
+  schemes: {
+    // gunmetal with a red-orange fin top and wing tips
+    enemy: {
+      preset: 'enemyBomberDark',
+      tailTipY: 7.2,
+      tailZ: 12,
+      stripe: { a: '#ff5a1c', b: '#a3210f', y: 0, amp: 0, width: 0.1, z0: 1e4, z1: 1e4, period: 3, sideMin: 0.5, wingZ: -1.25, wingK: 0.5, wingWidth: 3.5, wingXMin: 21 }
+    },
+    desert: 'enemyDesert',
+    gray: 'tankerGray'
+  },
   decals: [
     { tex: 'n88', center: [0, 1.4, -17.0], size: [2.4, 1.1], axis: 'x', depth: 1.7 },
     { tex: 'emblemEnemy', center: [0, 6.2, 18.5], size: [2.6, 2.6], axis: 'x', depth: 0.6 },

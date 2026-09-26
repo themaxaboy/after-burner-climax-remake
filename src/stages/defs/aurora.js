@@ -28,10 +28,10 @@ export default defineStage({
   waves: {
     seed: 101,
     rate: { base: 2.2, perStar: 0 },
-    maxAlive: { high: 26, low: 18 },
+    maxAlive: { high: 26, medium: 22, low: 18 },
     spans: [{ from: 800, to: L - 500 }],
     quiet: [],
-    mix: [['swarmPass', 3], ['vHeadOn', 3], ['lineHeadOn', 2], ['crossSweep', 2], ['overtakeClose', 2]],
+    mix: [['swarmPass', 3], ['vHeadOn', 3], ['headOnPass', 2], ['lineHeadOn', 2], ['pincer', 1.5], ['crossSweep', 2], ['overtakeClose', 2], ['overheadPass', 2]],
     types: { light: 'fighterA', heavy: 'fighterA' },
     preloadTypes: []
   },

@@ -22,7 +22,15 @@ export default {
     sootRange: [6.0, 8.5, 2.0],
     camoScale: 0.16
   },
-  schemes: { standard: 'olive', enemy: 'enemyDesert' },
+  schemes: {
+    standard: 'olive',
+    // dark olive with an orange cheat line (wing band disabled)
+    enemy: {
+      preset: 'enemyHeloDark',
+      stripe: { a: '#ff6a1a', b: '#2a2e27', y: -0.55, amp: 0, width: 0.2, z0: -9.5, z1: 8.5, period: 3, sideMin: 0.5, wingZ: 1e4, wingK: 0, wingWidth: 0.1, fuseHalf: 2.4 }
+    },
+    desert: 'enemyDesert'
+  },
   decals: [
     { tex: 'emblemEnemy', center: [0, 0.2, 1.0], size: [1.3, 1.3], axis: 'x', depth: 1.7, schemes: ['enemy'] },
     { tex: 'roundel', center: [0, 0.2, 1.0], size: [1.2, 1.2], axis: 'x', depth: 1.7, schemes: ['standard'] },

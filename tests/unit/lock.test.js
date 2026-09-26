@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PerspectiveCamera, Vector3 } from 'three';
-import { LockOn, LOCK_RADIUS } from '../../src/sim/lockon.js';
+import { LockOn, LOCK_RADIUS, LOCK_RANGE, lockRangeOf } from '../../src/sim/lockon.js';
 import { MissileSystem } from '../../src/sim/missiles.js';
 import { MissileStock } from '../../src/sim/weapons.js';
 import { Climax } from '../../src/sim/climax.js';
@@ -137,7 +137,7 @@ describe('lock-on rules', () => {
   it('drops locks of dead and long off-screen targets; consume skips them', () => {
     const lo = lockon();
     const a = enemy('fighterA', 0, 0, -1500);
-    const b = enemy('fighterA', 2, 0, -1600);
+    const b = enemy('fighterA', 2, 0, -1450);
     run(lo, [a, b], 0.1);
     expect(lo.locks.length).toBe(2);
     a.dead = true;
@@ -148,6 +148,86 @@ describe('lock-on rules', () => {
     expect(lo.locks.length).toBe(0);
     expect(b.locks).toBe(0);
     expect(lo.consume()).toBe(null);
+  });
+});
+
+describe('lock-on range', () => {
+  it('per-type ranges: air 1600 m, big / ground / sea 2400 m, min 80 m', () => {
+    expect(LOCK_RANGE).toEqual({ air: 1600, big: 2400 });
+    for (const ty of ['fighterA', 'stealthB', 'ace', 'heloCH47', 'cruiseMissile']) expect(ENEMY_TYPES[ty].lockRange, ty).toBe(1600);
+    for (const ty of ['bomberXB', 'bomberB52', 'destroyer', 'samBoat', 'samSite', 'aaGun', 'target', 'bossPod']) expect(ENEMY_TYPES[ty].lockRange, ty).toBe(2400);
+    expect(lockRangeOf({ air: true })).toBe(1600);
+    expect(lockRangeOf({ air: true, big: true })).toBe(2400);
+    expect(lockRangeOf({ air: false })).toBe(2400);
+    expect(new LockOn().minRange).toBe(80);
+  });
+
+  it('refuses targets beyond their range and accepts them inside it; flags e.inLockRange', () => {
+    const lo = lockon();
+    const far = enemy('fighterA', 0, 0, -1700);
+    const bigFar = enemy('bomberXB', 30, 0, -2600);
+    run(lo, [far, bigFar], 0.5);
+    expect(lo.locks.length).toBe(0);
+    expect(far.inLockRange).toBe(false);
+    expect(bigFar.inLockRange).toBe(false);
+    expect(far.onScreen).toBe(true);
+    expect(lo.assistTarget).toBe(null); // unlocked shots do not reach out of range either
+    far.pos.z = -1550;
+    bigFar.pos.z = -2300;
+    run(lo, [far, bigFar], 0.1);
+    expect(far.inLockRange).toBe(true);
+    expect(bigFar.inLockRange).toBe(true);
+    expect(far.locks).toBe(1);
+    expect(bigFar.locks).toBeGreaterThanOrEqual(1);
+    expect(far.lockRange).toBe(1600);
+    expect(bigFar.lockRange).toBe(2400);
+  });
+
+  it('nothing closer than the minimum range', () => {
+    const lo = lockon();
+    const e = enemy('fighterA', 0, 0, -60);
+    run(lo, [e], 0.3);
+    expect(e.inLockRange).toBe(false);
+    expect(e.locks).toBe(0);
+    expect(lo.assistTarget).toBe(null);
+  });
+
+  it('the assist target (unlocked missile shots) follows the range', () => {
+    const lo = lockon();
+    lo.dwellTime = 10; // never lock
+    const e = enemy('fighterA', 0, 0, -1750);
+    run(lo, [e], 0.1);
+    expect(lo.assistTarget).toBe(null);
+    e.pos.z = -1400;
+    run(lo, [e], 0.1);
+    expect(lo.assistTarget).toBe(e);
+  });
+
+  it('Climax widens every range ×1.5; its locks survive the salvo', () => {
+    const lo = lockon();
+    lo.climax = true;
+    const e = enemy('fighterA', 0, 0, -2300);
+    run(lo, [e], 0.05);
+    expect(e.lockRange).toBe(2400);
+    expect(e.locks).toBe(1);
+    lo.climax = false; // salvo: the lock taken at 2300 m is kept (1.2 × 2400)
+    run(lo, [e], 0.2);
+    expect(lo.locks.length).toBe(1);
+    expect(e.inLockRange).toBe(false);
+  });
+
+  it('drops a pending lock once the target is beyond 1.2× its range', () => {
+    const lo = lockon();
+    const e = enemy('fighterA', 0, 0, -1500);
+    run(lo, [e], 0.1);
+    expect(lo.locks.length).toBe(1);
+    e.pos.z = -1900; // < 1920: kept
+    run(lo, [e], 0.1);
+    expect(lo.locks.length).toBe(1);
+    e.pos.z = -1950;
+    run(lo, [e], 0.02);
+    expect(lo.locks.length).toBe(0);
+    expect(e.locks).toBe(0);
   });
 });
 
@@ -232,7 +312,7 @@ describe('combat: missiles', () => {
   it('one missile per press at the oldest lock; never twice at the same one-shot target', () => {
     const st = makeStage();
     const a = st.spawn('fighterA', 0, 0, 1500);
-    const b = st.spawn('fighterA', 3, 0, 1600);
+    const b = st.spawn('fighterA', 3, 0, 1450);
     st.step(24);
     expect(st.lockon.locks.length).toBe(2);
     const fox = [];
