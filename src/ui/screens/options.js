@@ -68,6 +68,12 @@ export function createOptionsMenu(game, onBack) {
       get: () => s.missileMode, set: (v) => { s.missileMode = v; save(); }
     },
     { type: 'toggle', label: t('opt.invertY'), get: () => s.invertY, set: (v) => { s.invertY = v; game.input.invertY = v; save(); } },
+    {
+      type: 'toggle', label: tr('opt.stickRoll', 'STICK FLICK ROLL'),
+      get: () => s.stickRoll !== false,
+      set: (v) => { s.stickRoll = v; if (game.gamepad) game.gamepad.stickRoll = v; save(); },
+      hint: tr('opt.stickRollHint', 'Gamepad: flick the stick from side to side to barrel roll. LB / RB always roll.')
+    },
     { type: 'toggle', label: t('opt.mouse'), get: () => s.mouseFlight, set: (v) => { s.mouseFlight = v; game.mouse.enabled = v; save(); } },
     {
       type: 'toggle', label: t('opt.tilt'), get: () => s.tilt,
@@ -81,6 +87,13 @@ export function createOptionsMenu(game, onBack) {
     { type: 'slider', label: t('opt.master'), get: () => s.volMaster, set: (v) => { s.volMaster = v; vol(); save(); } },
     { type: 'slider', label: t('opt.music'), get: () => s.volMusic, set: (v) => { s.volMusic = v; vol(); save(); } },
     { type: 'slider', label: t('opt.sfx'), get: () => s.volSfx, set: (v) => { s.volSfx = v; vol(); save(); } },
+    {
+      type: 'select', label: tr('opt.missileTone', 'MISSILE ALARM'),
+      options: [{ value: 'soft', label: tr('opt.toneSoft', 'SOFT') }, { value: 'off', label: tr('opt.toneOff', 'OFF') }],
+      get: () => (s.missileTone === 'off' ? 'off' : 'soft'),
+      set: (v) => { s.missileTone = v; save(); },
+      hint: tr('opt.missileToneHint', 'Warning tone when an enemy missile is about to hit. The on-screen MISSILE warning always shows.')
+    },
     {
       type: 'select', label: t('opt.lang'),
       options: [{ value: 'en', label: 'ENGLISH' }, { value: 'th', label: 'ภาษาไทย' }],

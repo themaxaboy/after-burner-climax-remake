@@ -12,6 +12,8 @@ export const DEFAULT_SETTINGS = {
   missileMode: 'tap', // 'tap' | 'paint'
   autoMissile: undefined, // undefined = on for easy difficulty only
   climaxToggle: false, // false = hold to sustain Climax, true = press on / press off
+  stickRoll: true, // gamepad: a quick left↔right stick flick barrel-rolls (LB/RB always roll)
+  missileTone: 'soft', // incoming-missile alarm: 'soft' | 'off'
   mouseFlight: false,
   tilt: false,
   lang: 'en',
