@@ -17,6 +17,7 @@ import { FX_STUB } from '../render/fxStub.js';
 import { PlayerJet } from '../render/playerJet.js';
 import { EnemyRenderer } from '../render/enemyRenderer.js';
 import { MissileRenderer } from '../render/missileRenderer.js';
+import { EnemyTrails } from '../render/enemyTrails.js';
 import { t } from '../ui/i18n.js';
 import { Clouds } from '../world/clouds.js';
 import { TouchSource } from '../input/touch.js';
@@ -105,6 +106,7 @@ export class StageState {
     this.jet = new PlayerJet({ models, fx: this.fx, jetId: session.jet, scheme: session.scheme, csm: g.world.csm });
     g.world.dynamic.add(this.jet.group);
     this.enemyRenderer = new EnemyRenderer(scene, models, { csm: g.world.csm });
+    this.enemyTrails = new EnemyTrails(this.fx);
     this.missileRenderer = new MissileRenderer(scene, models, g.world.csm);
     this.enemyRenderer.prepare(this._modelsUsed());
 
@@ -305,6 +307,7 @@ export class StageState {
     g.world.scene.remove(this.missileRenderer.mesh, this.missileRenderer.glow);
     this.missileRenderer.dispose?.();
     this.jet.dispose?.();
+    this.enemyTrails.dispose();
     this.fxHooks.dispose();
     this.fx.dispose?.();
     this.stageLogic?.dispose?.();
@@ -615,6 +618,7 @@ export class StageState {
     g.rig.snap?.();
     this.missiles.reset();
     this.fxHooks.clearTrails();
+    this.enemyTrails.clear();
     this.events.emit('respawn', {});
   }
 
@@ -643,7 +647,8 @@ export class StageState {
     const worldTime = g.clock.worldTime;
 
     this.jet.update(p, alpha, realDt, worldTime);
-    this.enemyRenderer.update(this.enemies, alpha);
+    this.enemyRenderer.update(this.enemies, alpha, cam, realDt);
+    this.enemyTrails.update(this.enemies, cam, alpha);
     this.missileRenderer.update(this.missiles, alpha, g.rig.camera);
     this.fxHooks.render(alpha);
 
