@@ -10,8 +10,10 @@ import { clamp, dampTo } from '../core/math.js';
  */
 export const RETICLE = {
   lift: 0.3, // NDC-Y above the projected nose
-  leadX: 0.12, // NDC-X at full lateral speed (aim reaches further toward the edges)
+  leadX: 0.12, // NDC-X at full lateral speed
   leadY: 0.08, // NDC-Y at full vertical speed
+  reachX: 0.24, // NDC-X extra reach at the side edges of the movement box (the aim covers
+  reachY: 0.16, //   more of the screen than the jet itself travels)
   maxPull: 0.06, // aim-assist pull (half-height units) at assist 2
   follow: 14, // screen-anchor response (1/s)
   pullRate: 7
@@ -43,11 +45,13 @@ export class Reticle {
    * @param {number} assist 0..2
    * @param {number} aspect camera aspect (x distances are scaled by it)
    * @param {object} out {x, y} receives the reticle centre
+   * @param {number} [bx01] position in the movement box, -1..1 (side edges)
+   * @param {number} [by01] position in the movement box, -1..1 (bottom/top)
    */
-  update(dt, noseX, noseY, vx01, vy01, target, assist, aspect, out) {
+  update(dt, noseX, noseY, vx01, vy01, target, assist, aspect, out, bx01 = 0, by01 = 0) {
     const R = RETICLE;
-    const bx = clamp(noseX + clamp(vx01, -1, 1) * R.leadX, -0.92, 0.92);
-    const by = clamp(noseY + R.lift + clamp(vy01, -1, 1) * R.leadY, -0.85, 0.85);
+    const bx = clamp(noseX + clamp(vx01, -1, 1) * R.leadX + clamp(bx01, -1, 1) * R.reachX, -0.92, 0.92);
+    const by = clamp(noseY + R.lift + clamp(vy01, -1, 1) * R.leadY + clamp(by01, -1, 1) * R.reachY, -0.85, 0.85);
     if (!this.primed) {
       this.baseX = bx;
       this.baseY = by;

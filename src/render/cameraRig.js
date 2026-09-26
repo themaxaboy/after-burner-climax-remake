@@ -30,9 +30,9 @@ export const CHASE = {
   // The jet travels across the screen with its position in the movement box
   // (arcade style: it can reach toward the corners, so the reticle can aim at
   // enemies near the screen edges) plus a short lead in the direction it moves.
-  slideX: 11, // jet offset from the camera axis at the box's side edge (m) ≈ 55 % of the half-width
-  slideYUp: 6, // … at the top of the box
-  slideYDown: 3.5, // … at the bottom
+  slideX: 9, // jet offset from the camera axis at the box's side edge (m) ≈ 45 % of the half-width
+  slideYUp: 3.5, // … at the top of the box (the jet stays in the lower two thirds)
+  slideYDown: 2.5, // … at the bottom
   slideLeadX: 3, // transient lead at full lateral speed
   slideLeadY: 1.5,
   slideOmega: 4.2, // spring toward that target

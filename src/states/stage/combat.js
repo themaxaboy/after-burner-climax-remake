@@ -433,7 +433,9 @@ export class Combat {
     const lockon = st.lockon;
     _v.copy(st.jet.group.position).addScaledVector(p.forward, 6);
     if (projectPoint(cam, _v, _s)) {
-      this.reticle.update(realDt, _s.x, _s.y, p.vx / (p.lateralSpeed || 150), p.vy / (p.verticalSpeed || 100), lockon.assistTarget, lockon.assist, cam.aspect, lockon.reticle);
+      const box = p.box || { x: 200, y: 80 };
+      const bx01 = p.x / (box.x || 200), by01 = (p.y - (p.boxCenterY || 0)) / (box.y || 80);
+      this.reticle.update(realDt, _s.x, _s.y, p.vx / (p.lateralSpeed || 150), p.vy / (p.verticalSpeed || 100), lockon.assistTarget, lockon.assist, cam.aspect, lockon.reticle, bx01, by01);
     }
   }
 
