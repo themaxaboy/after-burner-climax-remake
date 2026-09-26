@@ -3,6 +3,7 @@
 // stops the frame loop and steps the simulation by hand (clock included, so
 // particles and trails age exactly as in play), rendering densely during the
 // last second so trails and tracers look like real-time frames.
+// SwiftShader is slow: allow several minutes per shot, and don't run it next to other WebGL jobs.
 // Usage: node scripts/screenshots.mjs [baseUrl] [outDir] [--only ocean,climax] [--quality high]
 //   baseUrl  a running dev/preview server (default http://localhost:5173/)
 //   outDir   default docs/screenshots (JPEG, 1280×720)
@@ -68,7 +69,7 @@ for (const s of SHOTS) {
         g.update(1 / 120, w);
       };
       const n = Math.round(sim * 120);
-      const dense = 120; // the last second renders at 60 fps
+      const dense = 60; // the last half second renders at 60 fps
       for (let i = 0; i < n; i++) {
         step();
         if (i >= n - dense ? i % 2 === 0 : i % 12 === 0) g.render(1, i >= n - dense ? 1 / 60 : 0.1);
@@ -95,7 +96,7 @@ for (const s of SHOTS) {
     }, s);
     if (s.route) await page.waitForTimeout(2500);
   }
-  await page.screenshot({ path: `${out}/${s.name}.jpg`, type: 'jpeg', quality: 84, timeout: 180000 });
+  await page.screenshot({ path: `${out}/${s.name}.jpg`, type: 'jpeg', quality: 84, timeout: 900000 });
   console.log(`${s.name}.jpg`, `${((Date.now() - t0) / 1000).toFixed(0)} s`);
   await page.close();
 }
