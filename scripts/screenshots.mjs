@@ -92,6 +92,16 @@ for (const s of SHOTS) {
         g.session.stageNo = route.length;
         const def = STAGE_BY_ID[route[route.length - 1]];
         showPleaseWait(g, def, { events: { on: () => () => {} }, paused: false });
+        // software rendering can starve CSS animations: jump the panel's intro to its end
+        for (const el of document.querySelectorAll('.pw-screen, .pw-screen *')) {
+          for (const a of el.getAnimations()) {
+            try {
+              a.finish();
+            } catch {
+              a.cancel(); // infinite pulse
+            }
+          }
+        }
       }
     }, s);
     if (s.route) await page.waitForTimeout(2500);
