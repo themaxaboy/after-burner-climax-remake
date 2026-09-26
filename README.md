@@ -64,7 +64,7 @@ OCEAN ─ EMERALD ─ CANYON ─┬─ SUNSET ──┬─ DUNES ─(◯ AURORA)
 | RED CANYON | Red rock canyon under a low sun | Corridor swings, rock pillars and arches, **EO: XB-70**, route select |
 | SUNSET ARMADA | Orange sunset sea | Fleet action, **EO: B-52**, tanker refuelling |
 | GLACIER FJORD | Turquoise fjord, snowy walls | Low-level through the fjord, **EO: 6 AA sites on the banks** |
-| GOLDEN DUNES | Bright yellow desert, cyan sky | Pursuit from behind, **EO: 3 cruise missiles (gun only)**, route select |
+| GOLDEN DUNES | Tan sand desert, pale blue sky | Pursuit from behind, **EO: 3 cruise missiles (gun only)**, route select |
 | AURORA (bonus) | Night sea under an aurora | Dense swarms that don't shoot back |
 | THUNDERHEAD | Dark sea under a storm front | **EO: B-52 in the storm**, route select |
 | ASH RIDGE | Black basalt valley, red ash sky | **EO: 6 AA sites on the slopes**, route select |

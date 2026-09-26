@@ -46,7 +46,7 @@ const BANDS = {
   yellow: [35, 62], golden: [25, 55], teal: [150, 195]
 };
 const LOOK_BAND = {
-  oceanDay: 'blue', emerald: 'green', canyonRed: 'red', sunset: 'orange', glacier: 'turquoise', dunes: 'yellow',
+  oceanDay: 'blue', emerald: 'green', canyonRed: 'red', sunset: 'orange', glacier: 'turquoise', dunes: 'golden',
   clouds: 'golden', fortress: 'golden', strike: 'red', aurora: 'teal', title: 'blue', hangar: 'blue'
 };
 // Thresholds. Reference frames of the original (see --refs) score: blue ocean
@@ -60,6 +60,7 @@ const LOOK_LIMITS = {
   clouds: { sat: 0.25, V: 0.42 },
   fortress: { sat: 0.25, V: 0.42 },
   canyonRed: { sat: 0.3 },
+  dunes: { sat: 0.25 }, // natural tan sand, not saturated yellow
   strike: { sat: 0.3 }
 };
 

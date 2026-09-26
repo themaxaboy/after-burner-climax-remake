@@ -32,7 +32,7 @@ const c = (hex) => new Color(hex);
  *   desertRed  red/orange strata cliffs, orange sand (canyon)
  *   emerald    vivid grass on flats/gentle slopes, grey rock cliffs, snow above the snow line
  *   glacier    blue-grey rock, snow on everything flat, ice on the low flats
- *   dunes      bright yellow sand with ripples, golden sandstone on steep rock
+ *   dunes      warm tan sand with ripples, sandstone on steep rock
  *   volcanic   black basalt with glowing red strata, dark ash flats (shares the canyon shader branch)
  *   moonsand   pale silver sand with ripples for moonlit dunes (shares the dunes shader branch)
  */
@@ -85,14 +85,14 @@ export const PALETTES = {
     groundTex: 'aerial_sand',
     auxTex: 'aerial_sand',
     groundScale: 28,
-    strata: ['#e8a860', '#d08848', '#f2c080', '#b87040'],
-    rock: '#dea060',
-    rock2: '#c07c48',
-    ground: '#ffc430',
-    ground2: '#f08a1e',
+    strata: ['#d6a878', '#b88458', '#e8c89c', '#a07048'],
+    rock: '#c89a6c',
+    rock2: '#a87850',
+    ground: '#e8c28c',
+    ground2: '#cc9862',
     snow: '#ffffff',
     ice: '#ffffff',
-    bank: '#e0b060'
+    bank: '#c8a47a'
   },
   volcanic: {
     id: 0, // strata branch of the canyon shader, dark palette

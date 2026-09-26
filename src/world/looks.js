@@ -184,7 +184,7 @@ export const LOOKS = {
     sky: sky({ hue: [0.05, 0.45, 1.0], horizonHue: 0.8 }),
     clouds: { ...emerald.clouds, count: 0.5 }
   },
-  /** Bright yellow desert dunes under a cyan sky (stage "dunes"). */
+  /** Warm tan desert dunes under a pale blue, dusty sky (stage "dunes"). */
   dunes: {
     ...canyonRed,
     elev: 36,
@@ -193,17 +193,17 @@ export const LOOKS = {
     mie: 0.8,
     mieG: 0.8,
     ozone: 2,
-    groundAlbedo: [0.62, 0.48, 0.16],
+    groundAlbedo: [0.5, 0.4, 0.28],
     cloudCover: 0.14,
     fogDensity: 0.00004,
     fogFalloff: 0.0014,
-    horizonFog: 0.14,
+    horizonFog: 0.2,
     grade: 'arcadeDunes',
-    toneExposure: 1.05,
+    toneExposure: 1.0,
     envIntensity: 1.0,
     hemi: 0.25,
-    sunTint: [1.1, 1.08, 0.95], // warm white: sand reads yellow, not khaki
-    sky: sky({ saturation: 1.4, zenithBoost: -0.1, hue: [0.0, 0.62, 1.0], horizonHue: 0.6, iblSaturation: 1.0 }),
+    sunTint: [1.06, 1.03, 0.97], // near-white sun: sand reads tan, not yellow
+    sky: sky({ saturation: 1.25, zenithBoost: -0.1, hue: [0.12, 0.55, 1.0], horizonHue: 0.4, horizonBright: 0.18, iblSaturation: 0.9 }),
     clouds: { ...canyonRed.clouds, count: 0.25 }
   },
   /** Golden twilight above a cloud sea (stage "clouds"). */
