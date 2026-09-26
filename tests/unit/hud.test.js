@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { hudUnit, hudLayout, comboTier, armorColor, edgePoint, MARK, enemyHalfExtent, silhouettePx, lockBoxSize, markerGeometry } from '../../src/ui/hud/layout.js';
 import { calloutVariant } from '../../src/ui/hud/callouts.js';
-import { routeNodeStates, routeEdges, routeSuccessors } from '../../src/ui/routeMap.js';
+import { routeNodeStates, routeEdges, routeSuccessors, bonusProgress } from '../../src/ui/routeMap.js';
 import en from '../../src/ui/strings/en.js';
 import th from '../../src/ui/strings/th.js';
 
@@ -167,6 +167,16 @@ describe('Route map', () => {
 
   it('offers the start node before the first sortie', () => {
     expect(routeNodeStates(graph, { route: [], node: null }).ocean).toBe('available');
+  });
+});
+
+describe('Route map bonus progress', () => {
+  const graph = { start: 'a', nodes: { a: { next: 'b', bonus: { id: 'x', requires: 2 } }, x: { rejoin: 'a', bonusStage: true }, b: { end: true } }, layout: {} };
+
+  it('counts cleared Emergency Orders against the requirement', () => {
+    expect(bonusProgress(graph, { eoCleared: { e1: true } }, 'x')).toEqual({ n: 1, need: 2, open: false });
+    expect(bonusProgress(graph, { eoCleared: { e1: true, e2: true, e3: false } }, 'x')).toEqual({ n: 2, need: 2, open: true });
+    expect(bonusProgress(graph, {}, 'b')).toBe(null);
   });
 });
 

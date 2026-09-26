@@ -1,5 +1,5 @@
 import { STAGES, STAGE_BY_ID, getStageDef } from '../stages/campaign.js';
-import { ROUTE_GRAPH, forkOf, nextOf, plannedChoice, routeTo } from '../stages/routes.js';
+import { ROUTE_GRAPH, bonusUnlocked, eoClearedCount, forkOf, nextOf, plannedChoice, routeTo } from '../stages/routes.js';
 import { TitleState } from './titleState.js';
 import { HangarState } from './hangarState.js';
 import { StageState } from './stageState.js';
@@ -109,7 +109,10 @@ export class Flow {
       const bonus = !!(next && ROUTE_GRAPH.nodes[next]?.bonusStage);
       const env = (STAGE_BY_ID[node] || results.stage).env;
       const midGame = !!next && node === ROUTE_GRAPH.statusAfter[0];
-      g.setState(new StatusReportState(g, { results: s.results.slice(), env, bonus, midGame }, go));
+      // a bonus hangs off this node but was not earned: say how close the player got
+      const b = ROUTE_GRAPH.nodes[node]?.bonus;
+      const bonusLocked = b && !bonus && !s.route.includes(b.id) && !bonusUnlocked(node, s) ? { n: eoClearedCount(s), need: b.requires || 0 } : null;
+      g.setState(new StatusReportState(g, { results: s.results.slice(), env, bonus, bonusLocked, midGame }, go));
     } else go();
   }
 

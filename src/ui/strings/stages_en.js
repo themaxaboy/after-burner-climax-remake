@@ -98,6 +98,7 @@ export default {
   'flow.paintOf': '{scheme} PAINT',
   'flow.ready': 'PRESS START',
   'flow.bonus': 'SECRET ROUTE OPEN',
+  'flow.bonusLocked': 'SECRET ROUTE CLOSED — EMERGENCY ORDERS {n}/{need}',
   'flow.next': 'NEXT',
   'status.title': 'STATUS REPORT',
   'status.midgame': 'MID-GAME RESULT',

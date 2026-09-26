@@ -131,12 +131,13 @@ export class ResultsState extends PanelState {
 
 /** STATUS REPORT (blue glass): cumulative run figures graded against par; titled MID-GAME RESULT halfway. */
 export class StatusReportState extends PanelState {
-  constructor(game, { results, env, bonus = false, midGame = false }, onDone) {
+  constructor(game, { results, env, bonus = false, bonusLocked = null, midGame = false }, onDone) {
     super(game, env, { music: 'results', autoAdvance: 3 });
     this.kind = 'status';
     this.results = results;
     this.bonus = bonus;
     this.midGame = midGame;
+    this.bonusLocked = bonusLocked;
     this.onDone = onDone;
     this.accept = 1.0;
   }
@@ -166,6 +167,7 @@ export class StatusReportState extends PanelState {
           .join('')}
         <div class="st-map"></div>
         ${this.bonus ? `<div class="st-bonus">${t('flow.bonus')}</div>` : ''}
+        ${this.bonusLocked ? `<div class="st-bonus locked">${t('flow.bonusLocked').replace('{n}', this.bonusLocked.n).replace('{need}', this.bonusLocked.need)}</div>` : ''}
         <div class="go">${t('flow.next')} ›</div>
       </div>`;
     renderRouteMap(el.querySelector('.st-map'), ROUTE_GRAPH, g.session, { compact: true });
@@ -366,6 +368,7 @@ const FLOW_CSS = `
 .st-map { margin-top: 14px; padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,0.12); }
 .st-map-end { max-width: 520px; margin: 18px auto 0; background: rgba(255,255,255,0.06); }
 .st-bonus { margin-top: 12px; text-align: center; font: 900 italic 16px var(--font-display); letter-spacing: 0.2em; color: #ffe066; animation: pulse 1s infinite; }
+.st-bonus.locked { font-size: 13px; letter-spacing: 0.12em; color: #dfe6f2; opacity: 0.85; animation: none; }
 .st-panel .go { margin-top: 14px; text-align: right; font: 700 13px var(--font-display); letter-spacing: 0.3em; color: #ffe08a; animation: pulse 1.4s infinite; cursor: pointer; }
 @media (max-height: 520px) {
   .st-panel { padding: 14px 20px 10px; } .st-head { margin-bottom: 6px; font-size: 15px; }

@@ -123,13 +123,15 @@ describe('route graph', () => {
   });
 
   it('gates the bonus stage on cleared Emergency Orders', () => {
-    const two = { a: true, b: true, c: false };
-    const three = { a: true, b: true, c: true };
+    const two = { a: true, b: false, c: false };
+    const three = { a: true, b: true, c: false };
     expect(bonusUnlocked('dunes', { eoCleared: two, route: [] })).toBe(false);
     expect(bonusUnlocked('dunes', { eoCleared: three, route: [] })).toBe(true);
     expect(pathFor(['volcano'], { eoCleared: two })).not.toContain('aurora');
     expect(pathFor(['volcano'], { eoCleared: three }).slice(0, 7)).toEqual(['ocean', 'emerald', 'canyon', 'sunset', 'dunes', 'aurora', 'volcano']);
     expect(pathFor([], { eoCleared: three })).not.toContain('stratos');
+    expect(G.nodes.dunes.bonus.requires).toBe(2);
+    expect(G.nodes.nightfleet.bonus.requires).toBe(4);
     // ?route=…,aurora forces it (tests); flying it once is enough
     expect(pathFor(['glacier', 'aurora', 'storm']).slice(0, 7)).toEqual(['ocean', 'emerald', 'canyon', 'glacier', 'dunes', 'aurora', 'storm']);
     expect(bonusUnlocked('dunes', { eoCleared: three, route: ['aurora'] })).toBe(false);
@@ -138,9 +140,9 @@ describe('route graph', () => {
     expect(nextOf('dunes', { choices: { dunes: 'volcano' }, eoCleared: {} })).toBe('volcano');
   });
 
-  it('gates the second bonus stage on 6 cleared Emergency Orders', () => {
-    const five = Object.fromEntries([1, 2, 3, 4, 5].map((i) => [`e${i}`, true]));
-    const six = { ...five, e6: true };
+  it('gates the second bonus stage on 4 cleared Emergency Orders', () => {
+    const five = Object.fromEntries([1, 2, 3].map((i) => [`e${i}`, true]));
+    const six = { ...five, e4: true };
     expect(bonusUnlocked('nightfleet', { eoCleared: five, route: [] })).toBe(false);
     expect(bonusUnlocked('nightfleet', { eoCleared: six, route: [] })).toBe(true);
     const p6 = pathFor(['ravine'], { eoCleared: six });

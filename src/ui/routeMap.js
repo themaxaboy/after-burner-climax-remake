@@ -37,6 +37,18 @@ function eoCount(session) {
 }
 
 /**
+ * Unlock progress of bonus stage `id`: {n: Emergency Orders cleared, need,
+ * open: n >= need}, or null when `id` is not a bonus stage of the graph.
+ */
+export function bonusProgress(graph, session, id) {
+  const parent = Object.values(graph?.nodes || {}).find((n) => n.bonus?.id === id);
+  if (!parent) return null;
+  const need = parent.bonus.requires || 0;
+  const n = eoCount(session);
+  return { n, need, open: n >= need };
+}
+
+/**
  * State of every node: 'current' | 'visited' | 'available' | 'locked'.
  * @param {object} graph ROUTE_GRAPH
  * @param {object} session {route: visited ids, node: current id, eoCleared}
@@ -164,7 +176,12 @@ export function renderRouteMap(container, graph, session, opts = {}) {
       // inner bevel mark
       el('rect', { x: -h + 6, y: -h + 6, width: S - 12, height: S - 12, rx: 2, fill: 'none', stroke: st === 'locked' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.6)', 'stroke-width': 1 }, g);
     }
-    if (names[id] && !compact) {
+    const bp = shape === 'sphere' && (st === 'locked' || st === 'available') ? bonusProgress(graph, session, id) : null;
+    if (bp) {
+      // EO n/need under a bonus sphere that has not been flown yet
+      const tx = el('text', { y: S / 2 + (compact ? 11 : 14), 'text-anchor': 'middle', 'font-family': 'Rajdhani, sans-serif', 'font-weight': 700, 'font-size': compact ? 10 : 11, fill: bp.open ? '#b37400' : '#56617a', stroke: '#ffffff', 'stroke-width': 2.5, 'paint-order': 'stroke', class: 'rm-eo' }, g);
+      tx.textContent = `EO ${Math.min(bp.n, bp.need)}/${bp.need}`;
+    } else if (names[id] && !compact) {
       const tx = el('text', { y: S / 2 + 14, 'text-anchor': 'middle', 'font-family': 'Rajdhani, sans-serif', 'font-weight': 700, 'font-size': 10, fill: st === 'locked' ? '#56617a' : '#0b2c63', stroke: '#ffffff', 'stroke-width': 2.5, 'paint-order': 'stroke' }, g);
       tx.textContent = names[id];
     }

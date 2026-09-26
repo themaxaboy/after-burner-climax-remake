@@ -24,7 +24,7 @@ export const ROUTE_GRAPH = {
     glacier: { next: 'dunes' },
     dunes: {
       fork: [{ id: 'storm', side: -1 }, { id: 'volcano', side: 1 }],
-      bonus: { id: 'aurora', requires: 3 } // Emergency Orders cleared so far
+      bonus: { id: 'aurora', requires: 2 } // Emergency Orders cleared so far
     },
     // bonus: continues to whatever was chosen at the dunes fork
     aurora: { rejoin: 'dunes', bonusStage: true },
@@ -34,7 +34,7 @@ export const ROUTE_GRAPH = {
     strike: { next: 'nightfleet' },
     nightfleet: {
       fork: [{ id: 'whiteout', side: -1 }, { id: 'ravine', side: 1 }],
-      bonus: { id: 'stratos', requires: 6 }
+      bonus: { id: 'stratos', requires: 4 }
     },
     stratos: { rejoin: 'nightfleet', bonusStage: true },
     whiteout: { fork: JETSTREAM_OR_BADLANDS },

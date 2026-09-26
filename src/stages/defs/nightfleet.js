@@ -5,7 +5,7 @@ import { SKY_BOX, defineStage, eo, makeRail, routeSelectAt } from './kit.js';
 // MIDNIGHT ARMADA / NIGHT RAID — a moonlit sea, the enemy fleet running dark.
 // Emergency Order: sink the three escort destroyers screening the fleet.
 // Ends with the ROUTE SELECT: WHITEOUT ◀ / ▶ DUSK RAVINE (bonus STRATOSPHERE
-// first when at least 6 Emergency Orders have been cleared).
+// first when at least 4 Emergency Orders have been cleared).
 const SPEED = 240;
 const { points, length: L } = makeRail({
   start: [0, 70, 0],

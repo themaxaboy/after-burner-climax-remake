@@ -81,6 +81,7 @@ export default {
   'flow.paintOf': 'ลายพ่นสี{scheme}',
   'flow.ready': 'กด START',
   'flow.bonus': 'เปิดเส้นทางลับแล้ว',
+  'flow.bonusLocked': 'เส้นทางลับยังไม่เปิด — ผ่านภารกิจฉุกเฉิน {n}/{need}',
   'flow.next': 'ถัดไป',
   'status.title': 'รายงานสถานะ',
   'status.midgame': 'ผลกลางเกม',

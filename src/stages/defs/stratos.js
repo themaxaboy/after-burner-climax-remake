@@ -5,7 +5,7 @@ import { SKY_BOX, defineStage, makeRail } from './kit.js';
 
 // STRATOSPHERE / EDGE OF SPACE (bonus) — the top of the sky, stars by day
 // and the cloud deck far below: dense formations that never fire back.
-// Unlocked when at least 6 Emergency Orders were cleared before the end of
+// Unlocked when at least 4 Emergency Orders were cleared before the end of
 // MIDNIGHT ARMADA.
 const { points } = makeRail({
   start: [0, 2200, 0],

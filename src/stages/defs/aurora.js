@@ -4,7 +4,7 @@ import { SKY_BOX, defineStage, makeRail } from './kit.js';
 
 // AURORA / SECRET SORTIE (bonus) — night flight over a dark icy sea under
 // the aurora: dense swarms of enemies that never fire back. Unlocked when
-// at least 3 Emergency Orders were cleared before the end of GOLDEN DUNES.
+// at least 2 Emergency Orders were cleared before the end of GOLDEN DUNES.
 const { points, length: L } = makeRail({
   start: [0, 90, 0],
   heading: 0,

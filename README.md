@@ -65,13 +65,13 @@ OCEAN ─ EMERALD ─ CANYON ─┬─ SUNSET ──┬─ DUNES ─(◯ AURORA)
 | SUNSET ARMADA | Orange sunset sea | Fleet action, **EO: B-52**, tanker refuelling |
 | GLACIER FJORD | Turquoise fjord, snowy walls | Low-level through the fjord, **EO: 6 AA sites on the banks** |
 | GOLDEN DUNES | Tan sand desert, pale blue sky | Pursuit from behind, **EO: 3 cruise missiles (gun only)**, route select |
-| AURORA (bonus) | Night sea under an aurora | Dense swarms that don't shoot back |
+| AURORA (bonus) | Night sea under an aurora | Dense swarms that don't shoot back (2 EOs cleared) |
 | THUNDERHEAD | Dark sea under a storm front | **EO: B-52 in the storm**, route select |
 | ASH RIDGE | Black basalt valley, red ash sky | **EO: 6 AA sites on the slopes**, route select |
 | SEA OF CLOUDS | Golden twilight above the clouds | **EO: the ace** |
 | CANYON STRIKE | Canyon under a radar ceiling | Low-level run against the clock, pop-up strike in slow motion, 9-G pull-out |
 | MIDNIGHT ARMADA | Moonlit sea, the fleet running dark | **EO: sink 3 escort destroyers**, route select |
-| STRATOSPHERE (bonus) | Edge of space above the cloud deck | Dense formations that don't shoot back (6 EOs cleared) |
+| STRATOSPHERE (bonus) | Edge of space above the cloud deck | Dense formations that don't shoot back (4 EOs cleared) |
 | WHITEOUT | Snow valley in a white haze | Pursuit, **EO: 4 cruise missiles (gun only)**, route select |
 | DUSK RAVINE | Narrow canyon under a magenta dusk | Radar ceiling, **EO: XB-70**, route select |
 | JET STREAM | Pink dawn high above the clouds | **EO: an ace pair** |
