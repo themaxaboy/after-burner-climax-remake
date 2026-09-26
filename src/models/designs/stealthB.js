@@ -34,7 +34,17 @@ export default {
     radomeZ: null,
     camoScale: 0.14
   },
-  schemes: { enemy: 'enemyStealth', desert: 'enemyDesert' },
+  schemes: {
+    // near black: orange chine stripe, fin tips and wing tips
+    enemy: {
+      preset: 'enemyStealthBlack',
+      tailTipY: 1.75,
+      tailZ: 5.5,
+      stripe: { a: '#ff6a1a', b: '#1b1e23', y: 0.02, amp: 0, width: 0.09, z0: -8.5, z1: 7.0, period: 3, sideMin: 0.5, wingZ: 3.6, wingK: 0, wingWidth: 1.5, wingXMin: 5.3 }
+    },
+    sky: 'enemyStealth',
+    desert: 'enemyDesert'
+  },
   decals: [
     { tex: 'n33', center: [0, 0.1, -7.3], size: [0.8, 0.38], axis: 'x', depth: 0.9 },
     { tex: 'emblemEnemy', center: [2.18, 1.55, 6.6], size: [0.75, 0.75], axis: [0.899, -0.438, 0], depth: 0.25, mirror: true },

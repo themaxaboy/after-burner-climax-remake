@@ -166,6 +166,59 @@ export const PRESETS = {
     toneVar: 0.08
   },
   // --- enemies ---------------------------------------------------------------
+  // High-contrast enemy paint (what the stages use): dark silhouettes against
+  // bright sky, cloud and sand, with bold red-orange accents. Accent geometry
+  // (fin bands, wing tips, stripes) is set per design in its `schemes.enemy`.
+  enemyCharcoal: {
+    top: '#282d33',
+    bottom: '#3c434b',
+    counter: [-0.35, 0.12],
+    camo: { mode: 2, colors: ['#1f2328', '#32383f'], t1: 0.4, t2: 0.72 },
+    rough: 0.62,
+    metal: 0.06,
+    tail: '#ea4a1a',
+    stripe: { a: '#ff5a1c', b: '#a3210f' },
+    ink: '#d9d4c8',
+    grime: 0.35,
+    soot: 0.8,
+    toneVar: 0.04
+  },
+  enemyStealthBlack: {
+    top: '#1b1e23',
+    bottom: '#2a2f36',
+    counter: [-0.3, 0.2],
+    rough: 0.5,
+    metal: 0.1,
+    tail: '#ff6a1a',
+    stripe: { a: '#ff6a1a', b: '#1b1e23' },
+    ink: '#e0dccf',
+    grime: 0.25,
+    soot: 0.7,
+    toneVar: 0.03
+  },
+  enemyHeloDark: {
+    top: '#383d33',
+    bottom: '#4b5046',
+    counter: [-0.3, 0.2],
+    rough: 0.7,
+    stripe: { a: '#ff6a1a', b: '#2a2e27' },
+    ink: '#d9d4c8',
+    grime: 0.6,
+    soot: 1.1
+  },
+  enemyBomberDark: {
+    top: '#3a4047',
+    bottom: '#59616a',
+    counter: [-0.3, 0.2],
+    rough: 0.6,
+    metal: 0.06,
+    tail: '#ea4a1a',
+    stripe: { a: '#ff5a1c', b: '#a3210f' },
+    ink: '#d9d4c8',
+    grime: 0.45,
+    soot: 1.0
+  },
+  // older sky-camouflage schemes (kept for the hangar / showcase)
   enemySplinterBlue: {
     top: '#8398a8',
     bottom: '#b9c7d0',

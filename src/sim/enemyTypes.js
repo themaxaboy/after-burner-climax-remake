@@ -6,6 +6,8 @@
 //   visScale      render scale for readability (EnemyRenderer multiplies the
 //                 instance scale by it): fighters 1.8, stealth 1.6, helos 1.4,
 //                 big aircraft 1.15, ground/sea units 1.
+//   lockRange     lock-on range from the player (m): air 1600, big aircraft and
+//                 ground/sea units 2400 (defaults below; LockOn ×1.5 in Climax).
 //   canRam        may be used by the `rammer` (kamikaze) behaviour / waves.
 //   missileStrong chance that a missile this type fires is the red "strong"
 //                 variant (homes harder, more damage).
@@ -66,6 +68,9 @@ export const ENEMY_TYPES = {
 
 // collision radius = real size x 1.2 (aircraft)
 for (const d of Object.values(ENEMY_TYPES)) if (d.size) d.radius = +(d.size * 1.2).toFixed(1);
+// lock range: fighters / helos / cruise missiles 1600 m, big aircraft, boss parts and ground/sea units 2400 m
+ENEMY_TYPES.bossPod.lockRange = 2400;
+for (const d of Object.values(ENEMY_TYPES)) d.lockRange ??= d.big || d.air === false ? 2400 : 1600;
 
 export const SCORE = {
   comboWindow: 4.0,

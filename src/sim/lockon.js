@@ -23,6 +23,20 @@ export const LOCK_RADIUS = [0.075, 0.095, 0.115];
 export const MAX_LOCKS_PER_TARGET = 4;
 
 /**
+ * Lock-on range (m, from the player): fighters/helos 1600, big aircraft and
+ * ground/sea units 2400 (`ENEMY_TYPES[type].lockRange` wins). Climax widens
+ * every range ×1.5. Nothing is locked closer than `LockOn.minRange`.
+ */
+export const LOCK_RANGE = { air: 1600, big: 2400 };
+export const CLIMAX_RANGE_MUL = 1.5;
+
+/** Base lock range of an enemy type definition (m). */
+export function lockRangeOf(def) {
+  if (def?.lockRange) return def.lockRange;
+  return def && (def.big || def.air === false) ? LOCK_RANGE.big : LOCK_RANGE.air;
+}
+
+/**
  * Sweep-to-lock targeting in screen space (After Burner style).
  *
  * Passing the (small) reticle over a target locks it after a short dwell.
@@ -36,11 +50,18 @@ export const MAX_LOCKS_PER_TARGET = 4;
  *
  * `consume()` hands out the oldest valid pending lock (FIFO). Climax widens
  * the circle, removes the dwell and raises the cap to `climaxMax`.
+ *
+ * Range: a target locks (and can be the assist target for unlocked shots)
+ * only between `minRange` and its type's lock range (×1.5 in Climax);
+ * `e.inLockRange` / `e.lockRange` are refreshed every step for the HUD. A
+ * pending lock is dropped once its target is beyond 1.2× the range it was
+ * locked at (Climax locks keep the Climax range through the salvo).
  */
 export class LockOn {
   constructor() {
     this.locks = []; // pending lock entries (enemies, oldest first)
     this.lockIds = []; // enemy ids at lock time (pool slots get reused)
+    this.lockMuls = []; // range multiplier at lock time (Climax locks survive the salvo)
     this.max = 6; // per-jet capacity (PLAYER_JETS[id].lockCap)
     this.climaxMax = 64;
     this.reticle = { x: 0, y: -0.05 }; // NDC centre of the drawn reticle
@@ -50,8 +71,9 @@ export class LockOn {
     this.climaxRadius = 0.45;
     this.climax = false;
     this.assist = 2;
-    this.minRange = 120;
-    this.maxRange = 4200;
+    this.minRange = 80;
+    this.maxRange = 4200; // hard cap on any lock range (m)
+    this.climaxRangeMul = CLIMAX_RANGE_MUL;
     this.missileDamage = 12;
     this.dwellTime = 0.06; // s under the reticle before a lock
     this.relockTime = 0.3; // s rest between two locks on the same target
@@ -67,6 +89,7 @@ export class LockOn {
     for (let i = 0; i < this.locks.length; i++) if (this.locks[i].id === this.lockIds[i]) this.locks[i].locks = 0;
     this.locks.length = 0;
     this.lockIds.length = 0;
+    this.lockMuls.length = 0;
     this.assistTarget = null;
   }
 
@@ -87,6 +110,11 @@ export class LockOn {
 
   lockRadius() {
     return this.climax ? this.climaxRadius : LOCK_RADIUS[this.assist] ?? LOCK_RADIUS[2];
+  }
+
+  /** Current lock range of `e` (m): its type's range, ×1.5 in Climax (or `mul`), capped at maxRange. */
+  rangeOf(e, mul = this.climax ? this.climaxRangeMul : 1) {
+    return Math.min(this.maxRange, lockRangeOf(e.def) * mul);
   }
 
   /** Missiles needed to destroy `e` from its current hp (1..4). */
@@ -124,6 +152,7 @@ export class LockOn {
     const projK = 1 / Math.tan(((camera.fov || 60) * Math.PI) / 360); // metres/depth → half-height units
     const dwellNeed = this.climax ? 0 : this.dwellTime;
     const relock = this.climax ? this.climaxRelock : this.relockTime;
+    const mul = this.climax ? this.climaxRangeMul : 1;
     let best = null, bestScore = Infinity;
     const list = enemies.list;
     for (let i = 0; i < list.length; i++) {
@@ -140,17 +169,21 @@ export class LockOn {
       this.refresh(e);
       if (!e.active || !e.lockable || e.dead || e.dying) {
         e.onScreen = false;
+        e.inLockRange = false;
         e.dwell = 0;
         continue;
       }
       const onScreen = projectPoint(camera, e.lockPos, this._s);
       const dist = e.lockPos.distanceTo(playerPos);
+      const range = this.rangeOf(e, mul);
       e.dist = dist;
+      e.lockRange = range;
+      e.inLockRange = dist >= this.minRange && dist <= range;
       e.onScreen = onScreen && Math.abs(this._s.x) < 1.05 && Math.abs(this._s.y) < 1.05;
       e.sx = this._s.x;
       e.sy = this._s.y;
       e.offT = e.onScreen ? 0 : e.offT + dt;
-      if (!e.onScreen || dist < this.minRange || dist > this.maxRange) {
+      if (!e.onScreen || !e.inLockRange) {
         e.dwell = 0;
         continue;
       }
@@ -168,6 +201,7 @@ export class LockOn {
           e.locks = (e.locks || 0) + 1;
           this.locks.push(e);
           this.lockIds.push(e.id);
+          this.lockMuls.push(mul);
           this.newLocks++;
           e.relockT = relock;
           e.dwell = 0;
@@ -176,7 +210,7 @@ export class LockOn {
       } else e.dwell = 0;
       // assist target: closest to the reticle, prefer threats / EO targets and
       // targets that still need missiles
-      const score = d / reach + (dist / this.maxRange) * 0.3 - (e.def.threat || 0) * 0.15 - (e.tag ? 0.5 : 0) + (lockable ? 0 : 0.6);
+      const score = d / reach + (dist / range) * 0.3 - (e.def.threat || 0) * 0.15 - (e.tag ? 0.5 : 0) + (lockable ? 0 : 0.6);
       if (d < reach * 2 && score < bestScore) {
         bestScore = score;
         best = e;
@@ -187,13 +221,15 @@ export class LockOn {
     for (let i = this.locks.length - 1; i >= 0; i--) {
       const e = this.locks[i];
       const same = e.id === this.lockIds[i];
-      if (!same || !e.active || e.dead || e.dying || !e.lockable || e.dist > this.maxRange * 1.2 || e.offT > this.offscreenDrop) {
+      const far = same && e.dist > this.rangeOf(e, Math.max(mul, this.lockMuls[i] ?? 1)) * 1.2;
+      if (!same || !e.active || e.dead || e.dying || !e.lockable || far || e.offT > this.offscreenDrop) {
         if (same) {
           e.locks = Math.max(0, e.locks - 1);
           this.refresh(e);
         }
         this.locks.splice(i, 1);
         this.lockIds.splice(i, 1);
+        this.lockMuls.splice(i, 1);
       }
     }
   }
@@ -207,6 +243,7 @@ export class LockOn {
     while (this.locks.length) {
       const e = this.locks.shift();
       const id = this.lockIds.shift();
+      this.lockMuls.shift();
       if (e.id !== id) continue; // slot was recycled
       e.locks = Math.max(0, e.locks - 1);
       if (e.active && !e.dead && !e.dying) return e;

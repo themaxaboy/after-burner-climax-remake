@@ -29,6 +29,9 @@ export const DEFAULTS = {
   rammer: { dist: 1500, dir: 1 },
   overtake: { dist: -380, dir: -1, y: 12 },
   overtakeClose: { dist: -250, dir: -1 },
+  overheadPass: { dist: -250, dir: -1 },
+  headOnPass: { dist: 1500, dir: 1 },
+  pincer: { dist: 1200, dir: 1 },
   crossing: { dist: 1100, dir: 1 },
   swarmPass: { dist: 1000, dir: 1 },
   formation: { dist: 1600, dir: -1 },
@@ -44,7 +47,8 @@ export class Director {
   /**
    * @param {object} def stage definition
    * @param {object} api {spawn(type, opts), cue(name, ev), radio(key, ev), message(key, ev), eoEvent(kind, eo), end(ev), rank(),
-   *   player(), quality(), aliveCount(), forceWaves(), worldPoint(s, x, y, ground), railHeading(s)}
+   *   player(), quality(), aliveCount(), onScreenCount()?, forceWaves(), worldPoint(s, x, y, ground), railHeading(s)}
+   *   (onScreenCount is optional: enemies currently on screen, for the waves' starvation rule)
    */
   constructor(def, api) {
     this.def = def;

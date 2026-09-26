@@ -18,7 +18,17 @@ export default {
     antiGlare: [-24.5, -21.6, 0.7],
     camoScale: 0.07
   },
-  schemes: { enemy: 'enemyWhite', desert: 'enemyDesert' },
+  schemes: {
+    // gunmetal with red-orange fin tops and wing tips
+    enemy: {
+      preset: 'enemyBomberDark',
+      tailTipY: 3.3,
+      tailZ: 18,
+      stripe: { a: '#ff5a1c', b: '#a3210f', y: 0, amp: 0, width: 0.1, z0: 1e4, z1: 1e4, period: 3, sideMin: 0.5, wingZ: 21, wingK: 0, wingWidth: 4.5, wingXMin: 12.5 }
+    },
+    white: 'enemyWhite',
+    desert: 'enemyDesert'
+  },
   decals: [
     { tex: 'n88', center: [0, 0.3, -17.5], size: [2.2, 1.0], axis: 'x', depth: 1.6 },
     { tex: 'emblemEnemy', center: [3.2, 3.4, 21.5], size: [2.2, 2.2], axis: 'x', depth: 0.4, mirror: true },

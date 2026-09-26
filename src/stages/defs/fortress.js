@@ -32,11 +32,11 @@ export default defineStage({
   look: 'fortress',
   waves: {
     seed: 91,
-    rate: { base: 1.2, perStar: 0.1 },
-    maxAlive: { high: 16, low: 12 },
+    rate: { base: 1.8, perStar: 0.12 },
+    maxAlive: { high: 24, medium: 20, low: 16 },
     spans: [{ from: 1200, to: DESCEND - 600 }],
     quiet: [],
-    mix: [['vHeadOn', 3], ['heavyPair', 2], ['overtakeClose', 2], ['swarmPass', 1], ['crossSweep', 1]],
+    mix: [['vHeadOn', 3], ['headOnPass', 2.5], ['heavyPair', 2], ['pincer', 1.5], ['overtakeClose', 2], ['overheadPass', 2], ['swarmPass', 1], ['crossSweep', 1]],
     types: { light: 'fighterA', heavy: 'stealthB' },
     preloadTypes: ['stealthB']
   },
