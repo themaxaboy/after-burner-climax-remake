@@ -99,29 +99,23 @@ export class Reticle {
     }
     c.lineCap = 'round';
 
-    // lock slots under the bracket (normal mode)
+    // lock slots: a thin column beside the bracket (normal mode) — nothing is
+    // drawn under the reticle, where targets usually are
     const cap = s.lockCap | 0, n = s.lockCount | 0;
     if (!climax && cap > 0 && cap <= 12) {
-      const pw = 6 * u, ph = 3.2 * u, gap = 2.5 * u;
-      const total = cap * pw + (cap - 1) * gap;
-      let px = x - total / 2;
-      const py = y + h + 7 * u;
+      const pw = 3.2 * u, ph = 2.4 * u, gap = 1.8 * u;
+      const total = cap * ph + (cap - 1) * gap;
+      const px = x + Math.max(h, 10 * u) + 7 * u;
+      let py = y + total / 2 - ph;
+      c.globalAlpha = n > 0 ? 0.9 : 0.5;
       for (let i = 0; i < cap; i++) {
-        c.fillStyle = 'rgba(0, 10, 4, 0.55)';
-        c.fillRect(px - 1 * u, py - 1 * u, pw + 2 * u, ph + 2 * u);
-        c.fillStyle = i < n ? RED : 'rgba(170, 255, 190, 0.45)';
+        c.fillStyle = 'rgba(0, 10, 4, 0.45)';
+        c.fillRect(px - 0.8 * u, py - 0.8 * u, pw + 1.6 * u, ph + 1.6 * u);
+        c.fillStyle = i < n ? RED : 'rgba(170, 255, 190, 0.4)';
         c.fillRect(px, py, pw, ph);
-        px += pw + gap;
+        py -= ph + gap;
       }
-      if (n > 0) {
-        // "03/04" centred under the pips
-        const nw = this.lockNum.numberWidth(n, 2), sw = this.lockNum.textWidth('/'), cw = this.lockNum.numberWidth(cap, 2);
-        let lx = x - (nw + sw + cw) / 2;
-        const ly = py + 12 * u;
-        lx += this.lockNum.number(c, n, lx, ly, 2, 0);
-        lx = this.lockNum.text(c, '/', lx, ly, 0);
-        this.lockNum.number(c, cap, lx, ly, 2, 0);
-      }
+      c.globalAlpha = 1;
     }
   }
 
