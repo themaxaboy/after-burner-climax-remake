@@ -5,6 +5,7 @@
  * Each definition:
  *   dur       seconds rendered
  *   bus       'world' (slow-mo filtered/pitched, reverb send) | 'ui' | 'voice'
+ *   duck      (ui only) true -> ducked while the radio voice speaks (alert tones)
  *   gain      mix gain applied at play time (buffers are peak-normalised)
  *   channels  1 (mono, preferred for positional) or 2
  *   loop      { start, fade } -> seamless loop region [start, dur)
@@ -179,29 +180,53 @@ export function makeKit(ctx, shared, seed = 1) {
 
 /* ------------------------------------------------------ shared recipes */
 
-function vulcanShots(K, dur, times) {
+/**
+ * M61 round train as raw sample data. rounds = [[t, amp], ...].
+ *   noise: stereo noise amplitude-modulated by one ~2.5 ms pulse per round (0.3 ms attack,
+ *          exponential decay, 2.2-2.8 ms long) over a low gas floor that follows the local
+ *          firing density; L/R share a common part (modest stereo width).
+ *   body:  mono unipolar 5 ms pulse per round; its 100/200/300 Hz harmonics become the sub
+ *          "growl" once low-passed.
+ */
+function gunTrain(K, dur, rounds, floor = 1.2) {
   const { sr, rng } = K;
   const len = Math.ceil(dur * sr);
-  const L = new Float32Array(len);
-  const R = new Float32Array(len);
-  const nb = Math.round(0.0045 * sr);
-  const nc = Math.round(0.008 * sr);
-  const tau = 0.0013 * sr;
-  for (const [t, amp] of times) {
+  const env = new Float32Array(len);
+  const body = new Float32Array(len);
+  const att = Math.max(1, Math.round(0.0003 * sr));
+  const nb = Math.round(0.005 * sr);
+  for (const [t, amp] of rounds) {
+    const w = 0.0022 + rng() * 0.0006;
+    const tau = w * 0.4 * sr;
+    const n = Math.round(w * 1.6 * sr);
     const i0 = Math.round(t * sr);
+    for (let j = 0; j < n && i0 + j < len; j++) env[i0 + j] += (j < att ? j / att : Math.exp(-(j - att) / tau)) * amp;
     for (let j = 0; j < nb && i0 + j < len; j++) {
-      // one damped bipolar cycle per round (no DC build-up)
-      const v = Math.sin((2 * Math.PI * j) / nb) * Math.exp(-j / (nb * 0.7)) * amp * 0.9;
-      L[i0 + j] += v;
-      R[i0 + j] += v;
-    }
-    for (let j = 0; j < nc && i0 + j < len; j++) {
-      const e = Math.exp(-j / tau) * amp * 0.8;
-      L[i0 + j] += (rng() * 2 - 1) * e;
-      R[i0 + j] += (rng() * 2 - 1) * e;
+      const h = Math.sin((Math.PI * j) / nb);
+      body[i0 + j] += h * h * amp;
     }
   }
-  return K.data([L, R]);
+  // gas floor between rounds: ~15 ms smoothing of the pulse envelope
+  const a = Math.exp(-1 / (0.015 * sr));
+  let m = 0;
+  for (let i = 0; i < len; i++) {
+    m = m * a + env[i] * (1 - a);
+    env[i] += m * floor;
+  }
+  const L = new Float32Array(len);
+  const R = new Float32Array(len);
+  for (let i = 0; i < len; i++) {
+    const c = rng() * 2 - 1;
+    L[i] = (c * 0.8 + (rng() * 2 - 1) * 0.6) * env[i];
+    R[i] = (c * 0.8 + (rng() * 2 - 1) * 0.6) * env[i];
+  }
+  return { noise: K.data([L, R]), body: K.data([body]) };
+}
+
+/** Gun voice: band-limited tearing noise + low-passed 100 Hz growl, summed into `mix`. */
+function gunVoice(K, train, mix, noiseTop = 1600) {
+  K.chain(K.src(train.noise), K.filter('highpass', 200, 0.7), K.filter('lowpass', noiseTop, 0.7), K.gain(VULCAN_NOISE), mix);
+  K.chain(K.src(train.body), K.filter('highpass', 50, 0.7), K.filter('lowpass', 350, 0.7), K.filter('lowpass', 350, 0.7), K.gain(VULCAN_BODY), mix);
 }
 
 function beep(K, dest, t, freq, len, peak, type = 'sine', attack = 0.004, releaseTc = 0.008) {
@@ -226,68 +251,63 @@ function supersawNote(K, dest, t, freq, len, peak, spread = 12, voices = 3, cuto
 
 /* ------------------------------------------------------------- the bank */
 
+/** Vulcan mix into its soft tanh drive: AM noise ("tearing"), 100 Hz growl, spin whir. */
+const VULCAN_NOISE = 2.6;
+const VULCAN_BODY = 0.4;
+const VULCAN_WHIR = 0.2;
+
 export const SFX_DEFS = {
   /* ---------------- weapons */
   vulcan: {
-    dur: 1.35,
-    loop: { start: 0.35, fade: 0.06 },
+    dur: 2.3,
+    loop: { start: 0.3, fade: 0.05 },
     bus: 'world',
-    gain: 0.4,
+    gain: 0.22,
     channels: 2,
     tail: 'vulcanTail',
     render(K) {
-      // M61: 6000 rpm = 100 rounds/s. Spin-up to steady 100 Hz by t=0.25 s.
-      const times = [];
-      let t = 0.25;
-      let iv = 0.01;
+      // M61 "BRRRT": 6000 rpm = 100 rounds/s. ~0.18 s spin-up (low whir only), then a steady
+      // 10 ms grid with +-0.3 ms jitter and per-round level spread. Loop [0.3, 2.3) = 200 rounds.
+      const T = 0.2;
+      const rounds = [];
       const spin = [];
-      while (t > 0.02) {
-        iv *= 1.09;
+      for (let t = T, iv = 0.01; ; ) {
+        iv *= 1.1;
         t -= iv;
+        if (t < 0.02) break;
         spin.push(t);
       }
-      spin.reverse().forEach((st, i) => times.push([st, 0.45 + (0.5 * i) / spin.length]));
-      for (let k = 0; 0.25 + k * 0.01 < 1.35; k++) times.push([0.25 + k * 0.01, 0.82 + K.rng() * 0.18]);
-      const s = K.src(vulcanShots(K, 1.35, times));
-      const bus = K.verb(0.12);
-      K.chain(s, K.filter('lowpass', 3200, 0.7), K.filter('peaking', 180, 1, 5), K.shaper(3.5), K.gain(0.75), bus);
-      K.chain(s, K.filter('highpass', 2500, 0.7), K.gain(0.35), bus);
-      // mechanical rotor whine, spin-up then steady 1150 Hz (integer cycles per 1 s loop)
-      const w = K.osc('sawtooth', 180, 0);
-      K.sweep(w.frequency, 0, 180, 0.25, 1150);
-      const lfo = K.osc('sine', 6, 0);
-      K.chain(lfo, K.gain(12), w.frequency);
+      spin.reverse().forEach((t, i) => rounds.push([t, 0.35 + (0.5 * (i + 1)) / spin.length]));
+      for (let k = 0; T + k * 0.01 < 2.299; k++) rounds.push([T + k * 0.01 + K.rand(-0.0003, 0.0003), K.rand(0.78, 1)]);
+      const mix = K.gain(1);
+      gunVoice(K, gunTrain(K, 2.3, rounds), mix);
+      // spin-up whir 200 -> 420 Hz, silent before the loop region (no constant whine)
+      const w = K.osc('triangle', 200, 0, 0.27);
+      K.sweep(w.frequency, 0, 200, 0.2, 420);
       const wg = K.gain(0);
-      K.lin(wg.gain, 0, 0, 0.25, 0.07);
-      K.chain(w, K.filter('bandpass', 1200, 4), wg, bus);
-      // propellant gas rush
-      const n = K.noise('pink', 0);
-      const ng = K.gain(0);
-      K.lin(ng.gain, 0, 0, 0.25, 0.3);
-      K.chain(n, K.filter('bandpass', 650, 0.9), ng, bus);
+      wg.gain.setValueAtTime(0, 0);
+      wg.gain.linearRampToValueAtTime(VULCAN_WHIR, 0.06);
+      wg.gain.setTargetAtTime(0, 0.17, 0.018);
+      K.chain(w, K.filter('lowpass', 900, 0.7), wg, mix);
+      K.chain(mix, K.shaper(1.5), K.filter('lowpass', 2200, 0.7), K.out);
     }
   },
   vulcanTail: {
-    dur: 0.9,
+    dur: 0.7,
     bus: 'world',
-    gain: 0.5,
+    gain: 0.18,
     channels: 2,
+    maxInstances: 1,
     render(K) {
-      const times = [];
-      let t = 0;
-      let iv = 0.012;
-      for (let i = 0; i < 9; i++) {
-        times.push([t, 0.9 * Math.pow(0.8, i)]);
-        iv *= 1.28;
-        t += iv;
-      }
-      const s = K.src(vulcanShots(K, 0.9, times));
-      const bus = K.verb(0.2);
-      K.chain(s, K.filter('lowpass', 3000, 0.7), K.shaper(3), K.gain(0.75), bus);
-      K.chain(s, K.filter('highpass', 2500, 0.7), K.gain(0.3), bus);
-      const w = K.osc('sawtooth', 1150, 0, 0.9);
-      K.sweep(w.frequency, 0, 1150, 0.7, 220);
-      K.chain(w, K.filter('bandpass', 1000, 3), K.pg(0, 0.09, 0.005, 0.2), bus);
+      // the gun clears (a few fading rounds), the burst's rumble dies away and the barrels
+      // spin down (low whir 420 -> 130 Hz)
+      const mix = K.gain(1);
+      gunVoice(K, gunTrain(K, 0.7, [[0, 0.7], [0.011, 0.45], [0.024, 0.25], [0.04, 0.1]]), mix, 1400);
+      K.chain(K.noise('brown', 0, 0.7), K.filter('lowpass', 500, 0.7), K.pg(0, 0.45, 0.004, 0.09), mix);
+      const w = K.osc('triangle', 420, 0, 0.7);
+      K.sweep(w.frequency, 0, 420, 0.5, 130);
+      K.chain(w, K.filter('lowpass', 700, 0.7), K.pg(0.01, VULCAN_WHIR * 0.8, 0.02, 0.14), mix);
+      K.chain(mix, K.shaper(1.5), K.filter('lowpass', 2000, 0.7), K.out);
     }
   },
   missileLaunch: {
@@ -385,16 +405,24 @@ export const SFX_DEFS = {
     }
   },
   missileAlert: {
-    dur: 0.6,
-    loop: { start: 0.2, fade: 0.02 },
+    dur: 1.0,
+    loop: { start: 0.5, fade: 0.02 },
     bus: 'ui',
-    gain: 0.22,
+    duck: true, // the radio voice ducks it (src/audio/audio.js)
+    gain: 0.1,
     channels: 1,
     render(K) {
-      // 800/1000 Hz alternating every 100 ms (integer cycles per segment -> phase continuous)
-      const o = K.osc('square', 800, 0);
-      for (let i = 0; i < 6; i++) o.frequency.setValueAtTime(i & 1 ? 1000 : 800, i * 0.1);
-      K.chain(o, K.filter('lowpass', 3500, 0.7), K.gain(0.8), K.out);
+      // soft lock tone: two 55 ms sine beeps (~1.3 kHz + a quiet octave) 45 ms apart, every
+      // 0.5 s. Both cycles are identical and the loop region [0.5, 1.0) is exactly one cycle,
+      // so looping (and resuming at the loop start) keeps the rhythm.
+      const f = K.filter('lowpass', 4000, 0.7);
+      f.connect(K.out);
+      for (const c of [0, 0.5]) {
+        for (const t of [c + 0.01, c + 0.11]) {
+          beep(K, f, t, 1320, 0.042, 0.8, 'sine', 0.008, 0.006);
+          beep(K, f, t, 2640, 0.042, 0.1, 'sine', 0.008, 0.006);
+        }
+      }
     }
   },
   radarWarning: {
@@ -711,26 +739,20 @@ export const SFX_DEFS = {
     }
   },
   hit: {
-    dur: 0.35,
+    dur: 0.2,
     bus: 'world',
-    gain: 0.4,
+    gain: 0.22,
     channels: 1,
-    variance: 0.12,
-    maxInstances: 4,
-    minInterval: 0.03,
+    variance: 0.1,
+    maxInstances: 3,
+    minInterval: 0.09,
     ref: 40,
     render(K) {
+      // dull "tok": ~180 Hz body + a short 900 Hz noise tick (no metallic partials)
       const bus = K.gain(1);
-      K.chain(bus, K.shaper(1.5), K.out);
-      K.burst(bus, 0, 'white', 'bandpass', 3500, 1, 0.8, 0.0005, 0.008);
-      const partials = [1250, 2140, 3380, 4570];
-      partials.forEach((f, i) => {
-        const o = K.osc('sine', f * K.rand(0.96, 1.04), 0, 0.35);
-        K.chain(o, K.pg(0, 0.35 / (i + 1), 0.001, 0.05 - i * 0.008), bus);
-      });
-      const r = K.osc('sine', 2800, 0.01, 0.3);
-      K.sweep(r.frequency, 0.01, 2800, 0.22, 1600);
-      K.chain(r, K.pg(0.01, 0.2, 0.004, 0.05), bus);
+      K.chain(bus, K.shaper(1.3), K.filter('lowpass', 2500, 0.7), K.out);
+      K.thump(bus, 0, 240, 175, 0.018, 0.7, 0.024);
+      K.burst(bus, 0, 'white', 'bandpass', 900, 0.9, 5, 0.0006, 0.007);
     }
   },
   playerHit: {
