@@ -11,7 +11,28 @@ voiced radio chatter.
 > radio voices are synthesised offline with the open Kokoro TTS model, and the terrain textures are CC0 from
 > [Poly Haven](https://polyhaven.com).
 
+![CLIMAX mode over the emerald valley: time slows, the lock area covers the screen and every lock fires at once](docs/screenshots/climax.jpg)
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Blue Horizon: fighter waves over the deep-blue ocean](docs/screenshots/ocean.jpg) | ![Red Canyon: threading the snaking canyon corridor](docs/screenshots/canyon.jpg) |
+| **BLUE HORIZON** — head-on waves, overhead passes and rammers over the open sea | **RED CANYON** — the corridor swings left and right past rock pillars and arches |
+| ![Glacier Fjord: low level through a turquoise fjord](docs/screenshots/glacier.jpg) | ![Golden Dunes: pursuit over the bright desert](docs/screenshots/dunes.jpg) |
+| **GLACIER FJORD** — low level between snowy walls, AA sites on the banks | **GOLDEN DUNES** — enemies overtaking from behind over the yellow desert |
+| ![Sunset Armada: fleet action on an orange sea](docs/screenshots/sunset.jpg) | ![Sea of Clouds: golden twilight above the cloud deck](docs/screenshots/clouds.jpg) |
+| **SUNSET ARMADA** — fleet action and a bomber escort at sunset | **SEA OF CLOUDS** — dogfight above a golden cloud deck |
+| ![Aurora bonus stage: night sea under an aurora](docs/screenshots/aurora.jpg) | ![Please Wait screen with the route map](docs/screenshots/route.jpg) |
+| **AURORA** (secret bonus) — dense swarms under the northern lights | **ROUTE MAP** — the branching route so far, shown while the next stage loads |
+
+<p align="center"><img src="docs/screenshots/title.jpg" width="70%" alt="Title screen"></p>
+
+<sub>Captured from the game itself (High quality, 1280×720) with `node scripts/screenshots.mjs`.</sub>
+
 ## Play
+
+**Play online:** https://themaxaboy.github.io/after-burner-climax-remake/ (keyboard, gamepad, mouse or touch).
 
 ```bash
 npm install
@@ -50,15 +71,18 @@ OCEAN ─ EMERALD ─ CANYON ─┬─ SUNSET ──┬─ DUNES ─(◯ AURORA)
 Faithful arcade systems:
 - **Wide on-rails flight**: the jet sweeps across a large box (±240 m) while a close chase camera rolls hard with
   the bank. **SLOW / NORMAL / FAST** throttle.
-- **Tiny reticle, sweep-to-lock**: pass the reticle over enemies to lock them. Each missile press fires **one**
+- **Tiny reticle, sweep-to-lock**: pass the reticle over enemies inside lock range (about 1.6 km, 2.4 km for
+  bombers, ships and ground targets; wider in Climax) to lock them. Small corner ticks mark locks without hiding the target. Each missile press fires **one**
   missile at the oldest lock; targets with a missile on the way get a red **✕** and are never fired at twice.
   Tough targets take several locks. 8 ready missiles, refilling constantly; hold the button to ripple-fire
   (AUTO MISSILE option). Vulcan (auto-fire by default) also shoots down enemy missiles.
 - **CLIMAX**: fill the gauge, then **hold** the Climax button — cyan burst, time slows to ¼, the lock area covers
   most of the screen, locks are unlimited and missiles infinite; mash missile for up to 2× damage. Release (or run
   dry) and every lock is fired at once. Destroy them all for a bonus.
-- **Relentless enemies**: 1–2 per second — head-on formations, jets overtaking close past the canopy, crossing
-  sweeps, swarms, chasers on your six and **rammers** that dive straight at you (dodge them for a near-miss bonus).
+- **Relentless enemies**: about 2 per second — head-on formations and pass-bys, jets from behind screaming right over
+  (or under) the canopy, overtaking streams, pincers, crossing sweeps, swarms, chasers on your six and **rammers** that
+  dive straight at you (dodge them for a near-miss bonus). Dark silhouettes with glowing exhausts and short contrails
+  keep them readable against bright skies.
 - **Cinematic enemy missiles** swirl across the screen trailing thick white smoke before homing in; a well-timed
   **barrel roll** (or a hard jink in walled terrain) makes them miss. Red "strong" missiles home harder.
 - **Terrain that forces dodging**: canyons, valleys, fjords and dunes whose corridor snakes left and right, with
@@ -81,7 +105,8 @@ Faithful arcade systems:
 | Pause | Esc / P | Start | ❚❚ |
 
 Mouse flight (cursor = stick, LMB missile, RMB Climax, wheel throttle), tilt steering, invert-Y, auto missile,
-Climax hold/toggle and aim assist are in **Options**. The UI and radio subtitles are in **English and Thai**.
+Climax hold/toggle, aim assist, stick-flick roll and the missile alarm tone are in **Options**. Any gamepad works
+(standard and generic/DirectInput mappings, several pads at once); the stick also drives the menus. The UI and radio subtitles are in **English and Thai**.
 
 ## Graphics & performance
 
@@ -119,11 +144,13 @@ Open `/?bench=1` (or `/?bench=1&quality=ultra`): the autopilot flies stage 1 for
 ## Development
 
 ```bash
-npm test                                   # vitest: 360+ unit tests
+npm test                                   # vitest: 400+ unit tests
 node tests/e2e/smoke.mjs [url] [--strict]  # plays the end of every stage: errors, results, no mid-stage shader compiles
 node tests/e2e/routes.mjs [url] [A|B]      # plays both route paths through the forks (and the bonus) to the ending
 node tests/e2e/flicker.mjs [url]           # frame-to-frame luminance dips (dark-flicker detector)
 node tests/e2e/vivid.mjs [url]             # colour saturation / brightness / dominant hue per stage
+node tests/e2e/density.mjs [url]           # enemies on screen, arrivals per second, share from behind, per stage
+node scripts/screenshots.mjs [url]         # regenerate the README screenshots (docs/screenshots)
 node tests/e2e/shoot.mjs "<url>" out.png   # screenshot any state
 python3 scripts/voices/generate.py --setup && python3 scripts/voices/generate.py   # (re)voice radio lines (incremental)
 node scripts/fetch-textures.mjs && python3 scripts/compress_textures.py            # re-download CC0 textures
