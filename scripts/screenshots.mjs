@@ -40,7 +40,7 @@ const SHOTS = [
   { name: 'sunset', q: 'stage=sunset&t=11', sim: 5 },
   { name: 'clouds', q: 'stage=clouds&t=18', sim: 6 },
   { name: 'aurora', q: 'stage=aurora&t=16', sim: 6 },
-  { name: 'climax', q: 'stage=emerald&t=20', sim: 5, climax: true },
+  { name: 'climax', q: 'stage=ocean&t=12', sim: 5, climax: true },
   { name: 'route', q: 'stage=dunes', route: ['ocean', 'emerald', 'canyon', 'sunset', 'dunes'] },
   { name: 'title', title: true }
 ];
@@ -78,7 +78,7 @@ for (const s of SHOTS) {
       if (climax) {
         st.climax.gauge = 1;
         st.combat.activateClimax();
-        for (let i = 0; i < 90; i++) {
+        for (let i = 0; i < 150; i++) {
           step();
           if (i % 6 === 0) g.render(1, 0.05);
         }

@@ -11,7 +11,7 @@ voiced radio chatter.
 > radio voices are synthesised offline with the open Kokoro TTS model, and the terrain textures are CC0 from
 > [Poly Haven](https://polyhaven.com).
 
-![CLIMAX mode over the emerald valley: time slows, the lock area covers the screen and every lock fires at once](docs/screenshots/climax.jpg)
+![CLIMAX mode over the ocean: time slows, the lock area covers the screen and every lock fires at once](docs/screenshots/climax.jpg)
 
 ## Screenshots
 
