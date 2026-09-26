@@ -188,6 +188,8 @@ export function terrainRun(terrainDef) → (stage) => new TerrainRun(stage, terr
 | `e.incoming` | player missiles in flight at `e` (already maintained by `MissileSystem.launch`/drop) |
 | `e.xMark` | true when `incoming > 0 && locks + incoming ≥ lockNeed`; the HUD draws a red ✕ above the target |
 | `e.onScreen`, `e.sx`, `e.sy`, `e.dist`, `e.screenD` | screen projection, as today |
+| `e.lockRange` | lock range for this target this step (m): `ENEMY_TYPES[type].lockRange`, else air 1600 / big and ground 2400, ×1.5 during Climax |
+| `e.inLockRange` | `minRange (80) ≤ dist ≤ lockRange`. Only these can be locked or taken as the assist target; the HUD draws candidate marks only for them |
 
 **LockOn**
 
@@ -200,7 +202,8 @@ export function terrainRun(terrainDef) → (stage) => new TerrainRun(stage, terr
 | `lockon.climaxMax` | 64 |
 | `lockon.locks` / `lockon.lockIds` | pending lock entries (`{e}` list plus id guard) |
 | `lockon.newLocks` | locks acquired this step |
-| `lockon.assistTarget` | vulcan / assist target |
+| `lockon.assistTarget` | vulcan / assist target (in lock range only) |
+| `lockon.maxRange` / `lockon.minRange` | hard caps around the per-type range; a lock is dropped beyond 1.2× the range it was taken at |
 | `lockon.consume()` | oldest valid pending lock → e (moves one from `locks` to about-to-fire) or null |
 | `lockon.snapshot(out)` / `lockon.reset()` | as today |
 
@@ -234,8 +237,11 @@ Activation holds: `input.hold.climax` sustains Climax and releasing ends it. Wit
 ```js
 waves: {
   seed: 7,
-  rate: { base: 1.3, perStar: 0.12 },          // enemies per second
-  maxAlive: { high: 20, low: 14 },
+  rate: { base: 1.8, perStar: 0.12 },          // enemies per second
+  maxAlive: { high: 24, medium: 20, low: 16 },
+  gap: 0.6,                                     // min seconds between pattern starts
+  starve: 1.5, floor: 2,                        // < floor on screen for `starve` s → next pattern now
+  behind: 0.35,                                 // target share of attackers from behind
   spans: [{ from: 900, to: 13000 }],           // rail metres where waves run
   quiet: [[6200, 7400]],                        // pauses (set pieces)
   mix: [['vHeadOn', 4], ['rammerPair', 2], ['overtakeClose', 2], ['crossSweep', 1], ['swarmPass', 1], ['chaserPair', 1, { minS: 4000 }]],
@@ -244,7 +250,9 @@ waves: {
 }
 ```
 
-  Timeline event `{ at, waves: 'on' | 'off' | { rate } }` toggles or retunes the waves. ENEMY documents the full pattern list in the header of `waves.js`.
+  Timeline event `{ at, waves: 'on' | 'off' | { rate } }` toggles or retunes the waves. ENEMY documents the full pattern list and every option in the header of `waves.js`.
+  Patterns include `overheadPass` / `underPass` (from behind, right over or under the canopy), `headOnPass` (head-on pass-by, near-miss bonus), `pincer` and `overtakeStream`.
+  The starvation rule counts enemies on screen through the director API's optional `onScreenCount()` (StageState provides it from `e.onScreen`).
 - **Timeline events** (unchanged, plus `waves`):
   - Triggers: `{at: metres | {t: sec} | {event: 'killed' | 'escaped', tag, delay}, minRank, maxRank, flag, …}`.
   - Actions: `spawn: {type, formation, behavior, x, y, dist, count, spread, tag, params, hpMul, countable, world, heading, ground}`, `cue`, `radio`, `message`, `eo: {id, title, kind, count, timeLimit, bonus, spawn}`, `eoCheck`, `end`.
@@ -257,7 +265,7 @@ waves: {
   - They can be shot by the vulcan. ENEMY provides `missiles.shootables(out) → out` (the enemy missiles currently shootable, each with `pos`, `vel`, `radius` ≈ 4, `active`) and `missiles.shootDown(m)` (destroys it; `onEnd` reason `'shot'`). FLIGHT's `Vulcan` tests bullets against them as extra targets.
   - `missiles.threat(pos, vel) → {m, tgo}` for the HUD warning.
   - Enemy missile damage is applied by StageState: `difficulty.missile` (×1.3 if `m.strong`).
-- **enemyOps:** `threat` (render-time snapshot `{tgo, sx, sy, behind, strong}` or null), `enemyMissile(e)`, `update()` (collisions and near-miss → `events.emit('nearMiss', …)`, `scoring.nearMiss?.()`), `enemyBehind()`.
+- **enemyOps:** `threat` (render-time snapshot `{tgo, sx, sy, behind, strong, warn, urgent}` or null), `warnActive` (the missile warning is on: terminal-phase or close missile, with hysteresis; drives the tone, the HUD MISSILE plate and the post `uWarn`; `urgent` = warn and time-to-go short), `enemyMissile(e)`, `update()` (collisions and near-miss → `events.emit('nearMiss', …)`, `scoring.nearMiss?.()`), `enemyBehind()`.
 
 ## 6. Terrain (WORLD) — `def.terrain`
 

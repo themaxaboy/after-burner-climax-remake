@@ -27,7 +27,8 @@ export default defineStage({
   look: 'oceanDay',
   waves: {
     seed: 11,
-    rate: { base: 1.8, perStar: 0.12 },
+    rate: { base: 2.0, perStar: 0.12 },
+    floor: 3, // start the next pattern early when fewer than 3 are on screen (open sky/desert empties fast)
     maxAlive: { high: 24, medium: 20, low: 16 },
     spans: [{ from: 1700, to: L - 700 }],
     quiet: [[7500, 8900]],

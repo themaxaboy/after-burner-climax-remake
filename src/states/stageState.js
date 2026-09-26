@@ -404,6 +404,11 @@ export class StageState {
       player: () => this.player,
       quality: () => g.preset.name,
       aliveCount: () => this.enemies.list.length,
+      onScreenCount: () => {
+        let n = 0;
+        for (const e of this.enemies.list) if (e.onScreen && !e.dead) n++;
+        return n;
+      },
       forceWaves: () => !!g.params.waves,
       worldPoint: (s, x, y, ground) => {
         this.rail.frameAt(s, _frame);

@@ -52,6 +52,7 @@ export default defineStage({
   waves: {
     seed: 61,
     rate: { base: 1.8, perStar: 0.12 },
+    floor: 3, // start the next pattern early when fewer than 3 are on screen (open sky/desert empties fast)
     maxAlive: { high: 24, medium: 20, low: 16 },
     spans: [{ from: 1200, to: RS - 400 }],
     quiet: [[5900, 7300]],
