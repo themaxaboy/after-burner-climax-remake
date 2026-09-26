@@ -82,7 +82,7 @@ export const GRADES = {
   arcadeCanyon: arcade([1.0, 0.35, 0.12], { saturation: 1.22, gain: [1.03, 1.0, 0.97], focusAmount: 0.25 }),
   arcadeSunset: arcade([1.0, 0.5, 0.1], { saturation: 1.3, gain: [1.04, 1.0, 0.95], focusAmount: 0.3 }),
   arcadeGlacier: arcade([0.1, 0.85, 0.85], { saturation: 1.22, focusAmount: 0.3 }),
-  arcadeDunes: arcade([1.0, 0.72, 0.42], { saturation: 1.12, vibrance: 0.2, gain: [1.03, 1.0, 0.97], focusAmount: 0.25, focusWidth: 40, focusPull: 0.2 }),
+  arcadeDunes: arcade([1.0, 0.72, 0.42], { saturation: 1.15, vibrance: 0.22, gain: [1.03, 1.0, 0.97], focusAmount: 0.25, focusWidth: 40, focusPull: 0.2 }),
   arcadeClouds: arcade([1.0, 0.68, 0.28], { saturation: 1.32, gain: [1.03, 1.0, 0.96], focusAmount: 0.35 }),
   arcadeFortress: arcade([1.0, 0.62, 0.25], { saturation: 1.2, contrast: 1.07, focusAmount: 0.22 }),
   arcadeAurora: arcade([0.1, 1.0, 0.75], { saturation: 1.3, contrast: 1.06, focusAmount: 0.4, focusWidth: 45 }),
