@@ -32,8 +32,8 @@ const FACES = [
  * resize / language / touch-layout changes; numbers come from glyph atlases.
  *
  * Public API used by other modules: message(), callout(), popup(), radio(),
- * clearMessages(), popups, radioLines, messages, eo, visible, lowFx,
- * touchLayout, colorblind.
+ * clearMessages(), reset(), clear(), popups, radioLines, messages, eo,
+ * visible (setting false wipes the canvas), lowFx, touchLayout, colorblind.
  */
 export class HUD {
   constructor(canvas) {
@@ -43,7 +43,7 @@ export class HUD {
     this.messages = []; // {text, sub, t, dur, style, color, variant}
     this.popups = []; // {x, y, text, t, color}
     this.radioLines = []; // queue, [0] is on air: {who, text, t, dur}
-    this.visible = true;
+    this._visible = true;
     this.flashArmor = 0;
     this.colorblind = false;
     this.lowFx = false;
@@ -112,12 +112,39 @@ export class HUD {
     this.messages.length = 0;
   }
 
-  /** Drop every transient item (messages, popups, radio queue, EO sign). */
+  /**
+   * Shown / hidden. Hiding also wipes the canvas at once, so a menu state
+   * that hides the HUD never shows the last stage frame (the canvas is only
+   * redrawn while someone calls draw()).
+   */
+  get visible() {
+    return this._visible;
+  }
+
+  set visible(v) {
+    this._visible = !!v;
+    if (!v) this._wipe();
+  }
+
+  /** Wipe the canvas and hide the HUD (menus, stage exit, pause → quit). */
+  clear() {
+    this.visible = false;
+  }
+
+  /** Drop every transient item (messages, popups, radio queue, EO sign) and wipe the canvas. */
   reset() {
     this.messages.length = 0;
     this.popups.length = 0;
     this.radioLines.length = 0;
     this.eo = null;
+    this._wipe();
+  }
+
+  _wipe() {
+    const c = this.ctx;
+    if (!c) return;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   popup(x, y, text, color = '#ffe08a') {
@@ -165,7 +192,7 @@ export class HUD {
     const W = this.canvas.width, H = this.canvas.height;
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.clearRect(0, 0, W, H);
-    if (!this.visible || !s) return;
+    if (!this._visible || !s) return;
     this.t += dt;
     const time = this.t;
     this._ensureLayout(W, H, scale || 1);

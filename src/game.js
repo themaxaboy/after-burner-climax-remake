@@ -72,7 +72,13 @@ export class Game {
     // input
     this.input = new Input();
     this.input.invertY = !!this.settings.invertY;
-    this.gamepad = this.input.addSource(new GamepadSource());
+    this.gamepad = this.input.addSource(new GamepadSource({ stickRoll: this.settings.stickRoll !== false }));
+    // a pad alone never fires pointer / key events: try the audio unlock on its first real input
+    this.gamepad.onFirstInput = () => {
+      if (this.pauseUI) return; // paused audio stays paused
+      if (this._audioUnlock) this._audioUnlock();
+      else this._audioUnlockPending = true;
+    };
     this.mouse = this.input.addSource(new MouseSource(this.canvas));
     this.mouse.enabled = !!this.settings.mouseFlight;
     this.touch = this.input.addSource(new TouchSource(this.uiRoot));
@@ -150,14 +156,23 @@ export class Game {
     const audio = new mod.AudioEngine();
     this.audio = audio;
     const s = this.settings;
-    const start = async () => {
-      try {
-        await audio.init();
-        audio.setVolumes({ master: params.mute ? 0 : s.volMaster, sfx: s.volSfx, music: s.volMusic, voice: s.volVoice });
-        this.events.emit('audioReady', audio);
-      } catch (e) {
-        console.warn('audio init failed', e);
+    let started = null;
+    // first call builds the engine; later calls only resume a suspended context
+    const start = () => {
+      if (started) {
+        audio.init();
+        return started;
       }
+      started = (async () => {
+        try {
+          await audio.init();
+          audio.setVolumes({ master: params.mute ? 0 : s.volMaster, sfx: s.volSfx, music: s.volMusic, voice: s.volVoice });
+          this.events.emit('audioReady', audio);
+        } catch (e) {
+          console.warn('audio init failed', e);
+        }
+      })();
+      return started;
     };
     const unlock = () => {
       removeEventListener('pointerdown', unlock);
@@ -168,6 +183,10 @@ export class Game {
     addEventListener('pointerdown', unlock);
     addEventListener('keydown', unlock);
     addEventListener('gamepadconnected', unlock);
+    // first real gamepad input (see init): gamepadconnected may already have
+    // created a suspended context outside a gesture, so this retries the resume
+    this._audioUnlock = unlock;
+    if (this._audioUnlockPending) unlock();
   }
 
   setLoading(frac, label) {

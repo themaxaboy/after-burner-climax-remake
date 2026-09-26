@@ -25,9 +25,6 @@ export class Menu {
     this.list.className = 'menu-list';
     this.el.appendChild(this.list);
     this.rows = items.map((it, i) => this._row(it, i));
-    this._stickY = 0;
-    this._stickX = 0;
-    this._repeat = 0;
     this.focus(0);
   }
 
@@ -88,10 +85,14 @@ export class Menu {
     this.rows.forEach((r, i) => this._refresh(r, this.items[i]));
   }
 
-  focus(i) {
+  /** @param {boolean} reveal scroll the row into view (key / pad navigation; not for pointer hover) */
+  focus(i, reveal = false) {
     const n = this.items.length;
     this.index = ((i % n) + n) % n;
     this.rows.forEach((r, k) => r.classList.toggle('focused', k === this.index));
+    // keep the focused row visible in long (scrolling) menus when navigating by key / pad
+    const row = this.rows[this.index];
+    if (reveal && row?.isConnected) row.scrollIntoView?.({ block: 'nearest' });
     const hint = this.items[this.index].hint;
     this.el.dataset.hint = hint || '';
   }
@@ -119,21 +120,20 @@ export class Menu {
     it.onSelect?.();
   }
 
-  /** Poll unified input edges (call once per sim step while visible). */
+  /**
+   * Poll unified input edges (call once per sim step while visible). Only
+   * direction *presses* navigate: the gamepad source turns its stick into
+   * presses with key repeat, and reading the move axes here as well made a
+   * D-pad press step twice (its hold shows up in moveX one step later).
+   */
   update(input) {
     let dy = 0, dx = 0;
     if (input.pressed.up) dy = -1;
     if (input.pressed.down) dy = 1;
     if (input.pressed.left) dx = -1;
     if (input.pressed.right) dx = 1;
-    // analog stick with hysteresis (gamepad / touch)
-    const sy = input.moveY, sx = input.moveX;
-    if (Math.abs(sy) > 0.6 && Math.abs(this._stickY) < 0.3) dy = sy > 0 ? -1 : 1;
-    if (Math.abs(sx) > 0.6 && Math.abs(this._stickX) < 0.3) dx = sx > 0 ? 1 : -1;
-    this._stickY = sy;
-    this._stickX = sx;
     if (dy) {
-      this.focus(this.index + dy);
+      this.focus(this.index + dy, true);
       this.game?.audio?.play('uiMove');
     }
     if (dx) this.change(dx);
