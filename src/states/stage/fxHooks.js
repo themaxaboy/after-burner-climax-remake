@@ -110,7 +110,7 @@ export class FxHooks {
   onEnemyHit(e, amt, src) {
     if (src === 'gun') {
       const now = this.stage.time;
-      if (now - this.lastHitSfx > 0.07) {
+      if (now - this.lastHitSfx > 0.12) {
         this.lastHitSfx = now;
         this.game.audio?.play('hit', { position: e.pos, gain: 0.5 });
       }

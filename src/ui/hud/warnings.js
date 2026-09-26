@@ -21,6 +21,7 @@ export class Warnings {
     this.clock = new GlyphFont({ chars: '0123456789:.', fill: ['#ffffff', '#fff3c8', '#ffd23b'], outer: '#1a1000', outerW: 0.13 });
     this.clockRed = new GlyphFont({ chars: '0123456789:.', fill: ['#ffffff', '#ffc0b8', '#ff3b30'], outer: '#2a0000', outerW: 0.13 });
     this.L = null;
+    this._warnPh = 0; // MISSILE blink phase (rad) since the warning came on
   }
 
   layout(L) {
@@ -146,12 +147,16 @@ export class Warnings {
     const x = L.warn.x;
     let y = L.warn.y;
     const th = combat ? s.threat : null;
+    // MISSILE plate only while the warning is on (terminal / close missile, see enemyOps);
+    // calm blink rate 4 rad/s (8 when urgent; was 12/22), phase from the warning onset so it
+    // shows at once
+    const warn = !!th && th.warn !== false;
+    if (warn) this._warnPh += (dt > 0 ? dt : 0) * (th.urgent ? 8 : 4);
+    else this._warnPh = 0;
     if (th) {
-      const urgent = th.tgo < 1.5;
-      const rate = urgent ? 22 : 12;
-      const on = Math.sin(time * rate) > -0.35;
+      const urgent = warn && th.tgo < 1.5;
       const style = th.strong ? 'missileRed' : 'missile';
-      if (on) this._plate(style, t('hud.missile'), style).draw(c, x, y);
+      if (warn && Math.cos(this._warnPh) > -0.35) this._plate(style, t('hud.missile'), style).draw(c, x, y);
       if (urgent && Math.sin(time * 9) > -0.5) this._plate('roll', t('hud.roll'), 'label').draw(c, x, y + 26 * u);
       // edge arrow toward the missile
       let dx = th.sx * L.W * 0.5, dy = -th.sy * L.H * 0.5;
@@ -160,13 +165,13 @@ export class Warnings {
         dy = Math.abs(dy) + L.H * 0.3;
       }
       edgePoint(dx, dy, L.W, L.H, 70 * u, _edge);
-      const k = 1 + 0.15 * Math.sin(time * rate);
+      const k = warn ? 1 + 0.15 * Math.sin(this._warnPh) : 1;
       c.save();
       c.translate(_edge.x, _edge.y);
       c.rotate(_edge.a);
       (th.strong ? this.arrowRed : this.arrowOrange).drawScaled(c, 0, 0, k);
       c.restore();
-      y += 44 * u;
+      if (warn) y += 44 * u;
     }
     if (gauges) {
       const pull = s.pullUp || s.caution === 'PULL UP';

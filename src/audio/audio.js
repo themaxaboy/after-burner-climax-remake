@@ -49,6 +49,21 @@ const RADIO_DRIVE = 1.6;
 const RADIO_BED = 0.03;
 const RADIO_DUCK_MUSIC = 0.45;
 const RADIO_DUCK_WORLD = 0.75;
+/** Cockpit alert tones flagged `duck: true` (the missile lock tone) under the radio voice. */
+const RADIO_DUCK_ALERT = 0.5;
+
+/**
+ * Start offset (s) for a loop: `resume` -> the loop start, else `offset` clamped into the
+ * buffer (0 by default). entry = { loopStart, loopEnd } from the sound bank.
+ */
+export function loopOffset(entry, opts) {
+  const o = opts || EMPTY;
+  const end = entry && entry.loopEnd > 0 ? entry.loopEnd : 0;
+  let t = o.resume ? (entry && entry.loopStart) || 0 : Number(o.offset) || 0;
+  if (!(t > 0)) return 0;
+  if (end > 0 && t >= end) t = (entry && entry.loopStart) || 0;
+  return t;
+}
 
 /** Pre-master headroom trim (the glue compressor adds automatic make-up gain). */
 const MASTER_TRIM = 0.75;
@@ -451,6 +466,10 @@ export class AudioEngine {
     this._uiIn = g(1);
     this._uiVol = g(this._vol.sfx);
     this._uiIn.connect(this._uiVol).connect(this._master);
+    // ui alerts the radio voice ducks (defs with `duck: true`)
+    this._alertIn = g(1);
+    this._alertDuck = g(1);
+    this._alertIn.connect(this._alertDuck).connect(this._uiVol);
     this._voiceIn = g(1);
     this._voiceVol = g(this._vol.voice);
     this._voiceIn.connect(this._voiceVol).connect(this._master);
@@ -508,6 +527,11 @@ export class AudioEngine {
 
   _musicRig() {
     return { output: this._musicIn, reverbInput: this._musicRev, buffers: this._musicBuffers };
+  }
+
+  /** Bus input for a sound definition (`duck: true` ui sounds go through the radio-ducked alert path). */
+  _defInput(def) {
+    return def.duck && def.bus === 'ui' ? this._alertIn : this._busInput(def.bus);
   }
 
   _busInput(bus) {
@@ -676,7 +700,7 @@ export class AudioEngine {
       this._setPannerPos(slot.node, voice.px, voice.py, voice.pz);
       g.connect(slot.node);
     } else {
-      const dest = this._busInput(def.bus);
+      const dest = this._defInput(def);
       if (o.pan) sp = makeStereoPanner(ctx, clamp(o.pan, -1, 1));
       if (sp) g.connect(sp).connect(dest);
       else g.connect(dest);
@@ -815,7 +839,11 @@ export class AudioEngine {
 
   /* ------------------------------------------------------------ loops */
 
-  /** Start a looping sound by name (idempotent). opts { gain, rate, pan, fadeIn }. */
+  /**
+   * Start a looping sound by name (idempotent). opts { gain, rate, pan, fadeIn, offset, resume }.
+   * offset = seconds into the buffer to start at; resume = start at the loop start (skips the
+   * intro, e.g. the vulcan spin-up, when a loop restarts shortly after it stopped).
+   */
   startLoop(name, opts) {
     if (!this.isReady) return false;
     const entry = this._bank.get(name);
@@ -844,10 +872,10 @@ export class AudioEngine {
     g.gain.linearRampToValueAtTime(level, now + fadeIn);
     src.connect(g);
     const sp = o.pan ? makeStereoPanner(ctx, clamp(o.pan, -1, 1)) : null;
-    const dest = this._busInput(def.bus);
+    const dest = this._defInput(def);
     if (sp) g.connect(sp).connect(dest);
     else g.connect(dest);
-    src.start(now);
+    src.start(now, loopOffset(entry, o));
     this._loops.set(name, { name, src, gain: g, pan: sp, def, world, baseRate: rate });
     return true;
   }
@@ -1169,6 +1197,7 @@ export class AudioEngine {
     };
     duck(this._musicDuck.gain, RADIO_DUCK_MUSIC);
     duck(this._worldDuck.gain, RADIO_DUCK_WORLD);
+    duck(this._alertDuck.gain, RADIO_DUCK_ALERT);
   }
 
   /* ----------------------------------------------------------- frame */

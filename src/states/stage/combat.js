@@ -3,6 +3,7 @@ import { makeFrame } from '../../sim/rail.js';
 import { projectPoint } from '../../sim/lockon.js';
 import { Reticle } from '../../sim/reticle.js';
 import { clamp } from '../../core/math.js';
+import { LoopGate, BurstGate, GUN_GATE, AUTO_BURST } from '../../audio/loopGates.js';
 
 const _v = new Vector3();
 const _v2 = new Vector3();
@@ -13,6 +14,7 @@ const _mz = new Vector3();
 const _frame = makeFrame();
 const ASSIST_STRENGTH = [0, 0.55, 0.9]; // vulcan magnetism per assist level
 const ASSIST_CONE = [2, 4, 7].map((d) => (d * Math.PI) / 180);
+const RESUME = Object.freeze({ resume: true });
 
 /** Player weapon tuning. */
 export const COMBAT = {
@@ -38,8 +40,9 @@ export class Combat {
     this.stage = stage;
     this.game = stage.game;
     this.flareCd = 0;
-    this.lastGunSfx = 0;
     this._gunLoop = false;
+    this.gunGate = new LoopGate(GUN_GATE); // vulcan loop debounce
+    this.burst = new BurstGate(AUTO_BURST); // auto-fire bursts
     this.reticle = new Reticle();
     this.holdT = 0; // s the MISSILE button has been held
     this.rippleT = 0;
@@ -205,23 +208,38 @@ export class Combat {
     st.scoring.frozen = c.active || c.phase === 'salvo';
     p.boost = c.phase === 'afterburn' ? 1 : 0;
 
-    // vulcan: along the camera ray through the reticle; auto-fires at a target near it
+    // vulcan: along the camera ray through the reticle; auto-fires at a target near it.
+    // The fire button is continuous; auto-fire alone (setting, or Climax) fires 1.4 s bursts
+    // with 0.3 s pauses.
     const autoFire = g.settings.autoFire !== false;
     const at = lockon.assistTarget;
     const inGunRange = at != null && at.dist < COMBAT.gunRange;
-    const trigger = controls && (input.hold.fire || (autoFire && inGunRange) || (c.active && inGunRange));
+    const manual = controls && !!input.hold.fire;
+    const autoWant = controls && !manual && inGunRange && (autoFire || c.active);
+    const trigger = manual || this.burst.update(dt, autoWant);
     this.aimDir(_aim);
     st.vulcan.assistStrength = ASSIST_STRENGTH[lockon.assist] ?? ASSIST_STRENGTH[2];
     st.vulcan.assistCone = ASSIST_CONE[lockon.assist] ?? ASSIST_CONE[2];
     const ms = st.missiles;
     const extra = typeof ms.shootables === 'function' ? ms.shootables(this._shoot) : null;
     st.vulcan.update(wdt, p, _aim, at, trigger, st.enemies, extra, this._onShootDown);
-    if (trigger && st.time - this.lastGunSfx > 0.05) {
-      if (!this._gunLoop) this._gunLoop = !!g.audio?.startLoop?.('vulcan');
-      this.lastGunSfx = st.time;
-    } else if (!trigger && this._gunLoop) {
-      g.audio?.stopLoop?.('vulcan');
+    this._gunSound(dt, trigger, !manual && this.burst.pausing);
+  }
+
+  /**
+   * Vulcan loop debounce (see GUN_GATE): once started it runs ≥ 0.35 s and stops 0.25 s after
+   * the last trigger (right away at a deliberate burst pause); a restart within 0.4 s resumes
+   * at the loop start instead of replaying the spin-up.
+   */
+  _gunSound(dt, trigger, pause) {
+    const a = this.game.audio;
+    const act = this.gunGate.update(dt, trigger, pause);
+    if (act === 'stop') {
+      if (this._gunLoop) a?.stopLoop?.('vulcan');
       this._gunLoop = false;
+    } else if (this.gunGate.on && (act || (trigger && !a?.isLooping?.('vulcan')))) {
+      // (re)start; also retries while firing when audio was not ready or a stopAll cut the loop
+      this._gunLoop = !!a?.startLoop?.('vulcan', act === 'start' ? undefined : RESUME);
     }
   }
 
@@ -437,5 +455,7 @@ export class Combat {
   dispose() {
     if (this._gunLoop) this.game.audio?.stopLoop?.('vulcan');
     this._gunLoop = false;
+    this.gunGate.reset();
+    this.burst.reset();
   }
 }

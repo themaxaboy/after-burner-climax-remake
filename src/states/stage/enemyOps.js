@@ -1,5 +1,6 @@
 import { Vector3 } from 'three';
 import { projectPoint } from '../../sim/lockon.js';
+import { LoopGate, ALARM_GATE } from '../../audio/loopGates.js';
 
 const _v = new Vector3();
 const _v2 = new Vector3();
@@ -10,6 +11,21 @@ export const PLAYER_CORE = 3;
 /** Closest approach below this without contact is a near miss (m). */
 export const NEAR_MISS = 35;
 const NEAR_TRACK = 90;
+/** Incoming-missile snapshot horizon (s): HUD edge arrow, autopilot. */
+const THREAT_TGO = 6;
+/** Warning (tone, MISSILE plate, post pulse) only when the closest missile is terminal or this close (s). */
+export const WARN_TGO = 2.2;
+/** Faster MISSILE plate blink below this time-to-go (s). */
+export const URGENT_TGO = 1.2;
+const RESUME = Object.freeze({ resume: true });
+
+/**
+ * Does an incoming missile call for the warning? Its terminal phase (m.phase === 1, after the
+ * cinematic arc) or a short time-to-go; the arc itself stays quiet.
+ */
+export function warnQualifies(m, tgo) {
+  return !!m && (m.phase === 1 || tgo < WARN_TGO);
+}
 
 /**
  * Enemy-side glue for a stage: enemy missile launches, aircraft collisions
@@ -20,9 +36,15 @@ export class EnemyOps {
   constructor(stage) {
     this.stage = stage;
     this.game = stage.game;
-    /** Current threat snapshot or null: {tgo, sx, sy, behind, strong} */
+    /**
+     * Current threat snapshot or null: {tgo, sx, sy, behind, strong, warn, urgent}.
+     * warn = the missile warning is on (see warnActive); urgent = warn and tgo < URGENT_TGO.
+     */
     this.threat = null;
-    this._threat = { tgo: 0, sx: 0, sy: 0, behind: false, strong: false };
+    this._threat = { tgo: 0, sx: 0, sy: 0, behind: false, strong: false, warn: false, urgent: false };
+    /** Missile warning on (hysteresis: ≥ 0.8 s on, off 0.4 s after the last qualifying threat). */
+    this.warnActive = false;
+    this._alarm = new LoopGate(ALARM_GATE);
     this._warnLoop = false;
     this._launch = { speedBonus: 0, strong: false, shooter: null, rs: undefined };
     this._evadeEv = { n: 0 };
@@ -98,13 +120,18 @@ export class EnemyOps {
     st.events.emit('nearMiss', ev);
   }
 
-  /** Render-time threat (closest incoming missile) + warning loop. */
+  /**
+   * Render-time threat (closest incoming missile) + missile warning. The snapshot covers the
+   * whole approach (tgo < 6 s, edge arrow), the warning only the dangerous end of it
+   * (warnQualifies) with hysteresis; the tone honours settings.missileTone ('soft' | 'off').
+   */
   updateThreat(realDt) {
     const st = this.stage;
     const g = this.game;
     const p = st.player;
     const th = st.missiles.threat(p.pos, p.velocity);
-    if (th && th.tgo < 6 && !st.dead) {
+    let qualifies = false;
+    if (th && th.tgo < THREAT_TGO && !st.dead) {
       const onScr = projectPoint(g.rig.camera, th.m.pos, _s);
       const t = this._threat;
       t.tgo = th.tgo;
@@ -113,13 +140,23 @@ export class EnemyOps {
       t.behind = !onScr;
       t.strong = !!th.m.strong;
       this.threat = t;
-      if (!this._warnLoop) this._warnLoop = !!g.audio?.startLoop?.('missileAlert');
-    } else {
-      this.threat = null;
-      if (this._warnLoop) {
-        g.audio?.stopLoop?.('missileAlert');
-        this._warnLoop = false;
-      }
+      qualifies = warnQualifies(th.m, th.tgo);
+    } else this.threat = null;
+    const act = this._alarm.update(realDt, qualifies);
+    this.warnActive = this._alarm.on;
+    if (this.threat) {
+      this.threat.warn = this.warnActive;
+      this.threat.urgent = this.warnActive && this.threat.tgo < URGENT_TGO;
+    }
+    // tone: follows the warning; a restart within the resume window continues at the loop start
+    const tone = this.warnActive && g.settings?.missileTone !== 'off';
+    // (a stopAll or an audio engine that was not ready yet leaves the tone to be (re)started)
+    const playing = this._warnLoop && g.audio?.isLooping?.('missileAlert') !== false;
+    if (tone && !playing) {
+      this._warnLoop = !!g.audio?.startLoop?.('missileAlert', act === 'start' ? undefined : RESUME);
+    } else if (!tone && this._warnLoop) {
+      g.audio?.stopLoop?.('missileAlert');
+      this._warnLoop = false;
     }
     return this.threat;
   }
@@ -140,5 +177,8 @@ export class EnemyOps {
   dispose() {
     if (this._warnLoop) this.game.audio?.stopLoop?.('missileAlert');
     this._warnLoop = false;
+    this._alarm.reset();
+    this.warnActive = false;
+    this.threat = null;
   }
 }

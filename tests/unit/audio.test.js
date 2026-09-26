@@ -41,6 +41,9 @@ import {
 import { SFX_DEFS, SOUND_NAMES, LOOP_NAMES } from '../../src/audio/sfxBank.js';
 import { DRUM_DEFS } from '../../src/audio/instruments.js';
 import { AudioEngine } from '../../src/audio/index.js';
+import { loopOffset } from '../../src/audio/audio.js';
+import { LoopGate, BurstGate, ALARM_GATE, GUN_GATE, AUTO_BURST } from '../../src/audio/loopGates.js';
+import { warnQualifies, WARN_TGO, URGENT_TGO } from '../../src/states/stage/enemyOps.js';
 
 const close = (a, b, eps = 1e-3) => expect(Math.abs(a - b)).toBeLessThan(eps);
 
@@ -414,5 +417,166 @@ describe('AudioEngine without Web Audio', () => {
     await expect(a.init()).resolves.toBe(false); // no AudioContext in node
     await expect(a.init()).resolves.toBe(false); // safe twice
     expect(a.isReady).toBe(false);
+  });
+
+  it('startLoop offset / resume options are safe no-ops before init', () => {
+    const a = new AudioEngine();
+    expect(a.startLoop('vulcan', { resume: true })).toBe(false);
+    expect(a.startLoop('missileAlert', { offset: 0.5, gain: 0.5 })).toBe(false);
+    expect(a.startLoop('missileAlert', { offset: -3 })).toBe(false);
+    expect(a.isLooping('vulcan')).toBe(false);
+    expect(a.stopLoop('missileAlert')).toBe(false);
+  });
+});
+
+describe('loop start offset', () => {
+  const entry = { loopStart: 0.3, loopEnd: 2.3 };
+  it('resume starts at the loop start, offset is clamped into the buffer', () => {
+    expect(loopOffset(entry)).toBe(0);
+    expect(loopOffset(entry, {})).toBe(0);
+    expect(loopOffset(entry, { resume: true })).toBe(0.3);
+    expect(loopOffset(entry, { offset: 1.2 })).toBe(1.2);
+    expect(loopOffset(entry, { offset: -1 })).toBe(0);
+    expect(loopOffset(entry, { offset: NaN })).toBe(0);
+    expect(loopOffset(entry, { offset: 9 })).toBe(0.3); // past the end -> loop start
+    expect(loopOffset(null, { resume: true })).toBe(0);
+  });
+});
+
+describe('loop gates', () => {
+  /** Run a gate for `secs` at 60 Hz with a fixed request; returns the actions seen. */
+  const run = (gate, secs, want, cut = false) => {
+    const acts = [];
+    for (let i = 0; i < Math.round(secs * 60); i++) {
+      const a = gate.update(1 / 60, want, cut);
+      if (a) acts.push(a);
+    }
+    return acts;
+  };
+
+  it('missile alarm: at least 0.8 s on, off 0.4 s after the last threat, resumes within 1.5 s', () => {
+    const g = new LoopGate(ALARM_GATE);
+    expect(g.update(1 / 60, true)).toBe('start');
+    expect(g.on).toBe(true);
+    run(g, 0.1, true);
+    // a threat that vanishes early still keeps the tone for the minimum on-time
+    expect(run(g, 0.5, false)).toEqual([]);
+    expect(run(g, 0.3, false)).toEqual(['stop']);
+    expect(g.on).toBe(false);
+    // back within 1.5 s -> resume (no intro replay)
+    run(g, 1.0, false);
+    expect(g.update(1 / 60, true)).toBe('resume');
+    run(g, 2, true);
+    // a flickering threat (gaps < 0.4 s) never stops the tone
+    for (let k = 0; k < 5; k++) {
+      expect(run(g, 0.3, false)).toEqual([]);
+      run(g, 0.1, true);
+    }
+    expect(run(g, 0.45, false)).toEqual(['stop']);
+    // long silence -> a fresh start
+    run(g, 2, false);
+    expect(g.update(1 / 60, true)).toBe('start');
+    g.reset();
+    expect(g.on).toBe(false);
+    expect(g.update(1 / 60, true)).toBe('start');
+  });
+
+  it('vulcan: at least 0.35 s on, off 0.25 s after the trigger, resumes within 0.4 s', () => {
+    const g = new LoopGate(GUN_GATE);
+    expect(g.update(1 / 60, true)).toBe('start'); // a single-frame tap
+    expect(run(g, 0.3, false)).toEqual([]);
+    expect(run(g, 0.1, false)).toEqual(['stop']);
+    expect(run(g, 0.2, false)).toEqual([]);
+    expect(g.update(1 / 60, true)).toBe('resume');
+    run(g, 1, true);
+    // trigger flicker shorter than the release keeps the loop running
+    for (let k = 0; k < 10; k++) {
+      expect(run(g, 0.2, false)).toEqual([]);
+      run(g, 1 / 60, true);
+    }
+    // a deliberate pause (cut) stops right away once the minimum on-time is met
+    expect(g.update(1 / 60, false, true)).toBe('stop');
+    run(g, 0.3, false);
+    expect(g.update(1 / 60, true)).toBe('resume');
+    expect(run(g, 0.2, false, true)).toEqual([]); // still inside the minimum on-time
+    expect(run(g, 0.2, false, true)).toEqual(['stop']);
+    run(g, 0.5, false);
+    expect(g.update(1 / 60, true)).toBe('start');
+  });
+
+  it('auto-fire bursts: 1.4 s on, 0.3 s off; a natural gap counts as a pause', () => {
+    const b = new BurstGate(AUTO_BURST);
+    const dt = 1 / 60;
+    let fired = 0, pauses = 0, prev = false;
+    const onRuns = [];
+    let run = 0;
+    for (let i = 0; i < 60 * 6; i++) {
+      const f = b.update(dt, true);
+      if (f) fired++;
+      if (f) run++;
+      if (!f && prev) {
+        pauses++;
+        onRuns.push(run);
+        run = 0;
+      }
+      prev = f;
+    }
+    // 6 s of wanting fire -> 1.7 s cycles: 3 full pauses, ~82 % duty
+    expect(pauses).toBe(3);
+    for (const r of onRuns) expect(Math.abs(r * dt - AUTO_BURST.on)).toBeLessThan(0.05);
+    expect(fired * dt).toBeGreaterThan(4.5);
+    expect(fired * dt).toBeLessThan(5.2);
+    // pause length
+    const c = new BurstGate(AUTO_BURST);
+    let t = 0;
+    while (c.update(dt, true)) t += dt;
+    expect(c.pausing).toBe(true);
+    let off = 0;
+    while (!c.update(dt, true)) off += dt;
+    expect(Math.abs(off - AUTO_BURST.off)).toBeLessThan(0.05);
+    // flicker inside a burst does not reset the burst clock; a long gap does
+    const d = new BurstGate(AUTO_BURST);
+    d.update(dt, true);
+    for (let i = 0; i < 30; i++) d.update(dt, i % 3 !== 0);
+    expect(d.phase).toBe(1);
+    expect(d.t).toBeGreaterThan(0.45);
+    for (let i = 0; i < 20; i++) d.update(dt, false);
+    expect(d.phase).toBe(0);
+    expect(d.update(dt, true)).toBe(true);
+    expect(d.t).toBe(0);
+    expect(d.update(dt, false)).toBe(false);
+  });
+});
+
+describe('missile warning gate', () => {
+  it('warns only for terminal-phase or close missiles, not during the cinematic arc', () => {
+    expect(warnQualifies(null, 0.5)).toBe(false);
+    expect(warnQualifies({ phase: 0 }, 4)).toBe(false); // arc, far
+    expect(warnQualifies({ phase: 0 }, WARN_TGO + 0.1)).toBe(false);
+    expect(warnQualifies({ phase: 0 }, WARN_TGO - 0.1)).toBe(true);
+    expect(warnQualifies({ phase: 1 }, 5)).toBe(true); // terminal
+    expect(WARN_TGO).toBeCloseTo(2.2);
+    expect(URGENT_TGO).toBeLessThan(WARN_TGO);
+  });
+});
+
+describe('weapon / warning sound tuning', () => {
+  it('missile tone: one 0.5 s cycle per loop, quiet, ducked by the radio', () => {
+    const d = SFX_DEFS.missileAlert;
+    close(d.dur - d.loop.start, 0.5, 1e-9);
+    expect(d.gain).toBeLessThanOrEqual(0.12);
+    expect(d.duck).toBe(true);
+  });
+  it('vulcan loop and tail levels, hit rate limit', () => {
+    const v = SFX_DEFS.vulcan, tail = SFX_DEFS[v.tail];
+    expect(v.gain).toBeLessThanOrEqual(0.25);
+    expect(tail.gain).toBeLessThan(v.gain);
+    expect(tail.maxInstances).toBe(1);
+    // the loop region holds a whole number of 10 ms rounds (100 rounds/s)
+    const rounds = (v.dur - v.loop.start) / 0.01;
+    close(rounds, Math.round(rounds), 1e-6);
+    const h = SFX_DEFS.hit;
+    expect(h.gain).toBeLessThanOrEqual(0.25);
+    expect(h.minInterval).toBeGreaterThanOrEqual(0.09);
   });
 });

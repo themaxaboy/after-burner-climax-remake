@@ -48,8 +48,9 @@ export class PostBridge {
     gf.set('uGrey', this.grey);
     gf.set('uDamage', st.hitFlash * (reduced ? 0.35 : 0.8));
     gf.set('uClimax', this.climaxFx);
-    // missile warning eases in fast and out slowly; the pulse is shallow
-    const warn = st.enemyOps.threat ? (reduced ? 0.3 : 0.6) : 0;
+    // missile warning (terminal / close missiles only, same gate as the tone) eases in fast
+    // and out slowly; the pulse is shallow
+    const warn = st.enemyOps.warnActive ? (reduced ? 0.3 : 0.6) : 0;
     this.warn = dampTo(this.warn, warn, warn > this.warn ? 8 : 3, realDt);
     gf.set('uWarn', this.warn);
     gf.set('uPulse', reduced ? 0.15 : 0.6);
