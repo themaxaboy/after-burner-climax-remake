@@ -6,7 +6,7 @@
 // Fields
 //   seed        noise / obstacle seed
 //   profile     'canyon' | 'valley' | 'dunes'
-//   palette     'desertRed' | 'emerald' | 'glacier' | 'dunes' (default from the profile)
+//   palette     'desertRed' | 'emerald' | 'glacier' | 'dunes' | 'volcanic' | 'moonsand' (default from the profile)
 //   sections    [{ s, floor | clearance, depth, width }] smoothly interpolated along s
 //                 canyon: depth = wall height, width = floor half-width (depth < 20 → open desert)
 //                 valley: depth = peak height above the floor, width = floor half-width

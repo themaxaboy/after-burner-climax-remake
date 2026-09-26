@@ -129,13 +129,14 @@ export class ResultsState extends PanelState {
   }
 }
 
-/** STATUS REPORT (blue glass): cumulative run figures graded against par. */
+/** STATUS REPORT (blue glass): cumulative run figures graded against par; titled MID-GAME RESULT halfway. */
 export class StatusReportState extends PanelState {
-  constructor(game, { results, env, bonus = false }, onDone) {
+  constructor(game, { results, env, bonus = false, midGame = false }, onDone) {
     super(game, env, { music: 'results', autoAdvance: 3 });
     this.kind = 'status';
     this.results = results;
     this.bonus = bonus;
+    this.midGame = midGame;
     this.onDone = onDone;
     this.accept = 1.0;
   }
@@ -154,7 +155,7 @@ export class StatusReportState extends PanelState {
     el.className = 'st-wrap';
     el.innerHTML = `
       <div class="st-panel">
-        <div class="st-head">${t('status.title')}</div>
+        <div class="st-head">${t(this.midGame ? 'status.midgame' : 'status.title')}</div>
         ${rows
           .map(
             ([k, v, gr], i) => `

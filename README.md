@@ -3,7 +3,7 @@
 A browser remake of SEGA's 2006 arcade jet shooter *After Burner Climax* (and its mobile ports),
 built with **three.js (WebGL2)**, a heavy post-processing pipeline and fully procedural content, with a
 *Top Gun: Maverick*-inspired mood: a vivid arcade look with one dominant colour per stage, relentless enemy
-waves, swirling missiles, a branching route of ten one-minute stages, terrain you have to thread and constant
+waves, swirling missiles, a branching route of eighteen one-minute stages, terrain you have to thread and constant
 voiced radio chatter.
 
 > **Unofficial fan project** — not affiliated with or endorsed by SEGA or Paramount. No original assets,
@@ -48,12 +48,14 @@ GitHub Pages: the workflow in `.github/workflows/pages.yml` tests, builds and de
 
 Short (~1 minute) stages on a **branching route**, as in the arcade original. At the end of a fork stage the
 screen offers two routes — steer **left or right** between the big arrows to choose. Clear enough Emergency
-Orders and a secret bonus stage opens up.
+Orders and a secret bonus stage opens up. Like the original's route map there are 18 stages (16 plus 2 bonus);
+one run flies 11 of them (13 with both bonus stages), with a **MID-GAME RESULT** after GOLDEN DUNES.
 
 ```
-OCEAN ─ EMERALD ─ CANYON ─┬─ SUNSET ──┬─ DUNES ─(◯ AURORA)─┬─ CLOUDS ─┬─ FORTRESS
-                          └─ GLACIER ─┘                     └─ STRIKE ─┘
+OCEAN ─ EMERALD ─ CANYON ─┬─ SUNSET ──┬─ DUNES ─(◯ AURORA)─┬─ STORM ───┬─ CLOUDS ─┬─ NIGHTFLEET ─(◯ STRATOS)─┬─ WHITEOUT ─┬─ JETSTREAM ─┬─ FORTRESS
+                          └─ GLACIER ─┘                     └─ VOLCANO ─┴─ STRIKE ─┘                          └─ RAVINE ───┴─ BADLANDS ──┘
 ```
+(STORM and VOLCANO both fork to CLOUDS / STRIKE; WHITEOUT and RAVINE both fork to JETSTREAM / BADLANDS.)
 
 | Stage | Setting | Highlights |
 |---|---|---|
@@ -64,8 +66,16 @@ OCEAN ─ EMERALD ─ CANYON ─┬─ SUNSET ──┬─ DUNES ─(◯ AURORA)
 | GLACIER FJORD | Turquoise fjord, snowy walls | Low-level through the fjord, **EO: 6 AA sites on the banks** |
 | GOLDEN DUNES | Bright yellow desert, cyan sky | Pursuit from behind, **EO: 3 cruise missiles (gun only)**, route select |
 | AURORA (bonus) | Night sea under an aurora | Dense swarms that don't shoot back |
+| THUNDERHEAD | Dark sea under a storm front | **EO: B-52 in the storm**, route select |
+| ASH RIDGE | Black basalt valley, red ash sky | **EO: 6 AA sites on the slopes**, route select |
 | SEA OF CLOUDS | Golden twilight above the clouds | **EO: the ace** |
 | CANYON STRIKE | Canyon under a radar ceiling | Low-level run against the clock, pop-up strike in slow motion, 9-G pull-out |
+| MIDNIGHT ARMADA | Moonlit sea, the fleet running dark | **EO: sink 3 escort destroyers**, route select |
+| STRATOSPHERE (bonus) | Edge of space above the cloud deck | Dense formations that don't shoot back (6 EOs cleared) |
+| WHITEOUT | Snow valley in a white haze | Pursuit, **EO: 4 cruise missiles (gun only)**, route select |
+| DUSK RAVINE | Narrow canyon under a magenta dusk | Radar ceiling, **EO: XB-70**, route select |
+| JET STREAM | Pink dawn high above the clouds | **EO: an ace pair** |
+| MOONLIT BADLANDS | Silver dunes under the moon | **EO: down 8 of 10 transport helicopters** |
 | SKY FORTRESS | Twilight final battle | Flying fortress with four engine pods, kill-cam, carrier trap landing |
 
 Faithful arcade systems:
@@ -156,7 +166,7 @@ python3 scripts/voices/generate.py --setup && python3 scripts/voices/generate.py
 node scripts/fetch-textures.mjs && python3 scripts/compress_textures.py            # re-download CC0 textures
 ```
 
-Useful URL flags: `?stage=<1..10|id>` (e.g. `?stage=canyon`), `?route=glacier,aurora,strike` (pre-chosen forks),
+Useful URL flags: `?stage=<1..18|id>` (e.g. `?stage=canyon`), `?route=glacier,aurora,strike` (pre-chosen forks),
 `?quality=low|medium|high|ultra`, `?skipintro=1`, `?warp=SECONDS` (fast-forward the simulation), `?autopilot=1`,
 `?god=1`, `?climax=1`, `?jet=f14d|fa18e|f15e`, `?scheme=standard|camo|special|lowvis`, `?look=<name>` (preview a
 visual look), `?waves=1`, `?lumaprobe=N`, `?lang=th`, `?debug=1`, `?mute=1`. Dev pages: `/dev/hud.html`,

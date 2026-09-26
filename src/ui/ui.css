@@ -272,7 +272,7 @@ html, body {
 /* route map: renderRouteMap() puts an <svg class="route-map-svg"> in the container (.route-map / .pw-map) */
 .route-map { width: 100%; }
 .route-map-svg { display: block; width: 100%; height: auto; overflow: visible; }
-.route-map.compact { max-width: 560px; margin-left: auto; margin-right: auto; }
+.route-map.compact { max-width: 640px; margin-left: auto; margin-right: auto; }
 .route-map-svg .rm-node.current .rm-face { animation: rmPulse 1.1s ease-in-out infinite; }
 .route-map-svg .rm-node.available .rm-face { animation: rmAvail 1.6s ease-in-out infinite; }
 @keyframes rmPulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3); } }

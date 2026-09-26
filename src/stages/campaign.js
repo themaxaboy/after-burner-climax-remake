@@ -5,13 +5,24 @@ import sunset from './defs/sunset.js';
 import glacier from './defs/glacier.js';
 import dunes from './defs/dunes.js';
 import aurora from './defs/aurora.js';
+import storm from './defs/storm.js';
+import volcano from './defs/volcano.js';
 import clouds from './defs/clouds.js';
 import strike from './defs/strike.js';
+import nightfleet from './defs/nightfleet.js';
+import stratos from './defs/stratos.js';
+import whiteout from './defs/whiteout.js';
+import ravine from './defs/ravine.js';
+import jetstream from './defs/jetstream.js';
+import badlands from './defs/badlands.js';
 import fortress from './defs/fortress.js';
 
 // Every stage in route order (see ./routes.js for the graph with its forks
-// and the bonus stage). `index` is the 1-based position used by ?stage=<n>.
-export const STAGES = [ocean, emerald, canyon, sunset, glacier, dunes, aurora, clouds, strike, fortress];
+// and the bonus stages). `index` is the 1-based position used by ?stage=<n>.
+export const STAGES = [
+  ocean, emerald, canyon, sunset, glacier, dunes, aurora, storm, volcano,
+  clouds, strike, nightfleet, stratos, whiteout, ravine, jetstream, badlands, fortress
+];
 STAGES.forEach((s, i) => (s.index = i + 1));
 
 export const STAGE_BY_ID = Object.fromEntries(STAGES.map((s) => [s.id, s]));

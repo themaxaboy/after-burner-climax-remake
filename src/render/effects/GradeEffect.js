@@ -87,6 +87,14 @@ export const GRADES = {
   arcadeFortress: arcade([1.0, 0.62, 0.25], { saturation: 1.2, contrast: 1.07, focusAmount: 0.22 }),
   arcadeAurora: arcade([0.1, 1.0, 0.75], { saturation: 1.3, contrast: 1.06, focusAmount: 0.4, focusWidth: 45 }),
   arcadeStrike: arcade([1.0, 0.45, 0.2], { saturation: 1.2, contrast: 1.07, focusAmount: 0.2 }),
+  arcadeStorm: arcade([0.25, 0.55, 1.0], { saturation: 1.18, contrast: 1.1, focusAmount: 0.25 }),
+  arcadeVolcano: arcade([1.0, 0.25, 0.05], { saturation: 1.28, contrast: 1.1, gain: [1.05, 0.98, 0.94], focusAmount: 0.4 }),
+  arcadeNight: arcade([0.1, 0.45, 1.0], { saturation: 1.25, contrast: 1.06, focusAmount: 0.35, focusWidth: 45 }),
+  arcadeWhiteout: arcade([0.35, 0.75, 1.0], { saturation: 1.18, gain: [0.98, 1.0, 1.03], focusAmount: 0.25 }),
+  arcadeRavine: arcade([1.0, 0.35, 0.6], { saturation: 1.28, gain: [1.04, 0.98, 1.0], focusAmount: 0.35 }),
+  arcadeJetstream: arcade([1.0, 0.55, 0.7], { saturation: 1.3, gain: [1.03, 1.0, 1.0], focusAmount: 0.35 }),
+  arcadeBadlands: arcade([0.3, 0.55, 1.0], { saturation: 1.22, contrast: 1.07, focusAmount: 0.3 }),
+  arcadeStratos: arcade([0.1, 0.3, 1.0], { saturation: 1.3, contrast: 1.08, focusAmount: 0.4, focusWidth: 45 }),
   arcadeHangar: arcade([0.1, 0.4, 1.0], { saturation: 1.12, vibrance: 0.2, focusAmount: 0.1 })
 };
 

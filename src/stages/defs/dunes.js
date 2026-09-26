@@ -7,8 +7,8 @@ import { TERRAIN_BOX, defineStage, eo, makeRail, routeSelectAt } from './kit.js'
 // GOLDEN DUNES / SANDSTORM PURSUIT — low over bright yellow dunes, chased:
 // fighters sit on your six and loose missiles from behind. Emergency Order:
 // three cruise missiles that can only be stopped with the gun. Ends with the
-// ROUTE SELECT: SEA OF CLOUDS ◀ / ▶ CANYON STRIKE (bonus AURORA first when
-// at least 3 Emergency Orders have been cleared).
+// ROUTE SELECT: THUNDERHEAD ◀ / ▶ ASH RIDGE (bonus AURORA first when at least
+// 3 Emergency Orders have been cleared); the MID-GAME RESULT follows it.
 const SPEED = 240;
 const { points, length: L } = makeRail({
   start: [0, 55, 0],

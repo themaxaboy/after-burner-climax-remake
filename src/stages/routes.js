@@ -3,9 +3,16 @@
 // arrows (routeSelect component) and the choice decides the next stage.
 // Bonus nodes (spheres on the route map) unlock on a condition and are played
 // between a fork stage and the stage chosen at that fork.
+// Laid out like the original's route map: 18 stages (16 + 2 bonus), 11 per
+// run (13 with both bonus stages), a MID-GAME RESULT after GOLDEN DUNES.
 //
-//   ocean → emerald → canyon ─┬─ sunset ──┬─ dunes ─(aurora)─┬─ clouds ─┬─ fortress
-//                             └─ glacier ─┘                  └─ strike ─┘
+//   ocean → emerald → canyon ─┬─ sunset ──┬─ dunes ─(aurora)─┬─ storm ───┬─ clouds ─┬─ nightfleet ─(stratos)─┬─ whiteout ─┬─ jetstream ─┬─ fortress
+//                             └─ glacier ─┘                  └─ volcano ─┴─ strike ─┘                        └─ ravine ───┴─ badlands ──┘
+//   (storm and volcano both fork to clouds / strike; whiteout and ravine both
+//   fork to jetstream / badlands)
+
+const CLOUDS_OR_STRIKE = [{ id: 'clouds', side: -1 }, { id: 'strike', side: 1 }];
+const JETSTREAM_OR_BADLANDS = [{ id: 'jetstream', side: -1 }, { id: 'badlands', side: 1 }];
 
 export const ROUTE_GRAPH = {
   start: 'ocean',
@@ -16,13 +23,24 @@ export const ROUTE_GRAPH = {
     sunset: { next: 'dunes' },
     glacier: { next: 'dunes' },
     dunes: {
-      fork: [{ id: 'clouds', side: -1 }, { id: 'strike', side: 1 }],
+      fork: [{ id: 'storm', side: -1 }, { id: 'volcano', side: 1 }],
       bonus: { id: 'aurora', requires: 3 } // Emergency Orders cleared so far
     },
     // bonus: continues to whatever was chosen at the dunes fork
     aurora: { rejoin: 'dunes', bonusStage: true },
-    clouds: { next: 'fortress' },
-    strike: { next: 'fortress' },
+    storm: { fork: CLOUDS_OR_STRIKE },
+    volcano: { fork: CLOUDS_OR_STRIKE },
+    clouds: { next: 'nightfleet' },
+    strike: { next: 'nightfleet' },
+    nightfleet: {
+      fork: [{ id: 'whiteout', side: -1 }, { id: 'ravine', side: 1 }],
+      bonus: { id: 'stratos', requires: 6 }
+    },
+    stratos: { rejoin: 'nightfleet', bonusStage: true },
+    whiteout: { fork: JETSTREAM_OR_BADLANDS },
+    ravine: { fork: JETSTREAM_OR_BADLANDS },
+    jetstream: { next: 'fortress' },
+    badlands: { next: 'fortress' },
     fortress: { end: true }
   },
   // route map: [column, row (0 top · 1 middle · 2 bottom), shape]
@@ -34,12 +52,20 @@ export const ROUTE_GRAPH = {
     glacier: [3, 2, 'square'],
     dunes: [4, 1, 'square'],
     aurora: [5, 1, 'sphere'],
-    clouds: [6, 0, 'square'],
-    strike: [6, 2, 'square'],
-    fortress: [7, 1, 'square']
+    storm: [6, 0, 'square'],
+    volcano: [6, 2, 'square'],
+    clouds: [7, 0, 'square'],
+    strike: [7, 2, 'square'],
+    nightfleet: [8, 1, 'square'],
+    stratos: [9, 1, 'sphere'],
+    whiteout: [10, 0, 'square'],
+    ravine: [10, 2, 'square'],
+    jetstream: [11, 0, 'square'],
+    badlands: [11, 2, 'square'],
+    fortress: [12, 1, 'square']
   },
-  // a STATUS REPORT panel follows these stages
-  statusAfter: ['canyon', 'dunes', 'fortress']
+  // a STATUS REPORT panel follows these stages (the first one is the MID-GAME RESULT)
+  statusAfter: ['dunes', 'nightfleet', 'fortress']
 };
 
 /** Fork options of a node, left first ([{id, side}, …]), or null. */

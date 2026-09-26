@@ -28,8 +28,16 @@ const cases = [
   { stage: 'glacier', warp: 43 },
   { stage: 'dunes', warp: 43, route: 'strike' }, // route select
   { stage: 'aurora', warp: 41 },
+  { stage: 'storm', warp: 44, route: 'strike' }, // route select
+  { stage: 'volcano', warp: 44, route: 'clouds' }, // route select
   { stage: 'clouds', warp: 45 },
   { stage: 'strike', warp: 45 }, // strike + pull-out
+  { stage: 'nightfleet', warp: 44, route: 'ravine' }, // route select
+  { stage: 'stratos', warp: 41 },
+  { stage: 'whiteout', warp: 44, route: 'badlands' }, // route select
+  { stage: 'ravine', warp: 44, route: 'jetstream' }, // route select
+  { stage: 'jetstream', warp: 45 },
+  { stage: 'badlands', warp: 45 },
   { stage: 'fortress', warp: 50 } // approach + trap landing
 ].filter((c) => !only || only.includes(c.stage));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });

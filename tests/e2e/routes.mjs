@@ -25,8 +25,21 @@ const only = args[1] || null;
 // warp is applied to every stage of the run: 44 s leaves the last ~7–18 s of
 // each 50–65 s stage (route selects open ~11 s before the end of the rail)
 const RUNS = [
-  { name: 'A', start: 'emerald', route: 'sunset,clouds', path: ['emerald', 'canyon', 'sunset', 'dunes', 'clouds', 'fortress'], forks: { canyon: 'sunset', dunes: 'clouds' }, optional: ['aurora'] },
-  { name: 'B', start: 'canyon', route: 'glacier,aurora,strike', path: ['canyon', 'glacier', 'dunes', 'aurora', 'strike', 'fortress'], forks: { canyon: 'glacier', dunes: 'strike' } }
+  {
+    name: 'A',
+    start: 'emerald',
+    route: 'sunset,storm,clouds,whiteout,jetstream',
+    path: ['emerald', 'canyon', 'sunset', 'dunes', 'storm', 'clouds', 'nightfleet', 'whiteout', 'jetstream', 'fortress'],
+    forks: { canyon: 'sunset', dunes: 'storm', storm: 'clouds', nightfleet: 'whiteout', whiteout: 'jetstream' },
+    optional: ['aurora', 'stratos']
+  },
+  {
+    name: 'B',
+    start: 'canyon',
+    route: 'glacier,aurora,volcano,strike,stratos,ravine,badlands',
+    path: ['canyon', 'glacier', 'dunes', 'aurora', 'volcano', 'strike', 'nightfleet', 'stratos', 'ravine', 'badlands', 'fortress'],
+    forks: { canyon: 'glacier', dunes: 'volcano', volcano: 'strike', nightfleet: 'ravine', ravine: 'badlands' }
+  }
 ].filter((r) => !only || r.name === only);
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });

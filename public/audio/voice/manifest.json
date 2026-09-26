@@ -33,7 +33,7 @@
    "callsign": "TEXACO"
   }
  },
- "totalBytes": 1449888,
+ "totalBytes": 1655232,
  "lines": {
   "r.ocean.launch": {
    "speaker": "carrier",
@@ -555,6 +555,305 @@
      "hash": "482e6762f910",
      "en": "They're not shooting back! Free kills!",
      "th": "มันไม่ยิงตอบ! ยิงได้ตามสบาย!"
+    }
+   ]
+  },
+  "r.storm.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.storm.brief.0.mp3",
+     "dur": 2.297,
+     "bytes": 9408,
+     "hash": "de45ebe1d96f",
+     "en": "Storm front ahead. Stay under the ceiling.",
+     "th": "แนวพายุข้างหน้า บินต่ำใต้ฐานเมฆไว้"
+    }
+   ]
+  },
+  "r.storm.b52": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.storm.b52.0.mp3",
+     "dur": 2.383,
+     "bytes": 9792,
+     "hash": "8d7369c3dbb5",
+     "en": "Heavy bomber in the storm! Take it down!",
+     "th": "เครื่องทิ้งระเบิดหนักในพายุ! ยิงมันให้ตก!"
+    }
+   ]
+  },
+  "r.storm.route": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.storm.route.0.mp3",
+     "dur": 1.956,
+     "bytes": 8064,
+     "hash": "d4a375d7404c",
+     "en": "Clear of the storm. Pick your heading!",
+     "th": "พ้นพายุแล้ว เลือกเส้นทางเลย!"
+    }
+   ]
+  },
+  "r.volcano.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.volcano.brief.0.mp3",
+     "dur": 2.169,
+     "bytes": 8928,
+     "hash": "7214df24fd80",
+     "en": "Volcanic ridge. Watch the spires.",
+     "th": "สันเขาภูเขาไฟ ระวังยอดหินแหลม"
+    }
+   ]
+  },
+  "r.volcano.aa": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.volcano.aa.0.mp3",
+     "dur": 1.807,
+     "bytes": 7488,
+     "hash": "fd8cb19aee38",
+     "en": "Flak on the slopes! Hit those guns!",
+     "th": "ปืนต่อสู้อากาศยานบนไหล่เขา! ยิงมันเลย!"
+    }
+   ]
+  },
+  "r.volcano.route": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.volcano.route.0.mp3",
+     "dur": 1.956,
+     "bytes": 8064,
+     "hash": "10022b37f3e8",
+     "en": "Ridge ends here. Choose your route!",
+     "th": "สุดสันเขาแล้ว เลือกเส้นทาง!"
+    }
+   ]
+  },
+  "r.nightfleet.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.nightfleet.brief.0.mp3",
+     "dur": 2.489,
+     "bytes": 10176,
+     "hash": "90df0a272727",
+     "en": "Enemy fleet running dark. Weapons free.",
+     "th": "กองเรือข้าศึกดับไฟแล่น อนุญาตให้โจมตี"
+    }
+   ]
+  },
+  "r.nightfleet.escort": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.nightfleet.escort.0.mp3",
+     "dur": 2.255,
+     "bytes": 9216,
+     "hash": "c184e87c112f",
+     "en": "Escort destroyers! Sink all three!",
+     "th": "เรือพิฆาตคุ้มกัน! จมให้ครบสามลำ!"
+    }
+   ]
+  },
+  "r.nightfleet.route": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.nightfleet.route.0.mp3",
+     "dur": 2.361,
+     "bytes": 9696,
+     "hash": "c3b011d54d4d",
+     "en": "Fleet's broken. Two ways inland. Choose!",
+     "th": "กองเรือแตกแล้ว มีสองทางเข้าฝั่ง เลือกเลย!"
+    }
+   ]
+  },
+  "r.whiteout.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.whiteout.brief.0.mp3",
+     "dur": 2.489,
+     "bytes": 10176,
+     "hash": "5414fd6ac683",
+     "en": "Whiteout conditions. Trust your instruments.",
+     "th": "ทัศนวิสัยขาวโพลน เชื่อเครื่องวัดไว้"
+    }
+   ]
+  },
+  "r.whiteout.cruise": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.whiteout.cruise.0.mp3",
+     "dur": 2.425,
+     "bytes": 9984,
+     "hash": "d7b878773d2b",
+     "en": "Cruise missiles low over the snow! Guns!",
+     "th": "ขีปนาวุธร่อนเรี่ยหิมะ! ใช้ปืน!"
+    }
+   ]
+  },
+  "r.whiteout.route": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.whiteout.route.0.mp3",
+     "dur": 1.7,
+     "bytes": 7008,
+     "hash": "e987125227d9",
+     "en": "Valley splits ahead. Choose!",
+     "th": "หุบเขาแยกข้างหน้า เลือกเลย!"
+    }
+   ]
+  },
+  "r.ravine.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.ravine.brief.0.mp3",
+     "dur": 2.895,
+     "bytes": 11808,
+     "hash": "c2565c062012",
+     "en": "Tight ravine. Keep it low and slow on the turns.",
+     "th": "หุบผาแคบ บินต่ำไว้ ระวังตอนเลี้ยว"
+    }
+   ]
+  },
+  "r.ravine.ceiling": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.ravine.ceiling.0.mp3",
+     "dur": 1.551,
+     "bytes": 6432,
+     "hash": "33b3ff90f4aa",
+     "en": "We're painted! Get back down!",
+     "th": "เรดาร์จับเราได้! ลดระดับลงเร็ว!"
+    }
+   ]
+  },
+  "r.ravine.bomber": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.ravine.bomber.0.mp3",
+     "dur": 2.105,
+     "bytes": 8640,
+     "hash": "a15f97c41a7f",
+     "en": "Bomber in the ravine! Chase it down!",
+     "th": "เครื่องทิ้งระเบิดในหุบผา! ไล่ตามไป!"
+    }
+   ]
+  },
+  "r.ravine.route": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.ravine.route.0.mp3",
+     "dur": 1.849,
+     "bytes": 7680,
+     "hash": "f14dac5c5e12",
+     "en": "Out of the ravine. Pick a route!",
+     "th": "ออกจากหุบผาแล้ว เลือกเส้นทาง!"
+    }
+   ]
+  },
+  "r.jetstream.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.jetstream.brief.0.mp3",
+     "dur": 2.297,
+     "bytes": 9408,
+     "hash": "203f9e3c1c6e",
+     "en": "Riding the jet stream. Bandits high.",
+     "th": "ขี่กระแสเจ็ตสตรีม ข้าศึกอยู่สูง"
+    }
+   ]
+  },
+  "r.jetstream.aces": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.jetstream.aces.0.mp3",
+     "dur": 1.785,
+     "bytes": 7392,
+     "hash": "366048e8e05b",
+     "en": "Two aces! Watch each other's six!",
+     "th": "เอซสองลำ! ระวังหลังให้กันด้วย!"
+    }
+   ]
+  },
+  "r.badlands.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.badlands.brief.0.mp3",
+     "dur": 2.255,
+     "bytes": 9216,
+     "hash": "ab8c262990d1",
+     "en": "Night crossing. The fortress is close.",
+     "th": "ข้ามทะเลทรายยามค่ำ ป้อมบินอยู่ใกล้แล้ว"
+    }
+   ]
+  },
+  "r.badlands.helos": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.badlands.helos.0.mp3",
+     "dur": 2.639,
+     "bytes": 10752,
+     "hash": "5faef19c326a",
+     "en": "Night airlift inbound! Stop those helos!",
+     "th": "ขบวนลำเลียงยามค่ำมาแล้ว! หยุดเฮลิคอปเตอร์!"
+    }
+   ]
+  },
+  "r.badlands.fortress": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.badlands.fortress.0.mp3",
+     "dur": 1.977,
+     "bytes": 8160,
+     "hash": "50fe7a617fb6",
+     "en": "Fortress on radar. Get ready.",
+     "th": "ป้อมบินขึ้นเรดาร์แล้ว เตรียมตัว"
+    }
+   ]
+  },
+  "r.stratos.brief": {
+   "speaker": "awacs",
+   "variants": [
+    {
+     "file": "r.stratos.brief.0.mp3",
+     "dur": 2.148,
+     "bytes": 8832,
+     "hash": "5d82e71ea8bd",
+     "en": "Edge of space... you can see the stars.",
+     "th": "ขอบอวกาศ... มองเห็นดาวด้วย"
+    }
+   ]
+  },
+  "r.stratos.swarm": {
+   "speaker": "wing",
+   "variants": [
+    {
+     "file": "r.stratos.swarm.0.mp3",
+     "dur": 2.191,
+     "bytes": 9024,
+     "hash": "880738b5ba1e",
+     "en": "No return fire up here! Take them all!",
+     "th": "ข้างบนนี้มันไม่ยิงตอบ! จัดให้หมด!"
     }
    ]
   },

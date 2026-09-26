@@ -33,6 +33,8 @@ const c = (hex) => new Color(hex);
  *   emerald    vivid grass on flats/gentle slopes, grey rock cliffs, snow above the snow line
  *   glacier    blue-grey rock, snow on everything flat, ice on the low flats
  *   dunes      bright yellow sand with ripples, golden sandstone on steep rock
+ *   volcanic   black basalt with glowing red strata, dark ash flats (shares the canyon shader branch)
+ *   moonsand   pale silver sand with ripples for moonlit dunes (shares the dunes shader branch)
  */
 export const PALETTES = {
   desertRed: {
@@ -91,9 +93,37 @@ export const PALETTES = {
     snow: '#ffffff',
     ice: '#ffffff',
     bank: '#e0b060'
+  },
+  volcanic: {
+    id: 0, // strata branch of the canyon shader, dark palette
+    groundTex: 'gravelly_sand',
+    auxTex: 'gravelly_sand',
+    groundScale: 6,
+    strata: ['#4a3a36', '#8a2a14', '#2e2624', '#c8481c'],
+    rock: '#4c3e3a',
+    rock2: '#6a2c1c',
+    ground: '#5a4a44',
+    ground2: '#3e3230',
+    snow: '#ffffff',
+    ice: '#ffffff',
+    bank: '#4a3a34'
+  },
+  moonsand: {
+    id: 3, // ripples branch of the dunes shader, pale palette
+    groundTex: 'aerial_sand',
+    auxTex: 'aerial_sand',
+    groundScale: 28,
+    strata: ['#b8b4ac', '#9c9890', '#cfcac0', '#86827c'],
+    rock: '#aaa49a',
+    rock2: '#8e887e',
+    ground: '#e8e2d4',
+    ground2: '#c4bca8',
+    snow: '#ffffff',
+    ice: '#ffffff',
+    bank: '#b8b0a0'
   }
 };
-const ALIASES = { canyon: 'desertRed', red: 'desertRed', snow: 'glacier', ice: 'glacier', valley: 'emerald', desert: 'dunes' };
+const ALIASES = { volcano: 'volcanic', canyon: 'desertRed', red: 'desertRed', snow: 'glacier', ice: 'glacier', valley: 'emerald', desert: 'dunes' };
 
 export function resolvePalette(name) {
   const n = ALIASES[name] || name;

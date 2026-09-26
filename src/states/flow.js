@@ -108,7 +108,8 @@ export class Flow {
     if (ROUTE_GRAPH.statusAfter.includes(node)) {
       const bonus = !!(next && ROUTE_GRAPH.nodes[next]?.bonusStage);
       const env = (STAGE_BY_ID[node] || results.stage).env;
-      g.setState(new StatusReportState(g, { results: s.results.slice(), env, bonus }, go));
+      const midGame = !!next && node === ROUTE_GRAPH.statusAfter[0];
+      g.setState(new StatusReportState(g, { results: s.results.slice(), env, bonus, midGame }, go));
     } else go();
   }
 

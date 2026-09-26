@@ -98,12 +98,28 @@ describe('route graph', () => {
       expect(f.map((o) => o.side)).toEqual([-1, 1]);
     }
     expect(forkOf('canyon').map((o) => o.id)).toEqual(['sunset', 'glacier']);
-    expect(forkOf('dunes').map((o) => o.id)).toEqual(['clouds', 'strike']);
+    expect(forkOf('dunes').map((o) => o.id)).toEqual(['storm', 'volcano']);
+    for (const id of ['storm', 'volcano']) expect(forkOf(id).map((o) => o.id)).toEqual(['clouds', 'strike']);
+    expect(forkOf('nightfleet').map((o) => o.id)).toEqual(['whiteout', 'ravine']);
+    for (const id of ['whiteout', 'ravine']) expect(forkOf(id).map((o) => o.id)).toEqual(['jetstream', 'badlands']);
   });
 
   it('walks both forks to the end', () => {
-    expect(pathFor([])).toEqual(['ocean', 'emerald', 'canyon', 'sunset', 'dunes', 'clouds', 'fortress']);
-    expect(pathFor(['glacier', 'strike'])).toEqual(['ocean', 'emerald', 'canyon', 'glacier', 'dunes', 'strike', 'fortress']);
+    expect(pathFor([])).toEqual(['ocean', 'emerald', 'canyon', 'sunset', 'dunes', 'storm', 'clouds', 'nightfleet', 'whiteout', 'jetstream', 'fortress']);
+    expect(pathFor(['glacier', 'volcano', 'strike', 'ravine', 'badlands'])).toEqual(['ocean', 'emerald', 'canyon', 'glacier', 'dunes', 'volcano', 'strike', 'nightfleet', 'ravine', 'badlands', 'fortress']);
+    // crossing over between the rows
+    expect(pathFor(['storm', 'strike', 'ravine', 'jetstream'])).toEqual(['ocean', 'emerald', 'canyon', 'sunset', 'dunes', 'storm', 'strike', 'nightfleet', 'ravine', 'jetstream', 'fortress']);
+  });
+
+  it('has 18 stages like the original, 11 per run (13 with both bonus stages)', () => {
+    expect(ids.length).toBe(18);
+    expect(ids.filter((id) => G.nodes[id].bonusStage)).toEqual(['aurora', 'stratos']);
+    const plans = [[], ['glacier', 'volcano', 'strike', 'ravine', 'badlands'], ['storm', 'strike', 'whiteout', 'badlands']];
+    for (const plan of plans) expect(pathFor(plan).length).toBe(11);
+    const all = pathFor(['aurora', 'stratos']);
+    expect(all.length).toBe(13);
+    expect(all.indexOf('aurora')).toBe(all.indexOf('dunes') + 1);
+    expect(all.indexOf('stratos')).toBe(all.indexOf('nightfleet') + 1);
   });
 
   it('gates the bonus stage on cleared Emergency Orders', () => {
@@ -111,14 +127,25 @@ describe('route graph', () => {
     const three = { a: true, b: true, c: true };
     expect(bonusUnlocked('dunes', { eoCleared: two, route: [] })).toBe(false);
     expect(bonusUnlocked('dunes', { eoCleared: three, route: [] })).toBe(true);
-    expect(pathFor(['strike'], { eoCleared: two })).not.toContain('aurora');
-    expect(pathFor(['strike'], { eoCleared: three })).toEqual(['ocean', 'emerald', 'canyon', 'sunset', 'dunes', 'aurora', 'strike', 'fortress']);
+    expect(pathFor(['volcano'], { eoCleared: two })).not.toContain('aurora');
+    expect(pathFor(['volcano'], { eoCleared: three }).slice(0, 7)).toEqual(['ocean', 'emerald', 'canyon', 'sunset', 'dunes', 'aurora', 'volcano']);
+    expect(pathFor([], { eoCleared: three })).not.toContain('stratos');
     // ?route=…,aurora forces it (tests); flying it once is enough
-    expect(pathFor(['glacier', 'aurora', 'clouds'])).toEqual(['ocean', 'emerald', 'canyon', 'glacier', 'dunes', 'aurora', 'clouds', 'fortress']);
+    expect(pathFor(['glacier', 'aurora', 'storm']).slice(0, 7)).toEqual(['ocean', 'emerald', 'canyon', 'glacier', 'dunes', 'aurora', 'storm']);
     expect(bonusUnlocked('dunes', { eoCleared: three, route: ['aurora'] })).toBe(false);
     // the bonus rejoins the choice made at the dunes fork
-    expect(nextOf('aurora', { choices: { dunes: 'strike' } })).toBe('strike');
-    expect(nextOf('dunes', { choices: { dunes: 'strike' }, eoCleared: {} })).toBe('strike');
+    expect(nextOf('aurora', { choices: { dunes: 'volcano' } })).toBe('volcano');
+    expect(nextOf('dunes', { choices: { dunes: 'volcano' }, eoCleared: {} })).toBe('volcano');
+  });
+
+  it('gates the second bonus stage on 6 cleared Emergency Orders', () => {
+    const five = Object.fromEntries([1, 2, 3, 4, 5].map((i) => [`e${i}`, true]));
+    const six = { ...five, e6: true };
+    expect(bonusUnlocked('nightfleet', { eoCleared: five, route: [] })).toBe(false);
+    expect(bonusUnlocked('nightfleet', { eoCleared: six, route: [] })).toBe(true);
+    const p6 = pathFor(['ravine'], { eoCleared: six });
+    expect(p6.slice(p6.indexOf('nightfleet'), p6.indexOf('nightfleet') + 3)).toEqual(['nightfleet', 'stratos', 'ravine']);
+    expect(nextOf('stratos', { choices: { nightfleet: 'ravine' } })).toBe('ravine');
   });
 
   it('prefers the recorded choice, then the plan, then the left arrow', () => {
@@ -131,7 +158,9 @@ describe('route graph', () => {
   it('places direct entries on the route', () => {
     expect(routeTo('dunes', ['glacier'])).toEqual({ route: ['ocean', 'emerald', 'canyon', 'glacier', 'dunes'], choices: { canyon: 'glacier' }, stageNo: 5 });
     expect(routeTo('aurora', ['strike']).stageNo).toBe(6);
-    expect(routeTo('fortress', []).stageNo).toBe(7);
+    expect(routeTo('stratos', []).stageNo).toBe(9);
+    expect(routeTo('badlands', ['glacier', 'strike']).choices).toEqual({ canyon: 'glacier', dunes: 'storm', storm: 'strike', nightfleet: 'whiteout', whiteout: 'badlands' });
+    expect(routeTo('fortress', []).stageNo).toBe(11);
   });
 });
 

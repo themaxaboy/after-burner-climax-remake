@@ -1,5 +1,5 @@
 // URL flags for debugging, deterministic tests and benchmarks.
-//   ?stage=1..3  jump straight into a stage      ?seed=N     RNG seed
+//   ?stage=1..18 jump straight into a stage      ?seed=N     RNG seed
 //   ?fixed=1     fixed 1/60 s real dt per frame  ?frames=N   mark ready after N frames
 //   ?t=SECONDS   fast-forward the stage          ?autopilot=1 bot pilot
 //   ?quality=low|medium|high|ultra             ?bench=1    benchmark flythrough
