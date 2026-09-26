@@ -174,16 +174,18 @@ export class Callouts {
       else head ??= m;
       if (call && head) break;
     }
-    if (head) this._drawHeadline(c, head, L);
+    // a callout banner (EVADED, CLIMAX…) takes the stage: the headline steps back instead of
+    // being drawn through it
+    if (head) this._drawHeadline(c, head, L, call ? 0.15 : 1);
     if (call) this._drawCallout(c, call, L, time);
   }
 
-  _drawHeadline(c, m, L) {
+  _drawHeadline(c, m, L, dim = 1) {
     if (!m.sprite) this._build(m);
     const inA = Math.min(1, m.t * 4), outA = Math.min(1, (m.dur - m.t) * 3);
     const k = 1 + (1 - inA) * (1 - inA) * 0.35;
     const y = m.style === 'center' ? L.H * 0.5 : L.H * 0.24;
-    c.globalAlpha = Math.max(0, Math.min(inA, outA));
+    c.globalAlpha = Math.max(0, Math.min(inA, outA)) * dim;
     m.sprite.drawScaled(c, L.W / 2, y, k);
     c.globalAlpha = 1;
   }
@@ -194,7 +196,9 @@ export class Callouts {
     if (!sp.canvas) return;
     const { W, u } = L;
     const inT = 0.3, outT = 0.32;
-    const x0 = L.callout.x, y0 = m.y != null ? L.H * m.y : L.callout.y;
+    // warning plates (MISSILE, CAUTION…) own the centre column: go up into the headline slot
+    const y0 = m.y != null ? L.H * m.y : this.hud.warnings?.columnBusy ? L.H * 0.2 : L.callout.y;
+    const x0 = L.callout.x;
     let dx = 0, sx = 1, a = 1;
     if (m.t < inT) {
       const p = m.t / inT;

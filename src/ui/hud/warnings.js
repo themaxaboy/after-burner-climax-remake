@@ -193,6 +193,8 @@ export class Warnings {
       }
       if (s.timer) this._timer(c, s.timer, L, time);
     }
+    // plates occupy the centre column: callouts move up out of their way (Callouts reads this next frame)
+    this.columnBusy = y > L.warn.y;
     if (combat && s.enemyBehind && Math.sin(time * 8) > -0.4) {
       const by = L.eo.y - (s.eo ? 52 : 12) * u - 30 * u;
       this._plate('behind', t('hud.enemyBehind'), 'behind').draw(c, x, by);

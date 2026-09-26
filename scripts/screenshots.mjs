@@ -34,7 +34,7 @@ mkdirSync(out, { recursive: true });
 // name, stage query, simulated seconds before the capture
 const SHOTS = [
   { name: 'ocean', q: 'stage=ocean&t=22', sim: 6 },
-  { name: 'canyon', q: 'stage=canyon&t=16', sim: 5 },
+  { name: 'canyon', q: 'stage=canyon&t=9', sim: 5 },
   { name: 'glacier', q: 'stage=glacier&t=14', sim: 5 },
   { name: 'dunes', q: 'stage=dunes&t=18', sim: 6 },
   { name: 'sunset', q: 'stage=sunset&t=11', sim: 5 },
